@@ -19,7 +19,7 @@ const experiences: ExperienceItem[] = [
     period: "March 2024 - Present",
     description: {
       en: "Currently working as a Corporate Sales and Domain Name Specialist, helping businesses establish and optimize their online presence through strategic domain management.",
-      id: "Jadi jagoan digital di Qwords, ngurusin domain-domain keren buat perusahaan biar eksis di dunia maya. Spesialis yang bikin strategi biar brand-brand pada ngehits di internet! 🚀"
+      id: "Alhamdulillah, sekarang lagi berkesempatan jadi bagian dari tim Qwords. Di sini, gue bantu temen-temen pebisnis buat dapetin domain yang cocok buat usahanya. Sambil belajar dan berkembang bareng tim yang keren! 🌱"
     }
   }
 ];
@@ -29,21 +29,21 @@ const currentProjects = [
     name: "Indonesias.com",
     description: {
       en: "Digital Platform for Indonesian Business",
-      id: "Platform Digital Asli Indonesia Banget! 🇮🇩"
+      id: "Platform Digital Buat Kemajuan UMKM Indonesia 🇮🇩"
     }
   },
   {
     name: "Terbaiq.com",
     description: {
       en: "Premium Domain Marketplace",
-      id: "Surganya Domain Premium Berkelas ✨"
+      id: "Tempat Jual Beli Domain Premium ✨"
     }
   },
   {
     name: "Red.co.id",
     description: {
       en: "Digital Solutions Platform",
-      id: "Solusi Digital Masa Kini 🎯"
+      id: "Platform Digital Buat Bantu Bisnis Kamu 🎯"
     }
   }
 ];
@@ -72,7 +72,7 @@ export const Experience = () => {
         </div>
 
         <h2 className="text-2xl font-bold font-mono text-primary">
-          {language === 'en' ? 'Work Experience' : 'Jejak Karir Gue ✨'}
+          {language === 'en' ? 'Work Experience' : 'Perjalanan Karir 🌱'}
         </h2>
         
         <div className="space-y-12">
@@ -99,17 +99,17 @@ export const Experience = () => {
             onClick={() => window.open('https://www.linkedin.com/in/kukuh-laksana/', '_blank')}
           >
             <Link className="w-4 h-4" />
-            {language === 'en' ? 'Connect on LinkedIn for full experience' : 'Kepoin LinkedIn Gue Buat Lebih Lengkapnya! 🔍'}
+            {language === 'en' ? 'Connect on LinkedIn for full experience' : 'Yuk, Kenalan di LinkedIn! 🤝'}
           </Button>
         </div>
 
         <div className="mt-12">
           <h2 className="text-2xl font-bold font-mono text-primary mb-6">
-            {language === 'en' ? 'Currently Building' : 'Lagi Bikin Yang Keren-Keren Nih! 🛠️'}
+            {language === 'en' ? 'Currently Building' : 'Project Yang Lagi Dikerjain 🚀'}
           </h2>
           <div className="grid gap-4">
             <h3 className="text-lg font-semibold">
-              {language === 'en' ? 'Web and SaaS Projects:' : 'Project Digital Yang Lagi Diracik:'}
+              {language === 'en' ? 'Web and SaaS Projects:' : 'Lagi Asik Ngerjain:'}
             </h3>
             <ul className="space-y-4">
               {currentProjects.map((project, index) => (
