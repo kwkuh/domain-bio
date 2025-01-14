@@ -5,9 +5,9 @@ export const Stats = () => {
   const { theme } = useTheme();
   
   const stats = [
-    { label: "Projects", value: "50+" },
-    { label: "Domains Managed", value: "100+" },
-    { label: "Success Rate", value: "95%" },
+    { label: "Projects", value: "100+" },
+    { label: "Domains Managed", value: "10,000+" },
+    { label: "Clients", value: "500+" },
   ];
 
   return (
