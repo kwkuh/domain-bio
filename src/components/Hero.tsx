@@ -49,12 +49,10 @@ export const Hero = () => {
           </Button>
         </div>
         <div className="relative w-24 h-24 md:w-28 md:h-28 order-1 md:order-2 group">
-          <div className="absolute inset-0 rounded-full overflow-hidden border-4 border-primary animate-fade-in hover:scale-105 transition-transform duration-300">
-            <img
-              src="/photo-1581092795360-fd1ca04f0952"
-              alt="Profile Photo"
-              className="w-full h-full object-cover"
-            />
+          <div className="absolute inset-0 rounded-full overflow-hidden border-4 border-primary animate-fade-in hover:scale-105 transition-transform duration-300 bg-gradient-to-br from-purple-400 via-pink-500 to-purple-600 flex items-center justify-center">
+            <span className="text-3xl md:text-4xl font-black text-white font-mono">
+              KL
+            </span>
           </div>
           <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-mono animate-bounce shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             Open to Collab
