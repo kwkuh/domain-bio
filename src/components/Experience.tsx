@@ -1,11 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ExperienceItem {
   company: string;
   role: string;
   period: string;
-  description: string;
+  description: {
+    en: string;
+    id: string;
+  };
 }
 
 const experiences: ExperienceItem[] = [
@@ -13,21 +17,64 @@ const experiences: ExperienceItem[] = [
     company: "Qwords",
     role: "Corporate Sales / Domain Name Specialist",
     period: "March 2024 - Present",
-    description: "Currently working as a Corporate Sales and Domain Name Specialist, helping businesses establish and optimize their online presence through strategic domain management."
+    description: {
+      en: "Currently working as a Corporate Sales and Domain Name Specialist, helping businesses establish and optimize their online presence through strategic domain management.",
+      id: "Saat ini bekerja sebagai Corporate Sales dan Domain Name Specialist, membantu bisnis membangun dan mengoptimalkan kehadiran online mereka melalui manajemen domain yang strategis."
+    }
   }
 ];
 
 const currentProjects = [
-  "Indonesias.com",
-  "Terbaiq.com",
-  "Red.co.id"
+  {
+    name: "Indonesias.com",
+    description: {
+      en: "Digital Platform for Indonesian Business",
+      id: "Platform Digital untuk Bisnis Indonesia"
+    }
+  },
+  {
+    name: "Terbaiq.com",
+    description: {
+      en: "Premium Domain Marketplace",
+      id: "Marketplace Domain Premium"
+    }
+  },
+  {
+    name: "Red.co.id",
+    description: {
+      en: "Digital Solutions Platform",
+      id: "Platform Solusi Digital"
+    }
+  }
 ];
 
 export const Experience = () => {
+  const { language, setLanguage } = useLanguage();
+
   return (
     <section className="py-12">
       <div className="space-y-8">
-        <h2 className="text-2xl font-bold font-mono text-primary">Work Experience</h2>
+        <div className="flex justify-end gap-2 mb-8">
+          <button
+            onClick={() => setLanguage('en')}
+            className={`p-2 rounded-full transition-transform hover:scale-110 ${language === 'en' ? 'ring-2 ring-primary' : ''}`}
+            aria-label="Switch to English"
+          >
+            🇬🇧
+          </button>
+          <button
+            onClick={() => setLanguage('id')}
+            className={`p-2 rounded-full transition-transform hover:scale-110 ${language === 'id' ? 'ring-2 ring-primary' : ''}`}
+            aria-label="Ganti ke Bahasa Indonesia"
+          >
+            🇮🇩
+          </button>
+        </div>
+
+        <h2 className="text-2xl font-bold font-mono text-primary">
+          {language === 'en' ? 'Work Experience' : 'Pengalaman Kerja'}
+        </h2>
+        
         <div className="space-y-12">
           {experiences.map((exp, index) => (
             <div key={index} className="group flex flex-col md:flex-row gap-4 animate-fade-in hover:bg-muted/50 p-4 rounded-lg transition-colors">
@@ -37,7 +84,9 @@ export const Experience = () => {
               </div>
               <div className="md:w-2/3">
                 <h4 className="text-base font-semibold">{exp.role}</h4>
-                <p className="text-muted-foreground text-sm mt-2 leading-relaxed">{exp.description}</p>
+                <p className="text-muted-foreground text-sm mt-2 leading-relaxed">
+                  {exp.description[language]}
+                </p>
               </div>
             </div>
           ))}
@@ -50,18 +99,30 @@ export const Experience = () => {
             onClick={() => window.open('https://www.linkedin.com/in/kukuh-laksana/', '_blank')}
           >
             <Link className="w-4 h-4" />
-            Connect on LinkedIn for full experience
+            {language === 'en' ? 'Connect on LinkedIn for full experience' : 'Hubungkan di LinkedIn untuk pengalaman lengkap'}
           </Button>
         </div>
 
         <div className="mt-12">
-          <h2 className="text-2xl font-bold font-mono text-primary mb-6">Currently Building</h2>
+          <h2 className="text-2xl font-bold font-mono text-primary mb-6">
+            {language === 'en' ? 'Currently Building' : 'Sedang Membangun'}
+          </h2>
           <div className="grid gap-4">
-            <h3 className="text-lg font-semibold">Web and SaaS Projects:</h3>
-            <ul className="space-y-2">
+            <h3 className="text-lg font-semibold">
+              {language === 'en' ? 'Web and SaaS Projects:' : 'Proyek Web dan SaaS:'}
+            </h3>
+            <ul className="space-y-4">
               {currentProjects.map((project, index) => (
-                <li key={index} className="text-muted-foreground hover:text-primary transition-colors">
-                  {project}
+                <li 
+                  key={index} 
+                  className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group"
+                >
+                  <h4 className="text-primary font-mono font-bold group-hover:translate-x-2 transition-transform">
+                    {project.name}
+                  </h4>
+                  <p className="text-muted-foreground text-sm mt-1 group-hover:translate-x-2 transition-transform">
+                    {project.description[language]}
+                  </p>
                 </li>
               ))}
             </ul>
