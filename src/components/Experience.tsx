@@ -25,7 +25,7 @@ const currentProjects = [
   "DomainExpi.red",
   "Indomainer.com",
   "Aidentity.id",
-  "Waves.id"
+  "Social.co.id"
 ];
 
 export const Experience = () => {

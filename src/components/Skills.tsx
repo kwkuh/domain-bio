@@ -18,7 +18,22 @@ const skills = [
   "Market Research",
   "Analytics",
   "Brand Development",
-  "Client Relations"
+  "Client Relations",
+  "Digital Strategy",
+  "SEO Optimization",
+  "Backlink Building",
+  "Link Building Strategy",
+  "Website Design",
+  "UI/UX Design",
+  "Landing Page Design",
+  "WordPress Development",
+  "Digital Branding",
+  "Email Marketing",
+  "Social Media Marketing",
+  "Content Strategy",
+  "Conversion Optimization",
+  "Google Analytics",
+  "Search Console Management"
 ];
 
 export const Skills = () => {
