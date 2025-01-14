@@ -69,7 +69,7 @@ export const Experience = () => {
             Project Yang Lagi Dikerjain 🚀
           </h2>
           <h3 className="text-lg font-semibold mb-2 text-purple-400">
-            Suka Membangun:
+            Membangun Identitas Digital~
           </h3>
           <p className="text-sm text-muted-foreground mb-4 italic">
             Pernah manage lebih dari 3000 domain portofolio pribadi
