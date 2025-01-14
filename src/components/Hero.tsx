@@ -8,12 +8,9 @@ export const Hero = () => {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between py-8 gap-6">
       <div className="flex-1 space-y-4 text-left animate-fade-in order-2 md:order-1">
-        <div className="inline-flex items-center gap-3 border-2 border-primary rounded-lg px-4 py-2">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
-            Hi, I'm Kukuh
-          </h1>
-          <HandIcon className="w-8 h-8 text-primary animate-[wave_2s_ease-in-out_infinite]" />
-        </div>
+        <h1 className="text-5xl md:text-7xl font-black tracking-tighter bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 bg-clip-text text-transparent animate-pulse">
+          Kukuh Laksana
+        </h1>
         <div className="space-y-2">
           <h2 className="text-lg md:text-xl text-muted-foreground font-mono font-bold leading-relaxed">
             Digital Marketer | Domain Name Specialist | Brand Enabler
