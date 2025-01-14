@@ -22,15 +22,22 @@ const DomainStamps = () => {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
       {domains.map((domain, index) => {
-        const row = Math.floor(index / 3);
-        const col = index % 3;
+        // Calculate position to only place stamps on the sides
+        const isLeftSide = index < Math.ceil(domains.length / 2);
+        const position = isLeftSide ? 
+          { left: '5%', right: 'auto' } : 
+          { right: '5%', left: 'auto' };
+        
+        // Distribute vertically
+        const verticalPosition = `${15 + ((index % Math.ceil(domains.length / 2)) * 20)}%`;
+
         return (
           <div
             key={domain}
             className="absolute font-mono text-sm md:text-base opacity-10 dark:opacity-5 transform rotate-[-20deg] transition-all duration-500"
             style={{
-              top: `${20 + (row * 25)}%`,
-              left: `${15 + (col * 30)}%`,
+              top: verticalPosition,
+              ...position,
               animation: `stamp-fade-in 0.5s ease-out ${index * 0.1}s forwards`
             }}
           >
