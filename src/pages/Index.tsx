@@ -14,7 +14,8 @@ const domains = [
   "kukuh.xyz",
   "kukuh.org",
   "kukuh.net",
-  "kukuh.my"
+  "kukuh.my",
+  "kukuh.id"
 ];
 
 const DomainStamps = () => {
