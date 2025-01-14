@@ -7,10 +7,10 @@ interface ExperienceItem {
 
 const experiences: ExperienceItem[] = [
   {
-    company: "Domain Strategy Consultant",
-    role: "Independent Consultant",
-    period: "2022 - Present",
-    description: "Providing strategic domain name acquisition and management services for businesses."
+    company: "Qwords",
+    role: "Corporate Sales / Domain Name Specialist",
+    period: "March 2024 - Present",
+    description: "Currently working as a Corporate Sales and Domain Name Specialist, helping businesses establish and optimize their online presence through strategic domain management."
   },
   {
     company: "Digital Marketing Agency",
@@ -28,19 +28,19 @@ const experiences: ExperienceItem[] = [
 
 export const Experience = () => {
   return (
-    <section className="py-16 px-6">
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-3xl font-bold mb-12">Work Experience</h2>
-        <div className="space-y-12">
+    <section className="py-12 px-4">
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-3xl font-bold mb-8">Work Experience</h2>
+        <div className="space-y-8">
           {experiences.map((exp, index) => (
-            <div key={index} className="flex flex-col md:flex-row gap-6 animate-fade-in">
+            <div key={index} className="flex flex-col md:flex-row gap-4 animate-fade-in">
               <div className="md:w-1/3">
-                <h3 className="text-xl font-bold text-primary">{exp.company}</h3>
-                <p className="text-gray-500 mt-1">{exp.period}</p>
+                <h3 className="text-lg font-bold text-primary">{exp.company}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{exp.period}</p>
               </div>
               <div className="md:w-2/3">
-                <h4 className="text-lg font-semibold">{exp.role}</h4>
-                <p className="text-gray-600 mt-2 leading-relaxed">{exp.description}</p>
+                <h4 className="text-base font-semibold">{exp.role}</h4>
+                <p className="text-gray-600 dark:text-gray-300 text-sm mt-2 leading-relaxed">{exp.description}</p>
               </div>
             </div>
           ))}
