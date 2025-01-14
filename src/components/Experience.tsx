@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { Link } from "lucide-react";
+
 interface ExperienceItem {
   company: string;
   role: string;
@@ -11,19 +14,13 @@ const experiences: ExperienceItem[] = [
     role: "Corporate Sales / Domain Name Specialist",
     period: "March 2024 - Present",
     description: "Currently working as a Corporate Sales and Domain Name Specialist, helping businesses establish and optimize their online presence through strategic domain management."
-  },
-  {
-    company: "Digital Marketing Agency",
-    role: "Senior Digital Marketing Specialist",
-    period: "2020 - 2022",
-    description: "Led digital marketing campaigns and brand development initiatives for multiple clients."
-  },
-  {
-    company: "Tech Startup",
-    role: "Marketing Manager",
-    period: "2018 - 2020",
-    description: "Managed brand identity and digital presence for a growing tech startup."
   }
+];
+
+const currentProjects = [
+  "Indonesias.com",
+  "Terbaiq.com",
+  "Red.co.id"
 ];
 
 export const Experience = () => {
@@ -44,6 +41,31 @@ export const Experience = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="flex justify-center mt-6">
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => window.open('https://www.linkedin.com/in/kukuh-laksana/', '_blank')}
+          >
+            <Link className="w-4 h-4" />
+            Connect on LinkedIn for full experience
+          </Button>
+        </div>
+
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold font-mono text-primary mb-6">Currently Building</h2>
+          <div className="grid gap-4">
+            <h3 className="text-lg font-semibold">Web and SaaS Projects:</h3>
+            <ul className="space-y-2">
+              {currentProjects.map((project, index) => (
+                <li key={index} className="text-muted-foreground hover:text-primary transition-colors">
+                  {project}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>
