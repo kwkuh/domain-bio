@@ -1,4 +1,4 @@
-import { WaveHandIcon } from "lucide-react";
+import { HandIcon } from "lucide-react";
 
 export const Hero = () => {
   return (
@@ -6,7 +6,7 @@ export const Hero = () => {
       <div className="flex-1 space-y-4 text-center md:text-left animate-fade-in">
         <div className="flex items-center justify-center md:justify-start gap-2">
           <h1 className="text-4xl md:text-5xl font-bold">Hi, I'm Kukuh</h1>
-          <WaveHandIcon className="w-8 h-8 text-primary animate-[wave_2s_ease-in-out_infinite]" />
+          <HandIcon className="w-8 h-8 text-primary animate-[wave_2s_ease-in-out_infinite]" />
         </div>
         <h2 className="text-xl md:text-2xl text-muted-foreground">
           Digital Marketer | Domain Name Specialist | Brand Enabler
