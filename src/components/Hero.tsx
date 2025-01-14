@@ -8,15 +8,20 @@ export const Hero = () => {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between py-8 gap-6">
       <div className="flex-1 space-y-4 text-left animate-fade-in order-2 md:order-1">
-        <div className="flex items-center gap-2">
+        <div className="inline-flex items-center gap-3 border-2 border-primary rounded-lg px-4 py-2">
           <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
             Hi, I'm Kukuh
           </h1>
-          <HandIcon className="w-6 h-6 text-primary animate-[wave_2s_ease-in-out_infinite]" />
+          <HandIcon className="w-8 h-8 text-primary animate-[wave_2s_ease-in-out_infinite]" />
         </div>
-        <h2 className="text-lg md:text-xl text-muted-foreground font-mono font-bold leading-relaxed">
-          Digital Marketer | Domain Name Specialist | Brand Enabler
-        </h2>
+        <div className="space-y-2">
+          <h2 className="text-lg md:text-xl text-muted-foreground font-mono font-bold leading-relaxed">
+            Digital Marketer | Domain Name Specialist | Brand Enabler
+          </h2>
+          <p className="text-sm text-muted-foreground font-mono">
+            hi@kukuhlaksana.com | +62 822-6000-1011
+          </p>
+        </div>
         <Button
           variant="outline"
           size="icon"

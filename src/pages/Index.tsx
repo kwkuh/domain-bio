@@ -49,7 +49,7 @@ const Index = () => {
     <>
       <DomainStamps />
       <LanguageProvider>
-        <div className="relative min-h-screen max-w-2xl mx-auto px-4 md:px-6 animated-border z-10">
+        <div className="relative min-h-screen max-w-2xl mx-auto px-4 md:px-6 z-10">
           <Hero />
           <About />
           <Stats />
