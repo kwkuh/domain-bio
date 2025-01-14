@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap');
 
 @layer base {
   :root {
@@ -50,24 +51,24 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground transition-colors duration-300;
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    @apply tracking-tight;
   }
-  code, pre {
+  code, pre, .font-mono {
     font-family: 'JetBrains Mono', monospace;
-    font-weight: 600;
+    font-weight: 700;
   }
 }
 

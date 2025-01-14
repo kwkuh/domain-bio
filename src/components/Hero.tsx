@@ -9,19 +9,19 @@ export const Hero = () => {
     <div className="flex flex-col md:flex-row items-center justify-between py-12 gap-8">
       <div className="flex-1 space-y-4 text-left animate-fade-in order-2 md:order-1">
         <div className="flex items-center gap-2">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-black tracking-tighter bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
             Hi, I'm Kukuh
           </h1>
           <HandIcon className="w-8 h-8 text-primary animate-[wave_2s_ease-in-out_infinite]" />
         </div>
-        <h2 className="text-lg md:text-xl text-muted-foreground font-mono leading-relaxed">
+        <h2 className="text-xl md:text-2xl text-muted-foreground font-mono font-bold leading-relaxed">
           Digital Marketer | Domain Name Specialist | Brand Enabler
         </h2>
         <Button
           variant="outline"
           size="icon"
           onClick={toggleTheme}
-          className="mt-4 hover:bg-primary/10"
+          className="mt-4 hover:bg-primary/10 font-bold"
         >
           {theme === 'dark' ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
         </Button>
