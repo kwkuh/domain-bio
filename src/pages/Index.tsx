@@ -15,13 +15,17 @@ const domains = [
   "kukuh.org",
   "kukuh.net",
   "kukuh.my",
-  "kukuh.id"
+  "kukuh.id",
+  "kukuh.link"
 ];
 
 const DomainStamps = () => {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
       {domains.map((domain, index) => {
+        // Special styling for kukuh.link
+        const isMainDomain = domain === "kukuh.link";
+        
         // Calculate position to only place stamps on the sides
         const isLeftSide = index < Math.ceil(domains.length / 2);
         const position = isLeftSide ? 
@@ -34,14 +38,20 @@ const DomainStamps = () => {
         return (
           <div
             key={domain}
-            className="absolute font-mono text-sm md:text-base opacity-10 dark:opacity-5 transform rotate-[-20deg] transition-all duration-500"
+            className={`absolute font-mono text-sm md:text-base transform rotate-[-20deg] transition-all duration-500 ${
+              isMainDomain ? 'opacity-20 dark:opacity-10' : 'opacity-10 dark:opacity-5'
+            }`}
             style={{
               top: verticalPosition,
               ...position,
               animation: `stamp-fade-in 0.5s ease-out ${index * 0.1}s forwards`
             }}
           >
-            <div className="border-2 border-primary rounded-lg px-4 py-2">
+            <div className={`border-2 rounded-lg px-4 py-2 ${
+              isMainDomain 
+                ? 'border-[#8B5CF6] text-[#8B5CF6] dark:border-[#9b87f5] dark:text-[#9b87f5]' 
+                : 'border-primary text-primary'
+            }`}>
               {domain}
             </div>
           </div>
