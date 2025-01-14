@@ -64,20 +64,23 @@ export const Experience = () => {
           </Button>
         </div>
 
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold font-mono text-primary mb-6">
+        <div className="mt-12 bg-gradient-to-br from-purple-400/10 via-pink-500/10 to-purple-600/10 p-6 rounded-xl border border-purple-500/20">
+          <h2 className="text-2xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 mb-6">
             Project Yang Lagi Dikerjain 🚀
           </h2>
-          <h3 className="text-lg font-semibold mb-4">
+          <h3 className="text-lg font-semibold mb-2 text-purple-400">
             Suka Membangun:
           </h3>
+          <p className="text-sm text-muted-foreground mb-4 italic">
+            Pernah manage lebih dari 3000 domain portofolio pribadi
+          </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {currentProjects.map((project, index) => (
               <div 
                 key={index} 
-                className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all hover:scale-105 cursor-pointer border border-border/50"
+                className="p-4 rounded-lg bg-purple-500/5 hover:bg-purple-500/10 transition-all hover:scale-105 cursor-pointer border border-purple-500/20"
               >
-                <h4 className="text-primary font-mono font-bold">
+                <h4 className="text-purple-400 font-mono font-bold">
                   {project}
                 </h4>
               </div>
