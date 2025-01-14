@@ -15,11 +15,11 @@ interface ExperienceItem {
 const experiences: ExperienceItem[] = [
   {
     company: "Qwords",
-    role: "Corporate Sales / Domain Name Specialist",
+    role: "Staff Karyawan - Corporate Sales / Domain Name Specialist",
     period: "March 2024 - Present",
     description: {
-      en: "Currently working as a Corporate Sales and Domain Name Specialist, helping businesses establish and optimize their online presence through strategic domain management.",
-      id: "Alhamdulillah, sekarang lagi berkesempatan jadi bagian dari tim Qwords. Di sini, gue bantu temen-temen pebisnis buat dapetin domain yang cocok buat usahanya. Sambil belajar dan berkembang bareng tim yang keren! 🌱"
+      en: "Currently working at Qwords as Corporate Sales and Domain Name Specialist, helping businesses find the right domain names, choose appropriate hosting servers, and optimize their websites for maximum digital presence. I ensure everything runs smoothly for their online success, in an easy and effective way.",
+      id: "Sekarang, saya kerja di Qwords sebagai Corporate Sales dan Domain Name Specialist. Tugas saya bantu bisnis cari nama domain yang pas, pilih hosting server yang tepat, dan bantu bikin website mereka supaya bisa tampil maksimal di dunia digital. Saya pastikan semuanya berjalan dengan lancar supaya bisnis mereka sukses online, dengan cara yang mudah dan efektif."
     }
   }
 ];
