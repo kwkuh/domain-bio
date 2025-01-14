@@ -18,18 +18,14 @@ const experiences: ExperienceItem[] = [
 ];
 
 const currentProjects = [
-  {
-    name: "Indonesias.com",
-    description: "Platform Digital Buat Kemajuan UMKM Indonesia 🇮🇩"
-  },
-  {
-    name: "Terbaiq.com",
-    description: "Tempat Jual Beli Domain Premium ✨"
-  },
-  {
-    name: "Red.co.id",
-    description: "Platform Digital Buat Bantu Bisnis Kamu 🎯"
-  }
+  "Indonesias.com",
+  "Terbaiq.com",
+  "Esrevatem.com",
+  "Red.co.id",
+  "DomainExpi.red",
+  "Indomainer.com",
+  "Aidentity.id",
+  "Waves.id"
 ];
 
 export const Experience = () => {
@@ -72,25 +68,20 @@ export const Experience = () => {
           <h2 className="text-2xl font-bold font-mono text-primary mb-6">
             Project Yang Lagi Dikerjain 🚀
           </h2>
-          <div className="grid gap-4">
-            <h3 className="text-lg font-semibold">
-              Lagi Asik Ngerjain:
-            </h3>
-            <ul className="space-y-4">
-              {currentProjects.map((project, index) => (
-                <li 
-                  key={index} 
-                  className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group"
-                >
-                  <h4 className="text-primary font-mono font-bold group-hover:translate-x-2 transition-transform">
-                    {project.name}
-                  </h4>
-                  <p className="text-muted-foreground text-sm mt-1 group-hover:translate-x-2 transition-transform">
-                    {project.description}
-                  </p>
-                </li>
-              ))}
-            </ul>
+          <h3 className="text-lg font-semibold mb-4">
+            Suka Membangun:
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {currentProjects.map((project, index) => (
+              <div 
+                key={index} 
+                className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all hover:scale-105 cursor-pointer border border-border/50"
+              >
+                <h4 className="text-primary font-mono font-bold">
+                  {project}
+                </h4>
+              </div>
+            ))}
           </div>
         </div>
       </div>
