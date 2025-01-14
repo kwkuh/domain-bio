@@ -1,0 +1,24 @@
+{
+  "owner": {
+    "name": "Kukuh Laksana",
+    "handle": "@kwkuh",
+    "telegram": "kwkuh",
+    "email": "soeharyo@gmail.com",
+    "tagline": "Domain investor · brand operator · open-source toolmaker."
+  },
+  "domains": [
+    { "name": "claw.st",          "bin": null,  "tags": ["short","brand"],                "status": "active" },
+    { "name": "theclawd.com",     "bin": null,  "tags": ["openclaw","portfolio"],         "status": "active" },
+    { "name": "openclawlist.com", "bin": null,  "tags": ["openclaw","directory"],         "status": "active" },
+    { "name": "lobsterclawd.com", "bin": null,  "tags": ["openclaw","brand"],             "status": "active" },
+    { "name": "clawdmarket.com",  "bin": null,  "tags": ["openclaw","marketplace"],       "status": "active" },
+    { "name": "smartclawd.com",   "bin": null,  "tags": ["openclaw","ai"],                "status": "active" },
+    { "name": "vpsclaw.com",      "bin": null,  "tags": ["openclaw","hosting"],           "status": "active" },
+    { "name": "chatopenclaw.com", "bin": null,  "tags": ["openclaw","ai"],                "status": "active" },
+    { "name": "jarvis.md",        "bin": null,  "tags": ["saas","ai","brand"],            "status": "active" },
+    { "name": "baleswa.com",      "bin": null,  "tags": ["saas","whatsapp","ai"],         "status": "active" },
+    { "name": "studioterdekat.com", "bin": null,"tags": ["marketplace","local"],          "status": "active" },
+    { "name": "panel.id",         "bin": null,  "tags": ["short","cctld-id"],             "status": "active" },
+    { "name": "kula.co.id",       "bin": null,  "tags": ["brand","cctld-id"],             "status": "active" }
+  ]
+}
