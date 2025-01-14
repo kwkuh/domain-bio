@@ -28,19 +28,19 @@ const experiences: ExperienceItem[] = [
 
 export const Experience = () => {
   return (
-    <section className="py-20 px-6">
-      <div className="max-w-6xl mx-auto">
+    <section className="py-16 px-6">
+      <div className="max-w-4xl mx-auto">
         <h2 className="text-3xl font-bold mb-12">Work Experience</h2>
-        <div className="space-y-8">
+        <div className="space-y-12">
           {experiences.map((exp, index) => (
-            <div key={index} className="flex flex-col md:flex-row gap-4 md:gap-8 animate-fade-in">
+            <div key={index} className="flex flex-col md:flex-row gap-6 animate-fade-in">
               <div className="md:w-1/3">
-                <h3 className="text-xl font-semibold text-primary">{exp.company}</h3>
-                <p className="text-muted-foreground">{exp.period}</p>
+                <h3 className="text-xl font-bold text-primary">{exp.company}</h3>
+                <p className="text-gray-500 mt-1">{exp.period}</p>
               </div>
               <div className="md:w-2/3">
-                <h4 className="font-medium">{exp.role}</h4>
-                <p className="text-muted-foreground mt-2">{exp.description}</p>
+                <h4 className="text-lg font-semibold">{exp.role}</h4>
+                <p className="text-gray-600 mt-2 leading-relaxed">{exp.description}</p>
               </div>
             </div>
           ))}
