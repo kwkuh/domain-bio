@@ -13,14 +13,14 @@ const skills = [
 
 export const Skills = () => {
   return (
-    <section className="py-20 px-6 bg-muted">
-      <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold mb-8">Skills</h2>
+    <section className="py-16">
+      <div className="space-y-8">
+        <h2 className="text-2xl font-bold font-mono text-primary">Skills</h2>
         <div className="flex flex-wrap gap-3">
           {skills.map((skill, index) => (
             <span
               key={index}
-              className="px-4 py-2 bg-white rounded-full text-secondary shadow-sm hover:shadow-md transition-shadow animate-fade-in"
+              className="px-4 py-2 bg-muted rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-default animate-fade-in font-mono text-sm"
             >
               {skill}
             </span>
