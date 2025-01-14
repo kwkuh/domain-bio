@@ -59,9 +59,15 @@
   body {
     @apply bg-background text-foreground transition-colors duration-300;
     font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
   code, pre {
     font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
   }
 }
 
@@ -88,4 +94,3 @@
   80% { transform: rotate(-4deg); }
   100% { transform: rotate(0deg); }
 }
-
