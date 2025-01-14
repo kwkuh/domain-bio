@@ -8,7 +8,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 const Index = () => {
   return (
     <LanguageProvider>
-      <div className="min-h-screen max-w-3xl mx-auto px-4 md:px-6">
+      <div className="min-h-screen max-w-2xl mx-auto px-4 md:px-6 animated-border">
         <Hero />
         <About />
         <Experience />
