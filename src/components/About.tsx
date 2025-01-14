@@ -2,9 +2,9 @@ export const About = () => {
   return (
     <section className="py-12">
       <div className="space-y-4">
-        <h2 className="text-2xl font-black font-mono text-primary tracking-tight">About</h2>
+        <h2 className="text-2xl font-black font-mono text-primary tracking-tight">Tentang Gue ✨</h2>
         <p className="text-base leading-relaxed text-foreground font-normal">
-          I dedicate myself to helping brands thrive in the digital space. With extensive experience in domain management and digital marketing, I specialize in guiding businesses to find their ideal domain names. As a Domain Name Specialist and Digital Marketer, I focus on optimizing domain strategies to support brand growth and online presence. Passionate about the digital landscape, I actively engage in industry trends and continuously seek new opportunities to drive success for my clients.
+          Gue adalah spesialis yang bikin brand-brand makin ngehits di dunia digital! Dengan pengalaman yang udah terbukti di bidang domain management dan digital marketing, gue bantu bisnis-bisnis nemuin nama domain yang pas banget sama brand mereka. Sebagai Domain Name Specialist dan Digital Marketer, gue fokus bikin strategi domain yang bikin brand makin berkibar di dunia online. Gue selalu update sama tren industri dan terus nyari peluang baru buat bikin klien-klien gue makin sukses! 🚀
         </p>
       </div>
     </section>
