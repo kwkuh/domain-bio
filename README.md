@@ -2,7 +2,7 @@
 
 > Public portfolio page for the domains I own. Powered by [domainer](https://github.com/kwkuh/domainer).
 
-**Live:** [kwkuh.github.io/domain-portfolio](https://kwkuh.github.io/domain-portfolio/)
+**Live:** [kwkuh.github.io/domain-bio](https://kwkuh.github.io/domain-bio/)
 
 A single-page static site that lists every domain in my portfolio — filterable by tag, with direct inquiry links. Zero JavaScript framework, zero build step. Edit `domains.json`, push, GitHub Pages redeploys.
 
@@ -22,7 +22,7 @@ That's it. No Astro, no Next, no Hugo. One HTML file, one JSON file.
 
 ```bash
 # 1. Fork / clone this repo
-gh repo fork kwkuh/domain-portfolio --clone
+gh repo fork kwkuh/domain-bio --clone
 
 # 2. Replace domains.json with your portfolio
 $EDITOR domains.json
