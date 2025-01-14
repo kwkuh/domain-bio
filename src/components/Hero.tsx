@@ -28,8 +28,8 @@ export const Hero = () => {
       </div>
       <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-primary animate-fade-in order-1 md:order-2 hover:scale-105 transition-transform duration-300">
         <img
-          src="/lovable-uploads/4f715b09-e167-437f-b287-12d986f7e323.png"
-          alt="Kukuh Laksana"
+          src="/photo-1581092795360-fd1ca04f0952"
+          alt="Profile Photo"
           className="w-full h-full object-cover"
         />
       </div>
