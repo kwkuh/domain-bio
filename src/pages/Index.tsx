@@ -2,7 +2,6 @@ import { Hero } from "@/components/Hero";
 import { About } from "@/components/About";
 import { Experience } from "@/components/Experience";
 import { Skills } from "@/components/Skills";
-import { Stats } from "@/components/Stats";
 import { Contact } from "@/components/Contact";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 
@@ -59,7 +58,6 @@ const Index = () => {
         <div className="relative min-h-screen max-w-2xl mx-auto px-4 md:px-6 z-10">
           <Hero />
           <About />
-          <Stats />
           <Experience />
           <Skills />
           <Contact />
