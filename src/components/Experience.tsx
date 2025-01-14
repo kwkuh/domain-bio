@@ -1,15 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ExperienceItem {
   company: string;
   role: string;
   period: string;
-  description: {
-    en: string;
-    id: string;
-  };
+  description: string;
 }
 
 const experiences: ExperienceItem[] = [
@@ -17,62 +13,31 @@ const experiences: ExperienceItem[] = [
     company: "Qwords",
     role: "Staff Karyawan - Corporate Sales / Domain Name Specialist",
     period: "March 2024 - Present",
-    description: {
-      en: "Currently working at Qwords as Corporate Sales and Domain Name Specialist, helping businesses find the right domain names, choose appropriate hosting servers, and optimize their websites for maximum digital presence. I ensure everything runs smoothly for their online success, in an easy and effective way.",
-      id: "Sekarang, saya kerja di Qwords sebagai Corporate Sales dan Domain Name Specialist. Tugas saya bantu bisnis cari nama domain yang pas, pilih hosting server yang tepat, dan bantu bikin website mereka supaya bisa tampil maksimal di dunia digital. Saya pastikan semuanya berjalan dengan lancar supaya bisnis mereka sukses online, dengan cara yang mudah dan efektif."
-    }
+    description: "Sekarang, saya kerja di Qwords sebagai Corporate Sales dan Domain Name Specialist. Tugas saya bantu bisnis cari nama domain yang pas, pilih hosting server yang tepat, dan bantu bikin website mereka supaya bisa tampil maksimal di dunia digital. Saya pastikan semuanya berjalan dengan lancar supaya bisnis mereka sukses online, dengan cara yang mudah dan efektif."
   }
 ];
 
 const currentProjects = [
   {
     name: "Indonesias.com",
-    description: {
-      en: "Digital Platform for Indonesian Business",
-      id: "Platform Digital Buat Kemajuan UMKM Indonesia 🇮🇩"
-    }
+    description: "Platform Digital Buat Kemajuan UMKM Indonesia 🇮🇩"
   },
   {
     name: "Terbaiq.com",
-    description: {
-      en: "Premium Domain Marketplace",
-      id: "Tempat Jual Beli Domain Premium ✨"
-    }
+    description: "Tempat Jual Beli Domain Premium ✨"
   },
   {
     name: "Red.co.id",
-    description: {
-      en: "Digital Solutions Platform",
-      id: "Platform Digital Buat Bantu Bisnis Kamu 🎯"
-    }
+    description: "Platform Digital Buat Bantu Bisnis Kamu 🎯"
   }
 ];
 
 export const Experience = () => {
-  const { language, setLanguage } = useLanguage();
-
   return (
     <section className="py-12">
       <div className="space-y-8">
-        <div className="flex justify-end gap-2 mb-8">
-          <button
-            onClick={() => setLanguage('en')}
-            className={`p-2 rounded-full transition-transform hover:scale-110 ${language === 'en' ? 'ring-2 ring-primary' : ''}`}
-            aria-label="Switch to English"
-          >
-            🇬🇧
-          </button>
-          <button
-            onClick={() => setLanguage('id')}
-            className={`p-2 rounded-full transition-transform hover:scale-110 ${language === 'id' ? 'ring-2 ring-primary' : ''}`}
-            aria-label="Ganti ke Bahasa Indonesia"
-          >
-            🇮🇩
-          </button>
-        </div>
-
         <h2 className="text-2xl font-bold font-mono text-primary">
-          {language === 'en' ? 'Work Experience' : 'Perjalanan Karir 🌱'}
+          Perjalanan Karir 🌱
         </h2>
         
         <div className="space-y-12">
@@ -85,7 +50,7 @@ export const Experience = () => {
               <div className="md:w-2/3">
                 <h4 className="text-base font-semibold">{exp.role}</h4>
                 <p className="text-muted-foreground text-sm mt-2 leading-relaxed">
-                  {exp.description[language]}
+                  {exp.description}
                 </p>
               </div>
             </div>
@@ -99,17 +64,17 @@ export const Experience = () => {
             onClick={() => window.open('https://www.linkedin.com/in/kukuh-laksana/', '_blank')}
           >
             <Link className="w-4 h-4" />
-            {language === 'en' ? 'Connect on LinkedIn for full experience' : 'Yuk, Kenalan di LinkedIn! 🤝'}
+            Yuk, Kenalan di LinkedIn! 🤝
           </Button>
         </div>
 
         <div className="mt-12">
           <h2 className="text-2xl font-bold font-mono text-primary mb-6">
-            {language === 'en' ? 'Currently Building' : 'Project Yang Lagi Dikerjain 🚀'}
+            Project Yang Lagi Dikerjain 🚀
           </h2>
           <div className="grid gap-4">
             <h3 className="text-lg font-semibold">
-              {language === 'en' ? 'Web and SaaS Projects:' : 'Lagi Asik Ngerjain:'}
+              Lagi Asik Ngerjain:
             </h3>
             <ul className="space-y-4">
               {currentProjects.map((project, index) => (
@@ -121,7 +86,7 @@ export const Experience = () => {
                     {project.name}
                   </h4>
                   <p className="text-muted-foreground text-sm mt-1 group-hover:translate-x-2 transition-transform">
-                    {project.description[language]}
+                    {project.description}
                   </p>
                 </li>
               ))}
