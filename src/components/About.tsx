@@ -1,10 +1,10 @@
 export const About = () => {
   return (
-    <section className="py-12">
-      <div className="space-y-4">
-        <h2 className="text-2xl font-black font-mono text-primary tracking-tight">Hi, I'm Kukuh</h2>
-        <p className="text-base leading-relaxed text-foreground font-normal">
-          Dari perjalanan sebagai entrepreneur hingga menjadi digital marketer dan akhirnya bergabung sebagai karyawan, saya sekarang berperan sebagai #SiPalingDomain. Dengan pengalaman di domain management dan digital marketing, saya bantu brand-brand tumbuh dan dikenal di dunia digital. Tugas saya adalah membantu bisnis menemukan nama domain yang pas, yang sesuai dengan identitas mereka. Saya fokus mengembangkan strategi domain yang mendukung perkembangan brand secara online, sambil terus mengikuti tren terbaru dan mencari peluang baru demi kesuksesan klien-klien saya! 🚀
+    <section className="py-8 md:py-12">
+      <div className="space-y-4 max-w-full md:max-w-2xl mx-auto px-4 md:px-0">
+        <h2 className="text-xl md:text-2xl font-black font-mono text-primary tracking-tight">Hi, I'm Kukuh</h2>
+        <p className="text-sm md:text-base leading-relaxed text-foreground font-normal">
+          I help businesses grow through domain management and digital marketing strategies. With experience in both fields, I support brands in establishing and expanding their digital presence. My role is to assist businesses in finding the perfect domain names that align with their digital identity. I focus on developing domain strategies that strengthen brand presence online while staying current with trends and seeking new opportunities for my clients' success! 🚀
         </p>
       </div>
     </section>

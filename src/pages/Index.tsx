@@ -23,7 +23,7 @@ const domains = [
 
 const DomainStamps = () => {
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none">
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-10">
       {domains.map((domain, index) => {
         const isMainDomain = domain === "kukuh.link";
         const isLeftSide = index < Math.ceil(domains.length / 2);
@@ -36,7 +36,7 @@ const DomainStamps = () => {
           <div
             key={domain}
             className={`absolute font-mono text-sm md:text-base transform rotate-[-20deg] transition-all duration-500 ${
-              isMainDomain ? 'opacity-20 dark:opacity-10' : 'opacity-10 dark:opacity-5'
+              isMainDomain ? 'opacity-30 dark:opacity-20' : 'opacity-20 dark:opacity-10'
             }`}
             style={{
               top: verticalPosition,
@@ -46,7 +46,7 @@ const DomainStamps = () => {
           >
             <div className={`border-2 rounded-lg px-4 py-2 ${
               isMainDomain 
-                ? 'border-[#8B5CF6] text-[#8B5CF6] dark:border-[#9b87f5] dark:text-[#9b87f5]' 
+                ? 'border-purple-500 text-purple-500 dark:border-purple-400 dark:text-purple-400' 
                 : 'border-primary text-primary'
             }`}>
               {domain}
@@ -65,7 +65,7 @@ const Index = () => {
       <DomainStamps />
       <LanguageProvider>
         <OSWindow>
-          <div className="relative min-h-screen max-w-2xl mx-auto px-4 md:px-6 z-10">
+          <div className="relative min-h-screen max-w-2xl mx-auto px-4 md:px-6 z-20">
             <Hero />
             <About />
             <Experience />
