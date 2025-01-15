@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kukuh Laksana — Domain Portfolio</title>
-<meta name="description" content="Curated domain portfolio by @kwkuh — for-sale listings, brand assets, and active projects.">
-<meta property="og:title" content="Kukuh Laksana — Domain Portfolio">
-<meta property="og:description" content="Curated domain portfolio by @kwkuh. Acquisitions welcome.">
+<title>domain-portfolio — your portfolio in one page</title>
+<meta name="description" content="A single-page, JSON-driven portfolio template for domain investors. Forkable, static, GitHub Pages-ready.">
+<meta property="og:title" content="domain-portfolio">
+<meta property="og:description" content="A single-page, JSON-driven portfolio template for domain investors.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 
@@ -44,20 +44,18 @@ body {
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
 }
-code, .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+.mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 .wrap { max-width: 880px; margin: 0 auto; padding: 80px 24px 120px; }
 
-/* Header */
 header h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 8px; letter-spacing: -0.025em; font-weight: 700; }
 header p.tagline { color: var(--muted); font-size: 1.1rem; margin: 0 0 24px; }
 .handles { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 48px; font-size: 0.95rem; }
 .handles a { color: var(--fg); }
 .handles a:hover { color: var(--accent); }
 
-/* Filter chips */
 .filters {
   display: flex; flex-wrap: wrap; gap: 8px;
   margin: 32px 0 24px; padding-bottom: 24px;
@@ -76,7 +74,6 @@ header p.tagline { color: var(--muted); font-size: 1.1rem; margin: 0 0 24px; }
 }
 .count { color: var(--muted); margin-bottom: 8px; font-size: 0.9rem; font-family: 'JetBrains Mono', monospace; }
 
-/* Domain grid */
 .grid { display: grid; gap: 16px; }
 .card {
   background: var(--card);
@@ -140,7 +137,7 @@ footer a:hover { color: var(--accent); }
 </section>
 
 <footer>
-  <span>Built with <a href="https://github.com/kwkuh/domainer">domainer</a>. <a href="https://github.com/kwkuh/domain-bio">View source</a>.</span>
+  <span>Built with <a href="https://github.com/kwkuh/domainer">domainer</a>. <a href="https://github.com/kwkuh/domain-portfolio">View source</a>.</span>
   <span id="updated"></span>
 </footer>
 
