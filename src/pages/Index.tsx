@@ -4,6 +4,8 @@ import { Experience } from "@/components/Experience";
 import { Skills } from "@/components/Skills";
 import { Contact } from "@/components/Contact";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { OSWindow } from "@/components/OSWindow";
+import { Clock } from "@/components/Clock";
 
 const domains = [
   "kukuh.co.id",
@@ -23,16 +25,11 @@ const DomainStamps = () => {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
       {domains.map((domain, index) => {
-        // Special styling for kukuh.link
         const isMainDomain = domain === "kukuh.link";
-        
-        // Calculate position to only place stamps on the sides
         const isLeftSide = index < Math.ceil(domains.length / 2);
         const position = isLeftSide ? 
           { left: '5%', right: 'auto' } : 
           { right: '5%', left: 'auto' };
-        
-        // Distribute vertically
         const verticalPosition = `${15 + ((index % Math.ceil(domains.length / 2)) * 20)}%`;
 
         return (
@@ -64,15 +61,18 @@ const DomainStamps = () => {
 const Index = () => {
   return (
     <>
+      <Clock />
       <DomainStamps />
       <LanguageProvider>
-        <div className="relative min-h-screen max-w-2xl mx-auto px-4 md:px-6 z-10">
-          <Hero />
-          <About />
-          <Experience />
-          <Skills />
-          <Contact />
-        </div>
+        <OSWindow>
+          <div className="relative min-h-screen max-w-2xl mx-auto px-4 md:px-6 z-10">
+            <Hero />
+            <About />
+            <Experience />
+            <Skills />
+            <Contact />
+          </div>
+        </OSWindow>
       </LanguageProvider>
     </>
   );

@@ -152,3 +152,30 @@
     transform: scale(1) rotate(-20deg);
   }
 }
+
+/* OS Window Styles */
+.os-window {
+  @apply backdrop-blur-xl bg-opacity-50;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1),
+              0 4px 6px -1px rgba(0, 0, 0, 0.1),
+              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.os-window-controls {
+  @apply flex items-center space-x-2;
+}
+
+.os-window-button {
+  @apply w-3 h-3 rounded-full transition-all duration-200;
+}
+
+.os-window-content {
+  @apply bg-opacity-50 backdrop-blur-md;
+}
+
+/* Glass Effect */
+.glass-effect {
+  @apply bg-opacity-20 backdrop-blur-lg;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
