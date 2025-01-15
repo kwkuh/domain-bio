@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "lucide-react";
+import { Link, Terminal, Maximize2, Minus, X } from 'lucide-react';
+import { useState } from "react";
 
 interface ExperienceItem {
   company: string;
@@ -18,17 +19,20 @@ const experiences: ExperienceItem[] = [
 ];
 
 const currentProjects = [
-  "Indonesias.com",
-  "Terbaiq.com",
-  "Esrevatem.com",
-  "Red.co.id",
-  "DomainExpi.red",
-  "Indomainer.com",
-  "Aidentity.id",
-  "Social.co.id"
+  { name: "Indonesias.com", status: "Active", type: "Premium Domain" },
+  { name: "Terbaiq.com", status: "Development", type: "Brand Domain" },
+  { name: "Esrevatem.com", status: "Planning", type: "Creative Domain" },
+  { name: "Red.co.id", status: "Active", type: "Premium Domain" },
+  { name: "DomainExpi.red", status: "Development", type: "Tool Domain" },
+  { name: "Indomainer.com", status: "Active", type: "Community Domain" },
+  { name: "Aidentity.id", status: "Planning", type: "AI Domain" },
+  { name: "Social.co.id", status: "Active", type: "Premium Domain" }
 ];
 
 export const Experience = () => {
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <section className="py-12">
       <div className="space-y-8">
@@ -64,27 +68,85 @@ export const Experience = () => {
           </Button>
         </div>
 
-        <div className="mt-12 bg-gradient-to-br from-purple-400/10 via-pink-500/10 to-purple-600/10 p-6 rounded-xl border border-purple-500/20">
-          <h2 className="text-2xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 mb-6">
-            Project Yang Lagi Dikerjain 🚀
-          </h2>
-          <h3 className="text-lg font-semibold mb-2 text-purple-400">
-            Membangun Identitas Digital~
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4 italic">
-            Pernah manage lebih dari 3000 domain portofolio pribadi
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {currentProjects.map((project, index) => (
-              <div 
-                key={index} 
-                className="p-4 rounded-lg bg-purple-500/5 hover:bg-purple-500/10 transition-all hover:scale-105 cursor-pointer border border-purple-500/20"
-              >
-                <h4 className="text-purple-400 font-mono font-bold">
-                  {project}
-                </h4>
+        <div className="mt-12">
+          <div className="os-window bg-black/20 backdrop-blur-xl rounded-xl border border-white/10">
+            {/* Window Controls */}
+            <div className="flex items-center justify-between p-3 border-b border-white/10">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                <div className="w-3 h-3 rounded-full bg-green-500" />
               </div>
-            ))}
+              <div className="flex items-center space-x-2">
+                <Terminal className="w-4 h-4 text-purple-400" />
+                <span className="text-sm font-mono text-purple-400">projects.sh</span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <Minus className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
+                <Maximize2 className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
+                <X className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <h2 className="text-2xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 mb-6">
+                Project Yang Lagi Dikerjain 🚀
+              </h2>
+              
+              <div className="relative">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {currentProjects.map((project, index) => (
+                    <div
+                      key={index}
+                      className="group relative"
+                      onMouseEnter={() => {
+                        setSelectedProject(project.name);
+                        setIsMenuOpen(true);
+                      }}
+                      onMouseLeave={() => {
+                        setSelectedProject(null);
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <div className="p-4 rounded-lg glass-effect hover:scale-105 transition-all duration-300 cursor-pointer border border-purple-500/20 group-hover:border-purple-500/40">
+                        <h4 className="text-purple-400 font-mono font-bold mb-2">
+                          {project.name}
+                        </h4>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <p className="text-xs text-purple-300/70">{project.type}</p>
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs mt-2 ${
+                            project.status === 'Active' ? 'bg-green-500/20 text-green-400' :
+                            project.status === 'Development' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-blue-500/20 text-blue-400'
+                          }`}>
+                            {project.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* OS-style Menu */}
+                      {isMenuOpen && selectedProject === project.name && (
+                        <div className="absolute z-10 w-48 py-2 mt-2 bg-gray-800/90 backdrop-blur-lg rounded-lg shadow-xl border border-purple-500/20 animate-fade-in">
+                          <div className="px-4 py-2 text-xs text-purple-400 border-b border-purple-500/20">
+                            Domain Options
+                          </div>
+                          <button className="w-full px-4 py-2 text-sm text-left text-gray-200 hover:bg-purple-500/20 transition-colors">
+                            View Details
+                          </button>
+                          <button className="w-full px-4 py-2 text-sm text-left text-gray-200 hover:bg-purple-500/20 transition-colors">
+                            Check Availability
+                          </button>
+                          <button className="w-full px-4 py-2 text-sm text-left text-gray-200 hover:bg-purple-500/20 transition-colors">
+                            Development Status
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

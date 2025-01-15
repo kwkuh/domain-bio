@@ -121,18 +121,10 @@
   border-style: solid;
 }
 
-.glass-card {
-  @apply backdrop-blur-md bg-white/10 dark:bg-black/10 border border-white/20 dark:border-white/10;
-}
-
-.gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-purple-500 to-pink-500;
-}
-
-.neon-border {
-  box-shadow: 0 0 5px theme('colors.primary.DEFAULT'),
-              0 0 10px theme('colors.primary.DEFAULT'),
-              0 0 15px theme('colors.primary.DEFAULT');
+.glass-effect {
+  @apply bg-opacity-20 backdrop-blur-lg;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 @keyframes stamp-fade-in {
@@ -171,11 +163,4 @@
 
 .os-window-content {
   @apply bg-opacity-50 backdrop-blur-md;
-}
-
-/* Glass Effect */
-.glass-effect {
-  @apply bg-opacity-20 backdrop-blur-lg;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  border: 1px solid rgba(255, 255, 255, 0.18);
 }
