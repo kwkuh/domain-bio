@@ -14,7 +14,7 @@ const experiences: ExperienceItem[] = [
     company: "Qwords",
     role: "Staff Karyawan - Corporate Sales / Domain Name Specialist",
     period: "March 2024 - Present",
-    description: "Berawal dari perjalanan sebagai digital marketer, kemudian merambah menjadi entrepreneur, hingga akhirnya menjadi karyawan, kini berperan sebagai #SiPalingDomain. Dengan pengalaman di bidang digital marketing dan pengelolaan domain, mendukung brand untuk tumbuh dan dikenal di dunia digital adalah misi utama. Fokus saya membantu bisnis menemukan nama domain yang tepat sesuai identitas digital mereka, serta mengembangkan strategi domain yang memperkuat eksistensi brand secara online. Selalu mengikuti tren terbaru dan mencari peluang baru untuk memastikan kesuksesan klien adalah prioritas utama!"
+    description: "Membantu brand untuk tumbuh dan dikenal di dunia digital adalah misi utama. Fokus saya membantu bisnis menemukan nama domain yang tepat sesuai identitas digital mereka, serta mengembangkan strategi domain yang memperkuat eksistensi brand secara online. Selalu mengikuti tren terbaru dan mencari peluang baru untuk memastikan kesuksesan klien adalah prioritas utama!"
   }
 ];
 
