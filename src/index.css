@@ -161,22 +161,14 @@
   }
 }
 
-/* OS Window Styles */
+.glass-effect {
+  @apply bg-background/80 backdrop-blur-lg border border-border shadow-lg;
+}
+
 .os-window {
-  @apply backdrop-blur-xl bg-opacity-50;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1),
-              0 4px 6px -1px rgba(0, 0, 0, 0.1),
-              0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.os-window-controls {
-  @apply flex items-center space-x-2;
-}
-
-.os-window-button {
-  @apply w-3 h-3 rounded-full transition-all duration-200;
+  @apply bg-background/95 backdrop-blur-xl border border-border shadow-lg;
 }
 
 .os-window-content {
-  @apply bg-opacity-50 backdrop-blur-md;
+  @apply bg-background/95 backdrop-blur-md;
 }
