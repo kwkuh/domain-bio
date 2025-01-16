@@ -52,9 +52,9 @@ export const Experience = () => {
               {/* Animated ID Card */}
               <div className="id-card-container transform-style-3d w-64 hover:scale-105 transition-transform duration-300">
                 {/* Lanyard with orange and gold colors and swaying animation */}
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-1 h-12 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg font-['Neo_Brutalism'] text-sm">
-                  {/* Lanyard Clip with gold accent */}
-                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20"></div>
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg font-['Neo_Brutalism'] text-sm">
+                  {/* Lanyard Clip with gold accent - made smaller and more square */}
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-sm bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20"></div>
                 </div>
                 
                 <div className="border border-gray-800 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 shadow-xl transition-all duration-500 transform hover:rotate-y-10 hover:translate-z-10 animate-[float_6s_ease-in-out_infinite]">
@@ -107,20 +107,27 @@ export const Experience = () => {
                       </div>
                     </div>
 
-                    {/* Aksara Data Section */}
-                    <div className="mt-4 space-y-1 pt-2 border-t border-gray-800">
-                      <div className="flex items-center justify-center gap-1 text-[10px]">
-                        <Link2 className="w-3 h-3 text-[#FBBF24]" />
-                        <a href="https://aksaradata.id" target="_blank" rel="noopener noreferrer" className="text-[#FBBF24] hover:text-[#F97316] transition-colors">
-                          aksaradata.id
-                        </a>
+                    {/* Aksara Data Section - Made Responsive */}
+                    <div className="mt-4 space-y-2 pt-2 border-t border-gray-800">
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                        <div className="flex items-center gap-1 text-[10px]">
+                          <Link2 className="w-3 h-3 text-[#FBBF24]" />
+                          <a href="https://aksaradata.id" target="_blank" rel="noopener noreferrer" className="text-[#FBBF24] hover:text-[#F97316] transition-colors">
+                            aksaradata.id
+                          </a>
+                        </div>
+                        <p className="text-[10px] text-[#F97316] text-center sm:text-left">Domain Name Specialist</p>
                       </div>
-                      <p className="text-[10px] text-[#F97316]">Domain Name Specialist</p>
                       <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400">
                         <Mail className="w-3 h-3" />
                         <a href="mailto:kukuh@aksaradata.id" className="hover:text-[#F97316] transition-colors">
                           kukuh@aksaradata.id
                         </a>
+                      </div>
+                      <div className="text-[10px] text-gray-400 px-2 py-1 bg-black/20 rounded-md">
+                        <p className="text-center sm:text-left">
+                          Aksara Data is a subsidiary of PT Qwords Company International, specializing in domain name reseller and digital identity solutions.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -135,11 +142,6 @@ export const Experience = () => {
               <p className="text-sm text-muted-foreground mb-4">
                 Membantu brand untuk tumbuh dan dikenal di dunia digital adalah misi utama. Fokus saya membantu bisnis menemukan nama domain yang tepat sesuai identitas digital mereka, serta mengembangkan strategi domain yang memperkuat eksistensi brand secara online. Selalu mengikuti tren terbaru dan mencari peluang baru untuk memastikan kesuksesan klien adalah prioritas utama!
               </p>
-              <div className="mt-4 p-4 bg-accent/50 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  Aksara Data is a subsidiary of PT Qwords Company International, specializing in domain name reseller and digital identity solutions.
-                </p>
-              </div>
               <Button 
                 variant="outline" 
                 size="sm" 
