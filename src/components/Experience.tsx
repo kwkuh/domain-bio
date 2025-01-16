@@ -72,7 +72,7 @@ export const Experience = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Terminal className="w-4 h-4 text-purple-400" />
-                <span className="text-sm font-mono text-purple-400">projects.sh</span>
+                <span className="text-sm font-mono text-purple-400">kuk.uh</span>
               </div>
               <div className="flex items-center space-x-4">
                 <Minus className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
@@ -86,10 +86,10 @@ export const Experience = () => {
                 Project Yang Lagi Dikerjain 🚀
               </h2>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {currentProjects.map((project, index) => (
-                  <div key={index} className="group relative">
-                    <div className="p-4 rounded-lg glass-effect hover:scale-105 transition-all duration-300 cursor-pointer border border-purple-500/20 group-hover:border-purple-500/40">
+                  <div key={index} className="group relative transform transition-all duration-300 hover:scale-105">
+                    <div className="p-4 rounded-lg glass-effect hover:border-purple-500/40 transition-all duration-300 h-full">
                       <h4 className="text-purple-400 font-mono font-bold mb-2">
                         {project.name}
                       </h4>

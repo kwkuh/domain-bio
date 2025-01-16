@@ -6,7 +6,7 @@ interface OSWindowProps {
   title?: string;
 }
 
-export const OSWindow = ({ children, title = "kukuh.link" }: OSWindowProps) => {
+export const OSWindow = ({ children, title = "kuk.uh" }: OSWindowProps) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
@@ -34,8 +34,10 @@ export const OSWindow = ({ children, title = "kukuh.link" }: OSWindowProps) => {
 
   if (isMinimized) {
     return (
-      <div className="fixed bottom-4 right-4 bg-background/50 backdrop-blur-xl rounded-lg border border-border shadow-lg p-2 cursor-pointer"
-           onClick={() => setIsMinimized(false)}>
+      <div 
+        className="fixed bottom-4 right-4 bg-background/50 backdrop-blur-xl rounded-lg border border-border shadow-lg p-2 cursor-pointer transform transition-all duration-300 hover:scale-105"
+        onClick={() => setIsMinimized(false)}
+      >
         <div className="text-xs font-mono text-foreground/80">{title}</div>
       </div>
     );
@@ -43,13 +45,13 @@ export const OSWindow = ({ children, title = "kukuh.link" }: OSWindowProps) => {
 
   return (
     <div className={`transition-all duration-300 ease-in-out ${
-      isMaximized ? 'fixed inset-0 m-0 rounded-none' : 
-      isPreview ? 'fixed inset-4 rounded-lg' :
-      'min-h-screen bg-background p-2 sm:p-4 md:p-8'
+      isMaximized ? 'fixed inset-0 m-0 rounded-none z-50' : 
+      isPreview ? 'fixed bottom-8 right-8 w-1/3 rounded-lg shadow-2xl z-50 scale-90 hover:scale-95' :
+      'w-full rounded-lg'
     }`}>
       <div className={`${
-        isMaximized ? 'w-full h-full' : 'max-w-6xl mx-auto'
-      } bg-background/50 backdrop-blur-xl rounded-lg md:rounded-xl border border-border shadow-2xl overflow-hidden`}>
+        isMaximized ? 'w-full h-full' : 'w-full'
+      } bg-background/50 backdrop-blur-xl rounded-lg border border-border shadow-2xl overflow-hidden`}>
         {/* Window Controls */}
         <div className="bg-background/50 px-3 sm:px-4 py-2 sm:py-3 border-b border-border flex items-center justify-between">
           <div className="flex items-center space-x-1.5 sm:space-x-2">
@@ -89,7 +91,7 @@ export const OSWindow = ({ children, title = "kukuh.link" }: OSWindowProps) => {
         {/* Content */}
         <div className={`${
           isMaximized ? 'h-[calc(100vh-3rem)]' : ''
-        } p-4 sm:p-6 overflow-auto`}>
+        } overflow-auto`}>
           {children}
         </div>
       </div>
