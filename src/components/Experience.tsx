@@ -1,4 +1,4 @@
-import { Terminal, Minus, Maximize2, X, Link2, Mail } from "lucide-react";
+import { Terminal, Minus, Maximize2, X, Link2, Mail, Globe, Code, CreditCard, User, ShoppingCart } from "lucide-react";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
@@ -29,10 +29,38 @@ const currentProjects = [
   }
 ];
 
+const qwordsSkills = [
+  {
+    title: "Domain Management",
+    icon: Globe,
+    color: "text-purple-400"
+  },
+  {
+    title: "DNS Configuration",
+    icon: Code,
+    color: "text-purple-400"
+  },
+  {
+    title: "Domain Investment",
+    icon: CreditCard,
+    color: "text-purple-400"
+  },
+  {
+    title: "Client Relations",
+    icon: User,
+    color: "text-purple-400"
+  },
+  {
+    title: "Domain Broker",
+    icon: ShoppingCart,
+    color: "text-purple-400"
+  }
+];
+
 export const Experience = () => {
   return (
     <section className="py-8 space-y-8">
-      {/* Career Section */}
+      {/* Career Section with Lanyard */}
       <div className="os-window">
         <div className="os-window-header flex items-center justify-between p-2 border-b border-border">
           <div className="flex items-center space-x-2">
@@ -54,7 +82,7 @@ export const Experience = () => {
                 {/* Enhanced 3D Lanyard with loading animation */}
                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg transform-style-3d">
                   {/* Rotating Lanyard Clip with enhanced 3D effect */}
-                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-sm bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20 animate-[spin_2s_ease-in-out_1] transform-style-3d hover:animate-[spin_2s_ease-in-out_infinite]">
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-sm bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20 animate-[spin_2s_ease-in-out_1]">
                     {/* 3D edges for the clip */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-[#F97316]/30 to-transparent transform rotate-45"></div>
                     <div className="absolute inset-0 border-2 border-[#FBBF24]/20 rounded-sm transform scale-90"></div>
@@ -155,6 +183,39 @@ export const Experience = () => {
                 Yuk, Kenalan di LinkedIn! 👋
               </Button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Qwords Skills Section */}
+      <div className="mt-12">
+        <div className="relative bg-black/40 border border-purple-500/20 rounded-lg p-8">
+          <h3 className="text-2xl font-bold text-center mb-8 text-purple-400 font-mono">
+            Domain & Digital Expertise
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {qwordsSkills.map((skill, index) => (
+              <div 
+                key={index}
+                className="relative group"
+              >
+                <div className="absolute inset-0 bg-purple-500/20 blur-xl group-hover:bg-purple-400/30 transition-all duration-300" />
+                <div className="relative flex flex-col items-center p-4 bg-black/60 border border-purple-500/30 rounded-lg hover:border-purple-400/60 transition-all duration-300">
+                  <skill.icon className={`w-8 h-8 ${skill.color} group-hover:scale-110 transition-transform duration-300`} />
+                  <span className="mt-2 text-sm font-mono text-purple-300 group-hover:text-purple-200">
+                    {skill.title}
+                  </span>
+                  <div className="absolute -inset-px bg-gradient-to-r from-purple-500/0 via-purple-500/20 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Connecting Lines */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-purple-500/0 via-purple-500/50 to-purple-500/0" />
+            <div className="absolute top-0 bottom-0 left-1/2 w-px bg-gradient-to-b from-purple-500/0 via-purple-500/50 to-purple-500/0" />
           </div>
         </div>
       </div>

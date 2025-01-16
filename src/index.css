@@ -213,3 +213,23 @@
   50% { transform: rotateY(180deg) rotateX(180deg); }
   100% { transform: rotateY(360deg) rotateX(360deg); }
 }
+
+/* Add these new styles for the skills section */
+@keyframes skillGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px theme('colors.purple.400'));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px theme('colors.purple.400'));
+  }
+}
+
+.skill-icon {
+  animation: skillGlow 3s ease-in-out infinite;
+}
+
+.skill-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
