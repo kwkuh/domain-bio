@@ -1,22 +1,69 @@
 import { Maximize2, Minus, X, ArrowLeft } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface OSWindowProps {
   children: React.ReactNode;
   title?: string;
 }
 
+interface Position {
+  x: number;
+  y: number;
+}
+
 export const OSWindow = ({ children, title = "kuk.uh" }: OSWindowProps) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
+  const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<Position>({ x: 0, y: 0 });
+  const windowRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging && isPreview) {
+        const deltaX = e.clientX - dragStart.x;
+        const deltaY = e.clientY - dragStart.y;
+        setPosition(prev => ({
+          x: prev.x + deltaX,
+          y: prev.y + deltaY
+        }));
+        setDragStart({ x: e.clientX, y: e.clientY });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart, isPreview]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isPreview) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+    }
+  };
 
   const handleMaximize = () => {
     console.log("Maximizing window");
     setIsMaximized(!isMaximized);
     setIsMinimized(false);
     setIsPreview(false);
+    setPosition({ x: 0, y: 0 });
   };
 
   const handleMinimize = () => {
@@ -24,6 +71,7 @@ export const OSWindow = ({ children, title = "kuk.uh" }: OSWindowProps) => {
     setIsMinimized(!isMinimized);
     setIsMaximized(false);
     setIsPreview(false);
+    setPosition({ x: 0, y: 0 });
   };
 
   const handlePreview = () => {
@@ -31,6 +79,7 @@ export const OSWindow = ({ children, title = "kuk.uh" }: OSWindowProps) => {
     setIsPreview(!isPreview);
     setIsMaximized(false);
     setIsMinimized(false);
+    setPosition({ x: 0, y: 0 });
   };
 
   if (isMinimized) {
@@ -45,16 +94,29 @@ export const OSWindow = ({ children, title = "kuk.uh" }: OSWindowProps) => {
   }
 
   return (
-    <div className={`transition-all duration-300 ease-in-out ${
-      isMaximized ? 'fixed inset-0 m-0 rounded-none z-50' : 
-      isPreview ? 'fixed bottom-8 right-8 w-1/3 rounded-lg shadow-2xl z-50 scale-90 hover:scale-95' :
-      'mx-auto max-w-5xl rounded-lg my-8'
-    }`}>
+    <div 
+      ref={windowRef}
+      className={`transition-all duration-300 ease-in-out ${
+        isMaximized ? 'fixed inset-0 m-0 rounded-none z-50' : 
+        isPreview ? `fixed z-50 ${isMobile ? 'w-[90%] bottom-4 right-4' : 'w-1/3 bottom-8 right-8'} rounded-lg shadow-2xl scale-90 hover:scale-95` :
+        'mx-auto max-w-5xl rounded-lg my-8'
+      }`}
+      style={
+        isPreview ? {
+          transform: `translate(${position.x}px, ${position.y}px)`,
+          cursor: isDragging ? 'grabbing' : 'grab'
+        } : undefined
+      }
+    >
       <div className={`${
         isMaximized ? 'w-full h-full' : 'w-full'
-      } bg-background/50 backdrop-blur-xl rounded-lg border border-border shadow-2xl overflow-hidden`}>
+      } bg-[#1A1F2C] backdrop-blur-xl rounded-lg border border-border shadow-2xl overflow-hidden`}>
         {/* Window Controls */}
-        <div className="bg-[#1A1F2C] px-3 sm:px-4 py-2 sm:py-3 border-b border-border flex items-center justify-between">
+        <div 
+          className="bg-[#1A1F2C] px-3 sm:px-4 py-2 sm:py-3 border-b border-border flex items-center justify-between"
+          onMouseDown={handleMouseDown}
+          onTouchStart={() => console.log('Touch start')}
+        >
           <div className="flex items-center space-x-1.5 sm:space-x-2">
             <button 
               onClick={handleMinimize}
