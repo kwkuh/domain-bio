@@ -160,114 +160,51 @@ export const Experience = () => {
                           kukuh@aksaradata.id
                         </a>
                       </div>
-                      <div className="text-[10px] text-gray-400 px-2 py-1 bg-black/20 rounded-md">
-                        <p className="text-center sm:text-left">
-                          Specializing in domain name reseller and digital identity solutions.
-                        </p>
-                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Description Section */}
-            <div className="border border-border rounded-lg p-4 mt-8">
+            {/* Qwords Skills Section - Now inside career.sh */}
+            <div className="mt-8">
+              <div className="relative bg-black/40 border border-purple-500/20 rounded-lg p-6">
+                <h3 className="text-xl font-bold text-center mb-6 text-purple-400 font-mono">
+                  Domain & Digital Expertise
+                </h3>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {qwordsSkills.map((skill, index) => (
+                    <div 
+                      key={index}
+                      className="relative group"
+                    >
+                      <div className="absolute inset-0 bg-purple-500/20 blur-xl group-hover:bg-purple-400/30 transition-all duration-300" />
+                      <div className="relative flex flex-col items-center p-3 bg-black/60 border border-purple-500/30 rounded-lg hover:border-purple-400/60 transition-all duration-300">
+                        <skill.icon className={`w-6 h-6 ${skill.color} group-hover:scale-110 transition-transform duration-300`} />
+                        <span className="mt-2 text-xs font-mono text-purple-300 group-hover:text-purple-200">
+                          {skill.title}
+                        </span>
+                        <div className="absolute -inset-px bg-gradient-to-r from-purple-500/0 via-purple-500/20 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* LinkedIn Button */}
+            <div className="border border-border rounded-lg p-4 mt-4">
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-all duration-300 mt-4"
+                className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-all duration-300"
                 onClick={() => window.open('https://linkedin.com/in/kukuh-satrio-wibowo', '_blank')}
               >
                 <Link2 className="w-4 h-4 mr-2" />
                 Yuk, Kenalan di LinkedIn! 👋
               </Button>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Qwords Skills Section */}
-      <div className="mt-12">
-        <div className="relative bg-black/40 border border-purple-500/20 rounded-lg p-8">
-          <h3 className="text-2xl font-bold text-center mb-8 text-purple-400 font-mono">
-            Domain & Digital Expertise
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-            {qwordsSkills.map((skill, index) => (
-              <div 
-                key={index}
-                className="relative group"
-              >
-                <div className="absolute inset-0 bg-purple-500/20 blur-xl group-hover:bg-purple-400/30 transition-all duration-300" />
-                <div className="relative flex flex-col items-center p-4 bg-black/60 border border-purple-500/30 rounded-lg hover:border-purple-400/60 transition-all duration-300">
-                  <skill.icon className={`w-8 h-8 ${skill.color} group-hover:scale-110 transition-transform duration-300`} />
-                  <span className="mt-2 text-sm font-mono text-purple-300 group-hover:text-purple-200">
-                    {skill.title}
-                  </span>
-                  <div className="absolute -inset-px bg-gradient-to-r from-purple-500/0 via-purple-500/20 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Connecting Lines */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-purple-500/0 via-purple-500/50 to-purple-500/0" />
-            <div className="absolute top-0 bottom-0 left-1/2 w-px bg-gradient-to-b from-purple-500/0 via-purple-500/50 to-purple-500/0" />
-          </div>
-        </div>
-      </div>
-
-      {/* Projects Section */}
-      <div className="os-window">
-        <div className="os-window-header flex items-center justify-between p-2 border-b border-border">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center space-x-2">
-              <Terminal className="w-4 h-4 text-purple-400" />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="font-mono text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 hover:scale-105 transition-all duration-300 inline-flex items-center gap-2 animated-border"
-                      onClick={() => window.open('https://kuk.uh', '_blank')}
-                    >
-                      kuk.uh
-                      <Link2 className="w-4 h-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Click to visit kuk.uh</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Minus className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
-              <Maximize2 className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
-              <X className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            Project Yang Lagi Dikerjain 🚀
-          </h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {currentProjects.map((project, index) => (
-              <div key={index} className="group relative transform transition-all duration-300 hover:scale-105">
-                <div className="p-4 rounded-lg glass-effect hover:border-purple-500/40 transition-all duration-300 h-full">
-                  <h4 className="text-purple-400 font-mono font-bold text-center">
-                    {project.name}
-                  </h4>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
