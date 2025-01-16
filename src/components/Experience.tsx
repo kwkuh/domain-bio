@@ -29,10 +29,25 @@ const currentProjects = [
   }
 ];
 
+const responsibilities = [
+  "Domain Backorder",
+  "Domain Auction",
+  "Domain Management",
+  "Hosting Services",
+  "Corporate Sales",
+  "Customer Retention",
+  "Market Trends Analysis",
+  "Problem Solving & Consultation",
+  "Proposal & Presentation",
+  "Collaboration",
+  "Event Participation",
+  "Domain Investment",
+  "Innovation & Marketing Ideas"
+];
+
 export const Experience = () => {
   return (
     <section className="py-8 space-y-8">
-      {/* Career Section */}
       <div className="os-window">
         <div className="os-window-header flex items-center justify-between p-2 border-b border-border">
           <div className="flex items-center space-x-2">
@@ -49,22 +64,28 @@ export const Experience = () => {
         <div className="p-6">
           <div className="space-y-4">
             <div className="relative perspective-1000 flex justify-center">
-              {/* Animated ID Card */}
+              {/* Enhanced 3D ID Card with Glowing Effects */}
               <div className="id-card-container transform-style-3d w-64 hover:scale-105 transition-transform duration-300">
-                {/* Enhanced 3D Lanyard with loading animation */}
+                {/* Enhanced 3D Lanyard with Power Lines Effect */}
                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg transform-style-3d">
-                  {/* Rotating Lanyard Clip with enhanced 3D effect */}
-                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-sm bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20 animate-[spin_2s_ease-in-out_1] transform-style-3d hover:animate-[spin_2s_ease-in-out_infinite]">
-                    {/* 3D edges for the clip */}
+                  {/* Power Line Effects */}
+                  <div className="absolute -left-8 top-0 w-16 h-full">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 via-blue-500/30 to-transparent animate-pulse"></div>
+                    <div className="absolute inset-0 bg-gradient-to-l from-orange-500/30 via-yellow-500/30 to-transparent animate-pulse delay-75"></div>
+                  </div>
+                  
+                  {/* Enhanced 3D Rotating Clip */}
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-sm bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20 animate-[spin_2s_ease-in-out_1] transform-style-3d hover:animate-[spin_2s_ease-in-out_infinite]">
                     <div className="absolute inset-0 bg-gradient-to-tr from-[#F97316]/30 to-transparent transform rotate-45"></div>
                     <div className="absolute inset-0 border-2 border-[#FBBF24]/20 rounded-sm transform scale-90"></div>
-                  </div>
-                  {/* Decorative elements */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-full">
-                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-[#FBBF24]/20 to-transparent animate-pulse"></div>
+                    
+                    {/* Power Gathering Effects */}
+                    <div className="absolute -left-6 -right-6 top-1/2 h-0.5 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent animate-pulse"></div>
+                    <div className="absolute -top-6 -bottom-6 left-1/2 w-0.5 bg-gradient-to-b from-transparent via-blue-500/50 to-transparent animate-pulse delay-100"></div>
                   </div>
                 </div>
                 
+                {/* ID Card Content */}
                 <div className="border border-gray-800 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 shadow-xl transition-all duration-500 transform hover:rotate-y-10 hover:translate-z-10 animate-[float_6s_ease-in-out_infinite]">
                   {/* Card Header */}
                   <div className="p-2 text-xs text-gray-400 font-mono border-b border-gray-800 bg-black/30">
@@ -74,7 +95,7 @@ export const Experience = () => {
                     </div>
                   </div>
                   
-                  {/* Card Content */}
+                  {/* Card Content with Responsibilities */}
                   <div className="p-4 space-y-3 relative overflow-hidden">
                     {/* Holographic Effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -rotate-45 translate-x-[-200%] animate-[shine_3s_ease-in-out_infinite]"></div>
@@ -91,52 +112,16 @@ export const Experience = () => {
                       </div>
                     </div>
                     
-                    {/* Name and Roles */}
-                    <div className="text-center space-y-3">
-                      <div>
-                        <h3 className="text-base font-bold text-white">Kukuh Laksana</h3>
-                      </div>
-                      
-                      {/* Main Company: Qwords */}
-                      <div className="space-y-1 border-t border-gray-800 pt-2">
-                        <div className="flex items-center justify-center gap-1 text-[10px]">
-                          <Link2 className="w-3 h-3 text-[#FBBF24]" />
-                          <a href="https://qwords.com" target="_blank" rel="noopener noreferrer" className="text-[#FBBF24] hover:text-[#F97316] transition-colors">
-                            qwords.com
-                          </a>
+                    {/* Responsibilities Grid */}
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-[10px] text-gray-300">
+                      {responsibilities.map((resp, index) => (
+                        <div 
+                          key={index}
+                          className="px-2 py-1 rounded-md bg-gradient-to-r from-gray-800/50 to-gray-900/50 hover:from-purple-500/20 hover:to-blue-500/20 transition-colors duration-300"
+                        >
+                          {resp}
                         </div>
-                        <p className="text-[10px] text-[#F97316]">Corporate Sales</p>
-                        <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400">
-                          <Mail className="w-3 h-3" />
-                          <a href="mailto:kukuh@qwords.co.id" className="hover:text-[#F97316] transition-colors">
-                            kukuh@qwords.co.id
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Aksara Data Section - Made Responsive */}
-                    <div className="mt-4 space-y-2 pt-2 border-t border-gray-800">
-                      <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                        <div className="flex items-center gap-1 text-[10px]">
-                          <Link2 className="w-3 h-3 text-[#FBBF24]" />
-                          <a href="https://aksaradata.id" target="_blank" rel="noopener noreferrer" className="text-[#FBBF24] hover:text-[#F97316] transition-colors">
-                            aksaradata.id
-                          </a>
-                        </div>
-                        <p className="text-[10px] text-[#F97316] text-center sm:text-left">Domain Name Specialist</p>
-                      </div>
-                      <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400">
-                        <Mail className="w-3 h-3" />
-                        <a href="mailto:kukuh@aksaradata.id" className="hover:text-[#F97316] transition-colors">
-                          kukuh@aksaradata.id
-                        </a>
-                      </div>
-                      <div className="text-[10px] text-gray-400 px-2 py-1 bg-black/20 rounded-md">
-                        <p className="text-center sm:text-left">
-                          Specializing in domain name reseller and digital identity solutions.
-                        </p>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 </div>
