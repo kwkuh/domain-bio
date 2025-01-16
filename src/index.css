@@ -166,26 +166,19 @@
 
 @keyframes sway {
   0% { 
-    transform: rotate(-2deg) translateZ(0) translateX(-1px);
+    transform: rotate(-10deg) translateX(-5px);
     transform-origin: top;
   }
-  25% {
-    transform: rotate(0deg) translateZ(2px) translateX(1px);
-  }
   50% { 
-    transform: rotate(2deg) translateZ(0) translateX(1px);
-  }
-  75% {
-    transform: rotate(0deg) translateZ(-2px) translateX(-1px);
+    transform: rotate(10deg) translateX(5px);
   }
   100% { 
-    transform: rotate(-2deg) translateZ(0) translateX(-1px);
+    transform: rotate(-10deg) translateX(-5px);
   }
 }
 
 .animate-sway {
   animation: sway 4s ease-in-out infinite;
-  transform-style: preserve-3d;
 }
 
 .perspective-1000 {

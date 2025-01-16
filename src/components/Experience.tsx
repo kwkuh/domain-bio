@@ -51,7 +51,7 @@ export const Experience = () => {
             <div className="relative perspective-1000 flex justify-center">
               {/* Animated ID Card */}
               <div className="id-card-container transform-style-3d w-64 hover:scale-105 transition-transform duration-300">
-                {/* Lanyard with orange and gold colors */}
+                {/* Lanyard with orange and gold colors and swaying animation */}
                 <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-1 h-12 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg font-['Neo_Brutalism'] text-sm">
                   {/* Lanyard Clip with gold accent */}
                   <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20"></div>
@@ -77,7 +77,6 @@ export const Experience = () => {
                         {/* Character with glasses icon */}
                         <svg viewBox="0 0 24 24" className="w-16 h-16 text-white" fill="currentColor">
                           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                          {/* Added glasses */}
                           <path d="M9 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm6 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
                           <path d="M8.5 7h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1z"/>
                         </svg>
@@ -105,27 +104,23 @@ export const Experience = () => {
                             kukuh@qwords.co.id
                           </a>
                         </div>
-                        
-                        {/* Subsidiary: Aksara Data (indented) */}
-                        <div className="mt-2 space-y-1 pt-1 border-t border-gray-800/50">
-                          <div className="flex items-center justify-center gap-1 text-[10px]">
-                            <Link2 className="w-3 h-3 text-[#FBBF24]" />
-                            <a href="https://aksaradata.id" target="_blank" rel="noopener noreferrer" className="text-[#FBBF24] hover:text-[#F97316] transition-colors">
-                              aksaradata.id
-                            </a>
-                          </div>
-                          <p className="text-[10px] text-[#F97316]">Domain Name Specialist</p>
-                          <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400">
-                            <Mail className="w-3 h-3" />
-                            <a href="mailto:kukuh@aksaradata.id" className="hover:text-[#F97316] transition-colors">
-                              kukuh@aksaradata.id
-                            </a>
-                          </div>
-                          {/* Aksara Data Description */}
-                          <p className="mt-2 text-[10px] text-gray-400 px-2 sm:px-4 leading-relaxed">
-                            Aksara Data is a subsidiary of PT Qwords Company International, specializing in domain name reseller and digital identity solutions.
-                          </p>
-                        </div>
+                      </div>
+                    </div>
+
+                    {/* Aksara Data Section */}
+                    <div className="mt-4 space-y-1 pt-2 border-t border-gray-800">
+                      <div className="flex items-center justify-center gap-1 text-[10px]">
+                        <Link2 className="w-3 h-3 text-[#FBBF24]" />
+                        <a href="https://aksaradata.id" target="_blank" rel="noopener noreferrer" className="text-[#FBBF24] hover:text-[#F97316] transition-colors">
+                          aksaradata.id
+                        </a>
+                      </div>
+                      <p className="text-[10px] text-[#F97316]">Domain Name Specialist</p>
+                      <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400">
+                        <Mail className="w-3 h-3" />
+                        <a href="mailto:kukuh@aksaradata.id" className="hover:text-[#F97316] transition-colors">
+                          kukuh@aksaradata.id
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -133,16 +128,22 @@ export const Experience = () => {
               </div>
             </div>
 
+            {/* Description Section */}
             <div className="border border-border rounded-lg p-4 mt-8">
               <h3 className="text-xl font-bold text-purple-400 mb-2">PT Qwords Company International</h3>
               <p className="text-muted-foreground mb-2">March 2024 - Present</p>
               <p className="text-sm text-muted-foreground mb-4">
                 Membantu brand untuk tumbuh dan dikenal di dunia digital adalah misi utama. Fokus saya membantu bisnis menemukan nama domain yang tepat sesuai identitas digital mereka, serta mengembangkan strategi domain yang memperkuat eksistensi brand secara online. Selalu mengikuti tren terbaru dan mencari peluang baru untuk memastikan kesuksesan klien adalah prioritas utama!
               </p>
+              <div className="mt-4 p-4 bg-accent/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  Aksara Data is a subsidiary of PT Qwords Company International, specializing in domain name reseller and digital identity solutions.
+                </p>
+              </div>
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-all duration-300"
+                className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-all duration-300 mt-4"
                 onClick={() => window.open('https://linkedin.com/in/kukuh-satrio-wibowo', '_blank')}
               >
                 <Link2 className="w-4 h-4 mr-2" />
