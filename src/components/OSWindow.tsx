@@ -1,5 +1,6 @@
-import { Maximize2, Minus, X } from 'lucide-react';
+import { Maximize2, Minus, X, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from './ui/button';
 
 interface OSWindowProps {
   children: React.ReactNode;
@@ -53,7 +54,7 @@ export const OSWindow = ({ children, title = "kuk.uh" }: OSWindowProps) => {
         isMaximized ? 'w-full h-full' : 'w-full'
       } bg-background/50 backdrop-blur-xl rounded-lg border border-border shadow-2xl overflow-hidden`}>
         {/* Window Controls */}
-        <div className="bg-background/50 px-3 sm:px-4 py-2 sm:py-3 border-b border-border flex items-center justify-between">
+        <div className="bg-[#1A1F2C] px-3 sm:px-4 py-2 sm:py-3 border-b border-border flex items-center justify-between">
           <div className="flex items-center space-x-1.5 sm:space-x-2">
             <button 
               onClick={handleMinimize}
@@ -88,6 +89,16 @@ export const OSWindow = ({ children, title = "kuk.uh" }: OSWindowProps) => {
           </div>
         </div>
         
+        {/* Back Button - Only shows in preview mode */}
+        {isPreview && (
+          <Button
+            onClick={() => setIsPreview(false)}
+            className="absolute top-16 left-4 font-bold text-lg bg-background/90 hover:bg-background/70 transition-all duration-300"
+          >
+            <ArrowLeft className="mr-2 h-5 w-5" /> ⬅️ Back
+          </Button>
+        )}
+
         {/* Content */}
         <div className={`${
           isMaximized ? 'h-[calc(100vh-3rem)]' : ''
