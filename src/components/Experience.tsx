@@ -211,21 +211,21 @@ export const Experience = () => {
 
             {/* Qwords Skills Section - More Compact Grid */}
             <div className="mt-4">
-              <div className="relative bg-black/40 border border-purple-500/20 rounded-lg p-4">
-                <h3 className="text-lg font-bold text-center mb-4 text-purple-400 font-mono">
+              <div className="relative bg-black/40 border border-purple-500/20 rounded-lg p-3">
+                <h3 className="text-sm font-bold text-center mb-2 text-purple-400 font-mono">
                   Qwords Experience & Skills
                 </h3>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
                   {qwordsSkills.map((skill, index) => (
                     <div 
                       key={index}
                       className="relative group"
                     >
                       <div className="absolute inset-0 bg-purple-500/10 blur-sm group-hover:bg-purple-400/20 transition-all duration-300" />
-                      <div className="relative flex items-center p-2 bg-black/60 border border-purple-500/30 rounded-md hover:border-purple-400/60 transition-all duration-300">
-                        <skill.icon className={`w-4 h-4 ${skill.color} group-hover:scale-110 transition-transform duration-300 mr-2 flex-shrink-0`} />
-                        <span className="text-xs font-mono text-purple-300 group-hover:text-purple-200 truncate">
+                      <div className="relative flex items-center p-1.5 bg-black/60 border border-purple-500/30 rounded-md hover:border-purple-400/60 transition-all duration-300">
+                        <skill.icon className={`w-3 h-3 ${skill.color} group-hover:scale-110 transition-transform duration-300 mr-1.5 flex-shrink-0`} />
+                        <span className="text-[10px] font-mono text-purple-300 group-hover:text-purple-200 truncate">
                           {skill.title}
                         </span>
                       </div>
@@ -234,7 +234,6 @@ export const Experience = () => {
                 </div>
               </div>
 
-              {/* LinkedIn Button */}
               <div className="border border-border rounded-lg p-3 mt-4">
                 <Button 
                   variant="outline" 
