@@ -60,7 +60,7 @@ export const Experience = () => {
                 <div className="border border-gray-800 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 shadow-xl transition-all duration-500 transform hover:rotate-y-10 hover:translate-z-10 animate-[float_6s_ease-in-out_infinite]">
                   {/* Card Header */}
                   <div className="p-2 text-xs text-gray-400 font-mono border-b border-gray-800 bg-black/30">
-                    <span>Coding with Qwords</span>
+                    <span>PT Qwords Company International</span>
                   </div>
                   
                   {/* Card Content */}
@@ -71,7 +71,11 @@ export const Experience = () => {
                     {/* Profile Picture Area */}
                     <div className="w-20 h-20 mx-auto rounded-lg overflow-hidden border-2 border-gray-700 transform hover:scale-105 transition-transform duration-300">
                       <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                        <span className="text-2xl font-black text-white">KL</span>
+                        <svg viewBox="0 0 24 24" className="w-16 h-16 text-white" fill="currentColor">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                          <path d="M12 8.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5z"/>
+                          <path d="M15 7c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1s1-.45 1-1V8c0-.55-.45-1-1-1z"/>
+                        </svg>
                       </div>
                     </div>
                     
@@ -94,7 +98,7 @@ export const Experience = () => {
             </div>
 
             <div className="border border-border rounded-lg p-4 mt-8">
-              <h3 className="text-xl font-bold text-purple-400 mb-2">Qwords</h3>
+              <h3 className="text-xl font-bold text-purple-400 mb-2">PT Qwords Company International</h3>
               <p className="text-muted-foreground mb-2">Staff Karyawan - Corporate Sales / Domain Name Specialist (March 2024 - Present)</p>
               <p className="text-sm text-muted-foreground mb-4">
                 Membantu brand untuk tumbuh dan dikenal di dunia digital adalah misi utama. Fokus saya membantu bisnis menemukan nama domain yang tepat sesuai identitas digital mereka, serta mengembangkan strategi domain yang memperkuat eksistensi brand secara online. Selalu mengikuti tren terbaru dan mencari peluang baru untuk memastikan kesuksesan klien adalah prioritas utama!
