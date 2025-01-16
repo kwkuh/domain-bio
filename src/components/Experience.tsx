@@ -51,10 +51,10 @@ export const Experience = () => {
             <div className="relative perspective-1000 flex justify-center">
               {/* Animated ID Card */}
               <div className="id-card-container transform-style-3d w-64 hover:scale-105 transition-transform duration-300">
-                {/* Lanyard */}
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-0.5 h-12 bg-gradient-to-b from-gray-800 to-gray-600 origin-top animate-sway">
-                  {/* Lanyard Clip */}
-                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-gray-400"></div>
+                {/* Lanyard with new orange and gold colors */}
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-1 h-12 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg">
+                  {/* Lanyard Clip with gold accent */}
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20"></div>
                 </div>
                 
                 <div className="border border-gray-800 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 shadow-xl transition-all duration-500 transform hover:rotate-y-10 hover:translate-z-10 animate-[float_6s_ease-in-out_infinite]">
@@ -70,11 +70,13 @@ export const Experience = () => {
                     
                     {/* Profile Picture Area */}
                     <div className="w-20 h-20 mx-auto rounded-lg overflow-hidden border-2 border-gray-700 transform hover:scale-105 transition-transform duration-300">
-                      <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                      <div className="w-full h-full bg-gradient-to-br from-[#F97316]/20 to-[#FBBF24]/20 flex items-center justify-center">
+                        {/* Character with glasses icon */}
                         <svg viewBox="0 0 24 24" className="w-16 h-16 text-white" fill="currentColor">
                           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                          <path d="M12 8.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5z"/>
-                          <path d="M15 7c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1s1-.45 1-1V8c0-.55-.45-1-1-1z"/>
+                          {/* Added glasses */}
+                          <path d="M9 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm6 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+                          <path d="M8.5 7h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1z"/>
                         </svg>
                       </div>
                     </div>
@@ -82,15 +84,22 @@ export const Experience = () => {
                     {/* Name and Title */}
                     <div className="text-center space-y-1">
                       <h3 className="text-base font-bold text-white">Kukuh Laksana</h3>
-                      <p className="text-[10px] text-gray-400 font-mono">Corporate Sales / Domain Name Specialist</p>
                     </div>
                     
                     {/* Contact Info */}
-                    <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400 pt-2 border-t border-gray-800">
-                      <Mail className="w-3 h-3" />
-                      <a href="mailto:kukuh@qwords.co.id" className="hover:text-purple-400 transition-colors">
-                        kukuh@qwords.co.id
-                      </a>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400 pt-2 border-t border-gray-800">
+                        <Mail className="w-3 h-3" />
+                        <a href="mailto:kukuh@qwords.co.id" className="hover:text-[#F97316] transition-colors">
+                          kukuh@qwords.co.id
+                        </a>
+                      </div>
+                      <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400">
+                        <Mail className="w-3 h-3" />
+                        <a href="mailto:kukuh@aksaradata.id" className="hover:text-[#F97316] transition-colors">
+                          kukuh@aksaradata.id
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
