@@ -65,10 +65,10 @@ export const Hero = () => {
           </Button>
         </div>
         <div className="relative w-24 h-24 md:w-28 md:h-28 order-1 md:order-2 group">
+          <Glasses className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 text-primary opacity-80 rotate-12 animate-pulse z-10" />
           <div className="absolute inset-0 rounded-full overflow-hidden border-4 border-primary animate-fade-in hover:scale-105 transition-transform duration-300 bg-gradient-to-br from-purple-400 via-pink-500 to-purple-600 flex items-center justify-center">
             <span className="text-3xl md:text-4xl font-black text-white font-mono relative">
               KL
-              <Glasses className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-6 h-6 text-green-400 animate-pulse" />
             </span>
           </div>
           <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-mono animate-bounce shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
