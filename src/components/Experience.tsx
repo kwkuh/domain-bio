@@ -64,37 +64,10 @@ export const Experience = () => {
         <div className="p-6">
           <div className="space-y-4">
             <div className="relative perspective-1000 flex justify-center">
-              {/* Left Power Cable */}
-              <div className="absolute left-0 top-1/2 w-24 h-2 -translate-y-1/2 overflow-visible">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/50 to-blue-500/50 energy-pulse rounded-full"></div>
-                <div className="absolute top-1/2 left-0 w-full h-4 -translate-y-1/2">
-                  <div className="absolute inset-0 power-gather opacity-30">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Power Cable */}
-              <div className="absolute right-0 top-1/2 w-24 h-2 -translate-y-1/2 overflow-visible">
-                <div className="absolute inset-0 bg-gradient-to-l from-purple-500/50 to-blue-500/50 energy-pulse rounded-full"></div>
-                <div className="absolute top-1/2 right-0 w-full h-4 -translate-y-1/2">
-                  <div className="absolute inset-0 power-gather opacity-30">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-
               {/* Enhanced 3D ID Card with Glowing Effects */}
               <div className="id-card-container transform-style-3d w-32 hover:scale-105 transition-transform duration-300">
-                {/* Enhanced 3D Lanyard with Power Lines Effect */}
+                {/* Enhanced 3D Lanyard with Original Design */}
                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg transform-style-3d">
-                  {/* Power Line Effects */}
-                  <div className="absolute -left-8 top-0 w-16 h-full">
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 via-blue-500/30 to-transparent animate-pulse"></div>
-                    <div className="absolute inset-0 bg-gradient-to-l from-orange-500/30 via-yellow-500/30 to-transparent animate-pulse delay-75"></div>
-                  </div>
-                  
-                  {/* Enhanced 3D Rotating Clip */}
                   <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-sm bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20 animate-[spin_2s_ease-in-out_1] transform-style-3d hover:animate-[spin_2s_ease-in-out_infinite]">
                     <div className="absolute inset-0 bg-gradient-to-tr from-[#F97316]/30 to-transparent transform rotate-45"></div>
                     <div className="absolute inset-0 border-2 border-[#FBBF24]/20 rounded-sm transform scale-90"></div>
@@ -121,11 +94,20 @@ export const Experience = () => {
                       <div className="w-full h-full bg-gradient-to-br from-[#F97316]/20 to-[#FBBF24]/20 flex items-center justify-center">
                         <svg viewBox="0 0 24 24" className="w-16 h-16 text-white" fill="currentColor">
                           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                          <path d="M9 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm6 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
-                          <path d="M8.5 7h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1z"/>
                         </svg>
                       </div>
                     </div>
+
+                    {/* Contact Button */}
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="w-full text-[#F97316] hover:text-[#FBBF24] hover:bg-[#F97316]/10 transition-all duration-300"
+                      onClick={() => window.location.href = 'mailto:kukuh@qwords.co.id'}
+                    >
+                      <Mail className="w-4 h-4 mr-2" />
+                      kukuh@qwords.co.id
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -165,24 +147,7 @@ export const Experience = () => {
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center space-x-2">
               <Terminal className="w-4 h-4 text-purple-400" />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="font-mono text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 hover:scale-105 transition-all duration-300 inline-flex items-center gap-2 animated-border"
-                      onClick={() => window.open('https://kuk.uh', '_blank')}
-                    >
-                      kuk.uh
-                      <Link2 className="w-4 h-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Click to visit kuk.uh</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <span className="font-mono">projects.sh</span>
             </div>
             <div className="flex items-center space-x-4">
               <Minus className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
