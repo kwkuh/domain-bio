@@ -1,6 +1,5 @@
-import { Terminal, Minus, Maximize2, X, Link2, Mail, Globe, Code, CreditCard, User, ShoppingCart } from "lucide-react";
+import { Terminal, Minus, Maximize2, X, Link2, Mail, Globe } from "lucide-react";
 import { Button } from "./ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 const currentProjects = [
   {
@@ -31,28 +30,73 @@ const currentProjects = [
 
 const qwordsSkills = [
   {
+    title: "Domain Backorder",
+    icon: Globe,
+    color: "text-purple-400"
+  },
+  {
+    title: "Domain Auction",
+    icon: Globe,
+    color: "text-purple-400"
+  },
+  {
     title: "Domain Management",
     icon: Globe,
     color: "text-purple-400"
   },
   {
-    title: "DNS Configuration",
-    icon: Code,
+    title: "Hosting Services",
+    icon: Globe,
+    color: "text-purple-400"
+  },
+  {
+    title: "Corporate Sales",
+    icon: Globe,
+    color: "text-purple-400"
+  },
+  {
+    title: "Customer Retention",
+    icon: Globe,
+    color: "text-purple-400"
+  },
+  {
+    title: "Market Trends Analysis",
+    icon: Globe,
+    color: "text-purple-400"
+  },
+  {
+    title: "Landing Page Optimization",
+    icon: Globe,
+    color: "text-purple-400"
+  },
+  {
+    title: "Problem Solving & Consultation",
+    icon: Globe,
+    color: "text-purple-400"
+  },
+  {
+    title: "Proposal & Presentation",
+    icon: Globe,
+    color: "text-purple-400"
+  },
+  {
+    title: "Collaboration",
+    icon: Globe,
+    color: "text-purple-400"
+  },
+  {
+    title: "Event Participation",
+    icon: Globe,
     color: "text-purple-400"
   },
   {
     title: "Domain Investment",
-    icon: CreditCard,
+    icon: Globe,
     color: "text-purple-400"
   },
   {
-    title: "Client Relations",
-    icon: User,
-    color: "text-purple-400"
-  },
-  {
-    title: "Domain Broker",
-    icon: ShoppingCart,
+    title: "Innovation & Marketing Ideas",
+    icon: Globe,
     color: "text-purple-400"
   }
 ];
@@ -60,7 +104,6 @@ const qwordsSkills = [
 export const Experience = () => {
   return (
     <section className="py-8 space-y-8">
-      {/* Career Section with Lanyard */}
       <div className="os-window">
         <div className="os-window-header flex items-center justify-between p-2 border-b border-border">
           <div className="flex items-center space-x-2">
@@ -76,8 +119,8 @@ export const Experience = () => {
         
         <div className="p-6">
           <div className="space-y-4">
-            <div className="relative perspective-1000 flex justify-center">
-              {/* Animated ID Card */}
+            {/* ID Card with Lanyard */}
+            <div className="relative perspective-1000 flex justify-center mb-8">
               <div className="id-card-container transform-style-3d w-64 hover:scale-105 transition-transform duration-300">
                 {/* Enhanced 3D Lanyard with loading animation */}
                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg transform-style-3d">
@@ -166,44 +209,43 @@ export const Experience = () => {
               </div>
             </div>
 
-            {/* Qwords Skills Section - Now inside career.sh */}
-            <div className="mt-8">
-              <div className="relative bg-black/40 border border-purple-500/20 rounded-lg p-6">
-                <h3 className="text-xl font-bold text-center mb-6 text-purple-400 font-mono">
-                  Domain & Digital Expertise
+            {/* Qwords Skills Section - More Compact Grid */}
+            <div className="mt-4">
+              <div className="relative bg-black/40 border border-purple-500/20 rounded-lg p-4">
+                <h3 className="text-lg font-bold text-center mb-4 text-purple-400 font-mono">
+                  Qwords Experience & Skills
                 </h3>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                   {qwordsSkills.map((skill, index) => (
                     <div 
                       key={index}
                       className="relative group"
                     >
-                      <div className="absolute inset-0 bg-purple-500/20 blur-xl group-hover:bg-purple-400/30 transition-all duration-300" />
-                      <div className="relative flex flex-col items-center p-3 bg-black/60 border border-purple-500/30 rounded-lg hover:border-purple-400/60 transition-all duration-300">
-                        <skill.icon className={`w-6 h-6 ${skill.color} group-hover:scale-110 transition-transform duration-300`} />
-                        <span className="mt-2 text-xs font-mono text-purple-300 group-hover:text-purple-200">
+                      <div className="absolute inset-0 bg-purple-500/10 blur-sm group-hover:bg-purple-400/20 transition-all duration-300" />
+                      <div className="relative flex items-center p-2 bg-black/60 border border-purple-500/30 rounded-md hover:border-purple-400/60 transition-all duration-300">
+                        <skill.icon className={`w-4 h-4 ${skill.color} group-hover:scale-110 transition-transform duration-300 mr-2 flex-shrink-0`} />
+                        <span className="text-xs font-mono text-purple-300 group-hover:text-purple-200 truncate">
                           {skill.title}
                         </span>
-                        <div className="absolute -inset-px bg-gradient-to-r from-purple-500/0 via-purple-500/20 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
 
-            {/* LinkedIn Button */}
-            <div className="border border-border rounded-lg p-4 mt-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-all duration-300"
-                onClick={() => window.open('https://linkedin.com/in/kukuh-satrio-wibowo', '_blank')}
-              >
-                <Link2 className="w-4 h-4 mr-2" />
-                Yuk, Kenalan di LinkedIn! 👋
-              </Button>
+              {/* LinkedIn Button */}
+              <div className="border border-border rounded-lg p-3 mt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-all duration-300"
+                  onClick={() => window.open('https://linkedin.com/in/kukuh-satrio-wibowo', '_blank')}
+                >
+                  <Link2 className="w-4 h-4 mr-2" />
+                  Yuk, Kenalan di LinkedIn! 👋
+                </Button>
+              </div>
             </div>
           </div>
         </div>
