@@ -123,7 +123,7 @@ export const Experience = () => {
                           </div>
                           {/* Aksara Data Description */}
                           <p className="mt-2 text-[10px] text-gray-400 px-2 sm:px-4 leading-relaxed">
-                            Aksara Data is a subsidiary of PT Qwords Company International, specializing in domain name services and digital identity solutions.
+                            Aksara Data is a subsidiary of PT Qwords Company International, specializing in domain name reseller and digital identity solutions.
                           </p>
                         </div>
                       </div>
