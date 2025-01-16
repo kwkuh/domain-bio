@@ -90,7 +90,7 @@ export const Experience = () => {
                         <h3 className="text-base font-bold text-white">Kukuh Laksana</h3>
                       </div>
                       
-                      {/* Company 1: Qwords */}
+                      {/* Main Company: Qwords */}
                       <div className="space-y-1 border-t border-gray-800 pt-2">
                         <div className="flex items-center justify-center gap-1 text-[10px]">
                           <Link2 className="w-3 h-3 text-[#FBBF24]" />
@@ -105,22 +105,22 @@ export const Experience = () => {
                             kukuh@qwords.co.id
                           </a>
                         </div>
-                      </div>
-                      
-                      {/* Company 2: Aksara Data */}
-                      <div className="space-y-1 border-t border-gray-800 pt-2">
-                        <div className="flex items-center justify-center gap-1 text-[10px]">
-                          <Link2 className="w-3 h-3 text-[#FBBF24]" />
-                          <a href="https://aksaradata.id" target="_blank" rel="noopener noreferrer" className="text-[#FBBF24] hover:text-[#F97316] transition-colors">
-                            aksaradata.id
-                          </a>
-                        </div>
-                        <p className="text-[10px] text-[#F97316]">Domain Name Specialist</p>
-                        <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400">
-                          <Mail className="w-3 h-3" />
-                          <a href="mailto:kukuh@aksaradata.id" className="hover:text-[#F97316] transition-colors">
-                            kukuh@aksaradata.id
-                          </a>
+                        
+                        {/* Subsidiary: Aksara Data (indented) */}
+                        <div className="mt-2 space-y-1 pt-1 border-t border-gray-800/50">
+                          <div className="flex items-center justify-center gap-1 text-[10px]">
+                            <Link2 className="w-3 h-3 text-[#FBBF24]" />
+                            <a href="https://aksaradata.id" target="_blank" rel="noopener noreferrer" className="text-[#FBBF24] hover:text-[#F97316] transition-colors">
+                              aksaradata.id
+                            </a>
+                          </div>
+                          <p className="text-[10px] text-[#F97316]">Domain Name Specialist</p>
+                          <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400">
+                            <Mail className="w-3 h-3" />
+                            <a href="mailto:kukuh@aksaradata.id" className="hover:text-[#F97316] transition-colors">
+                              kukuh@aksaradata.id
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </div>
