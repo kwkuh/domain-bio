@@ -1,19 +1,34 @@
 import { HandIcon, MoonIcon, SunIcon, Phone } from "lucide-react";
 import { Button } from "./ui/button";
 import { useTheme } from "@/hooks/use-theme";
+import { useEffect, useState } from "react";
 
 export const Hero = () => {
   const { theme, toggleTheme } = useTheme();
+  const [isSticky, setIsSticky] = useState(false);
 
   const handleWhatsAppClick = () => {
     window.open('https://wa.me/6282260001011', '_blank');
   };
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsSticky(window.scrollY > 100);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <>
-      <div className="text-sm text-muted-foreground text-center mb-4 font-mono">
-        Selamat datang di kukuh.link
-      </div>
+      {isSticky && (
+        <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg z-50 py-2 px-4 border-b border-border transition-all duration-300">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-xl font-bold text-primary">kukuh.link</h2>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row items-center justify-between py-8 gap-6">
         <div className="flex-1 space-y-4 text-left animate-fade-in order-2 md:order-1">
           <div className="inline-flex items-center gap-3">
