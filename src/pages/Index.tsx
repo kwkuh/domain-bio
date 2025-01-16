@@ -23,7 +23,7 @@ const domains = [
 
 const DomainStamps = () => {
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-10">
+    <div className="fixed inset-0 overflow-hidden pointer-events-none">
       {domains.map((domain, index) => {
         const isMainDomain = domain === "kukuh.link";
         const isLeftSide = index < Math.ceil(domains.length / 2);
@@ -61,11 +61,10 @@ const DomainStamps = () => {
 const Index = () => {
   return (
     <>
-      <Clock />
       <DomainStamps />
       <LanguageProvider>
         <OSWindow>
-          <div className="relative min-h-screen max-w-2xl mx-auto px-4 md:px-6 z-20">
+          <div className="relative min-h-screen max-w-2xl mx-auto px-4 md:px-6">
             <Hero />
             <About />
             <Experience />
