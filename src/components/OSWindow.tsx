@@ -48,7 +48,7 @@ export const OSWindow = ({ children, title = "kuk.uh" }: OSWindowProps) => {
     <div className={`transition-all duration-300 ease-in-out ${
       isMaximized ? 'fixed inset-0 m-0 rounded-none z-50' : 
       isPreview ? 'fixed bottom-8 right-8 w-1/3 rounded-lg shadow-2xl z-50 scale-90 hover:scale-95' :
-      'w-full rounded-lg'
+      'mx-auto max-w-5xl rounded-lg my-8'
     }`}>
       <div className={`${
         isMaximized ? 'w-full h-full' : 'w-full'
@@ -101,7 +101,7 @@ export const OSWindow = ({ children, title = "kuk.uh" }: OSWindowProps) => {
 
         {/* Content */}
         <div className={`${
-          isMaximized ? 'h-[calc(100vh-3rem)]' : ''
+          isMaximized ? 'h-[calc(100vh-3rem)]' : 'max-h-[calc(100vh-8rem)]'
         } overflow-auto`}>
           {children}
         </div>
