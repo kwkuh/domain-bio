@@ -99,7 +99,7 @@ export const Experience = () => {
 
             <div className="border border-border rounded-lg p-4 mt-8">
               <h3 className="text-xl font-bold text-purple-400 mb-2">PT Qwords Company International</h3>
-              <p className="text-muted-foreground mb-2">Staff Karyawan - Corporate Sales / Domain Name Specialist (March 2024 - Present)</p>
+              <p className="text-muted-foreground mb-2">March 2024 - Present</p>
               <p className="text-sm text-muted-foreground mb-4">
                 Membantu brand untuk tumbuh dan dikenal di dunia digital adalah misi utama. Fokus saya membantu bisnis menemukan nama domain yang tepat sesuai identitas digital mereka, serta mengembangkan strategi domain yang memperkuat eksistensi brand secara online. Selalu mengikuti tren terbaru dan mencari peluang baru untuk memastikan kesuksesan klien adalah prioritas utama!
               </p>
