@@ -110,10 +110,10 @@ export const OSWindow = ({ children, title = "kuk.uh" }: OSWindowProps) => {
     >
       <div className={`${
         isMaximized ? 'w-full h-full' : 'w-full'
-      } bg-[#1A1F2C] backdrop-blur-xl rounded-lg border border-border shadow-2xl overflow-hidden`}>
+      } bg-background/50 backdrop-blur-xl rounded-lg border border-border shadow-2xl overflow-hidden`}>
         {/* Window Controls */}
         <div 
-          className="bg-[#1A1F2C] px-3 sm:px-4 py-2 sm:py-3 border-b border-border flex items-center justify-between"
+          className="bg-background/50 px-3 sm:px-4 py-2 sm:py-3 border-b border-border flex items-center justify-between"
           onMouseDown={handleMouseDown}
           onTouchStart={() => console.log('Touch start')}
         >
