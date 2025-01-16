@@ -51,7 +51,7 @@ export const Experience = () => {
             <div className="relative perspective-1000 flex justify-center">
               {/* Animated ID Card */}
               <div className="id-card-container transform-style-3d w-64 hover:scale-105 transition-transform duration-300">
-                {/* Lanyard with new orange and gold colors */}
+                {/* Lanyard with orange and gold colors */}
                 <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-1 h-12 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg">
                   {/* Lanyard Clip with gold accent */}
                   <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20"></div>
@@ -60,7 +60,10 @@ export const Experience = () => {
                 <div className="border border-gray-800 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 shadow-xl transition-all duration-500 transform hover:rotate-y-10 hover:translate-z-10 animate-[float_6s_ease-in-out_infinite]">
                   {/* Card Header */}
                   <div className="p-2 text-xs text-gray-400 font-mono border-b border-gray-800 bg-black/30">
-                    <span>PT Qwords Company International</span>
+                    <div className="flex flex-col items-center">
+                      <span className="font-bold text-[#FBBF24]">PT Qwords Company International</span>
+                      <span className="text-[10px] text-[#F97316]">March 2024 - Present</span>
+                    </div>
                   </div>
                   
                   {/* Card Content */}
@@ -81,24 +84,44 @@ export const Experience = () => {
                       </div>
                     </div>
                     
-                    {/* Name and Title */}
-                    <div className="text-center space-y-1">
-                      <h3 className="text-base font-bold text-white">Kukuh Laksana</h3>
-                    </div>
-                    
-                    {/* Contact Info */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400 pt-2 border-t border-gray-800">
-                        <Mail className="w-3 h-3" />
-                        <a href="mailto:kukuh@qwords.co.id" className="hover:text-[#F97316] transition-colors">
-                          kukuh@qwords.co.id
-                        </a>
+                    {/* Name and Roles */}
+                    <div className="text-center space-y-3">
+                      <div>
+                        <h3 className="text-base font-bold text-white">Kukuh Laksana</h3>
                       </div>
-                      <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400">
-                        <Mail className="w-3 h-3" />
-                        <a href="mailto:kukuh@aksaradata.id" className="hover:text-[#F97316] transition-colors">
-                          kukuh@aksaradata.id
-                        </a>
+                      
+                      {/* Company 1: Qwords */}
+                      <div className="space-y-1 border-t border-gray-800 pt-2">
+                        <div className="flex items-center justify-center gap-1 text-[10px]">
+                          <Link2 className="w-3 h-3 text-[#FBBF24]" />
+                          <a href="https://qwords.com" target="_blank" rel="noopener noreferrer" className="text-[#FBBF24] hover:text-[#F97316] transition-colors">
+                            qwords.com
+                          </a>
+                        </div>
+                        <p className="text-[10px] text-[#F97316]">Corporate Sales</p>
+                        <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400">
+                          <Mail className="w-3 h-3" />
+                          <a href="mailto:kukuh@qwords.co.id" className="hover:text-[#F97316] transition-colors">
+                            kukuh@qwords.co.id
+                          </a>
+                        </div>
+                      </div>
+                      
+                      {/* Company 2: Aksara Data */}
+                      <div className="space-y-1 border-t border-gray-800 pt-2">
+                        <div className="flex items-center justify-center gap-1 text-[10px]">
+                          <Link2 className="w-3 h-3 text-[#FBBF24]" />
+                          <a href="https://aksaradata.id" target="_blank" rel="noopener noreferrer" className="text-[#FBBF24] hover:text-[#F97316] transition-colors">
+                            aksaradata.id
+                          </a>
+                        </div>
+                        <p className="text-[10px] text-[#F97316]">Domain Name Specialist</p>
+                        <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400">
+                          <Mail className="w-3 h-3" />
+                          <a href="mailto:kukuh@aksaradata.id" className="hover:text-[#F97316] transition-colors">
+                            kukuh@aksaradata.id
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </div>
