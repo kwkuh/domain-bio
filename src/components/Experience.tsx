@@ -50,20 +50,26 @@ export const Experience = () => {
           <div className="space-y-4">
             <div className="relative perspective-1000 flex justify-center">
               {/* Animated ID Card */}
-              <div className="id-card-container transform-style-3d w-64">
+              <div className="id-card-container transform-style-3d w-64 hover:scale-105 transition-transform duration-300">
                 {/* Lanyard */}
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-0.5 h-12 bg-black origin-top animate-sway"></div>
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-0.5 h-12 bg-gradient-to-b from-gray-800 to-gray-600 origin-top animate-sway">
+                  {/* Lanyard Clip */}
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-gray-400"></div>
+                </div>
                 
-                <div className="border border-gray-800 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 shadow-xl transition-all duration-500 transform-gpu hover:rotate-y-10">
+                <div className="border border-gray-800 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 shadow-xl transition-all duration-500 transform hover:rotate-y-10 hover:translate-z-10 animate-[float_6s_ease-in-out_infinite]">
                   {/* Card Header */}
-                  <div className="p-2 text-xs text-gray-400 font-mono border-b border-gray-800">
+                  <div className="p-2 text-xs text-gray-400 font-mono border-b border-gray-800 bg-black/30">
                     <span>Coding with Qwords</span>
                   </div>
                   
                   {/* Card Content */}
-                  <div className="p-4 space-y-3">
+                  <div className="p-4 space-y-3 relative overflow-hidden">
+                    {/* Holographic Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -rotate-45 translate-x-[-200%] animate-[shine_3s_ease-in-out_infinite]"></div>
+                    
                     {/* Profile Picture Area */}
-                    <div className="w-20 h-20 mx-auto rounded-lg overflow-hidden border-2 border-gray-700">
+                    <div className="w-20 h-20 mx-auto rounded-lg overflow-hidden border-2 border-gray-700 transform hover:scale-105 transition-transform duration-300">
                       <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
                         <span className="text-2xl font-black text-white">KL</span>
                       </div>

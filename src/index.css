@@ -164,22 +164,28 @@
   @apply bg-background/80 backdrop-blur-lg border border-border shadow-lg;
 }
 
-.os-window {
-  @apply bg-background/95 backdrop-blur-xl border border-border shadow-lg;
-}
-
-.os-window-content {
-  @apply bg-background/95 backdrop-blur-md;
-}
-
 @keyframes sway {
-  0% { transform: rotate(-2deg); }
-  50% { transform: rotate(2deg); }
-  100% { transform: rotate(-2deg); }
+  0% { 
+    transform: rotate(-2deg) translateZ(0) translateX(-1px);
+    transform-origin: top;
+  }
+  25% {
+    transform: rotate(0deg) translateZ(2px) translateX(1px);
+  }
+  50% { 
+    transform: rotate(2deg) translateZ(0) translateX(1px);
+  }
+  75% {
+    transform: rotate(0deg) translateZ(-2px) translateX(-1px);
+  }
+  100% { 
+    transform: rotate(-2deg) translateZ(0) translateX(-1px);
+  }
 }
 
 .animate-sway {
-  animation: sway 3s ease-in-out infinite;
+  animation: sway 4s ease-in-out infinite;
+  transform-style: preserve-3d;
 }
 
 .perspective-1000 {
@@ -188,4 +194,24 @@
 
 .transform-style-3d {
   transform-style: preserve-3d;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px) translateZ(0);
+  }
+  50% {
+    transform: translateY(-5px) translateZ(5px);
+  }
+  100% {
+    transform: translateY(0px) translateZ(0);
+  }
+}
+
+.os-window {
+  @apply bg-background/95 backdrop-blur-xl border border-border shadow-lg;
+}
+
+.os-window-content {
+  @apply bg-background/95 backdrop-blur-md;
 }
