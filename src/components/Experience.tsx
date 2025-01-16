@@ -1,4 +1,4 @@
-import { Terminal, Minus, Maximize2, X, Link2 } from "lucide-react";
+import { Terminal, Minus, Maximize2, X, Link2, Mail } from "lucide-react";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
@@ -48,7 +48,38 @@ export const Experience = () => {
         
         <div className="p-6">
           <div className="space-y-4">
-            <div className="border border-border rounded-lg p-4">
+            <div className="relative perspective-1000">
+              {/* Animated ID Card */}
+              <div className="id-card-container animate-swing transform-style-3d">
+                <div className="border border-border rounded-lg p-6 bg-gradient-to-br from-purple-400/10 via-pink-500/10 to-purple-600/10 backdrop-blur-sm shadow-xl hover:shadow-purple-500/20 transition-all duration-500 transform-gpu rotate-x-5 hover:rotate-x-0">
+                  {/* Lanyard */}
+                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-1 h-16 bg-gradient-to-b from-purple-400 to-pink-500 origin-top animate-sway"></div>
+                  
+                  {/* Company Logo */}
+                  <div className="mb-4 flex justify-center">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 via-pink-500 to-purple-600 p-1">
+                      <div className="w-full h-full rounded-full bg-background flex items-center justify-center">
+                        <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Q</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ID Card Content */}
+                  <div className="text-center space-y-2">
+                    <h3 className="text-xl font-bold text-purple-400">Kukuh Laksana</h3>
+                    <p className="text-muted-foreground font-mono">Corporate Sales / Domain Name Specialist</p>
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Mail className="w-4 h-4" />
+                      <a href="mailto:kukuh@qwords.co.id" className="hover:text-purple-400 transition-colors">
+                        kukuh@qwords.co.id
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="border border-border rounded-lg p-4 mt-8">
               <h3 className="text-xl font-bold text-purple-400 mb-2">Qwords</h3>
               <p className="text-muted-foreground mb-2">Staff Karyawan - Corporate Sales / Domain Name Specialist (March 2024 - Present)</p>
               <p className="text-sm text-muted-foreground mb-4">
