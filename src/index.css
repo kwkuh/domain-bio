@@ -139,7 +139,6 @@
 
 .glass-effect {
   @apply bg-opacity-20 backdrop-blur-lg;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
 }
 
 @keyframes stamp-fade-in {
@@ -207,4 +206,10 @@
 
 .os-window-content {
   @apply bg-background/95 backdrop-blur-md;
+}
+
+@keyframes spin {
+  0% { transform: rotateY(0deg) rotateX(0deg); }
+  50% { transform: rotateY(180deg) rotateX(180deg); }
+  100% { transform: rotateY(360deg) rotateX(360deg); }
 }

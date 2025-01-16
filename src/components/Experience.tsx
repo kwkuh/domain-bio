@@ -51,18 +51,26 @@ export const Experience = () => {
             <div className="relative perspective-1000 flex justify-center">
               {/* Animated ID Card */}
               <div className="id-card-container transform-style-3d w-64 hover:scale-105 transition-transform duration-300">
-                {/* Lanyard with orange and gold colors and swaying animation */}
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg font-['Neo_Brutalism'] text-sm">
-                  {/* Lanyard Clip with gold accent - made smaller and more square */}
-                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-sm bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20"></div>
+                {/* Enhanced 3D Lanyard with loading animation */}
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg transform-style-3d">
+                  {/* Rotating Lanyard Clip with enhanced 3D effect */}
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-sm bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20 animate-[spin_2s_ease-in-out_1] transform-style-3d hover:animate-[spin_2s_ease-in-out_infinite]">
+                    {/* 3D edges for the clip */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-[#F97316]/30 to-transparent transform rotate-45"></div>
+                    <div className="absolute inset-0 border-2 border-[#FBBF24]/20 rounded-sm transform scale-90"></div>
+                  </div>
+                  {/* Decorative elements */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-full">
+                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-[#FBBF24]/20 to-transparent animate-pulse"></div>
+                  </div>
                 </div>
                 
                 <div className="border border-gray-800 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 shadow-xl transition-all duration-500 transform hover:rotate-y-10 hover:translate-z-10 animate-[float_6s_ease-in-out_infinite]">
                   {/* Card Header */}
                   <div className="p-2 text-xs text-gray-400 font-mono border-b border-gray-800 bg-black/30">
                     <div className="flex flex-col items-center">
-                      <span className="font-bold text-[#FBBF24]">PT Qwords Company International</span>
-                      <span className="text-[10px] text-[#F97316]">March 2024 - Present</span>
+                      <span className="font-bold text-[#FBBF24]">Corporate Sales</span>
+                      <span className="text-[10px] text-[#F97316]">Domain Name Specialist</span>
                     </div>
                   </div>
                   
@@ -126,7 +134,7 @@ export const Experience = () => {
                       </div>
                       <div className="text-[10px] text-gray-400 px-2 py-1 bg-black/20 rounded-md">
                         <p className="text-center sm:text-left">
-                          Aksara Data is a subsidiary of PT Qwords Company International, specializing in domain name reseller and digital identity solutions.
+                          Specializing in domain name reseller and digital identity solutions.
                         </p>
                       </div>
                     </div>
@@ -137,11 +145,6 @@ export const Experience = () => {
 
             {/* Description Section */}
             <div className="border border-border rounded-lg p-4 mt-8">
-              <h3 className="text-xl font-bold text-purple-400 mb-2">PT Qwords Company International</h3>
-              <p className="text-muted-foreground mb-2">March 2024 - Present</p>
-              <p className="text-sm text-muted-foreground mb-4">
-                Membantu brand untuk tumbuh dan dikenal di dunia digital adalah misi utama. Fokus saya membantu bisnis menemukan nama domain yang tepat sesuai identitas digital mereka, serta mengembangkan strategi domain yang memperkuat eksistensi brand secara online. Selalu mengikuti tren terbaru dan mencari peluang baru untuk memastikan kesuksesan klien adalah prioritas utama!
-              </p>
               <Button 
                 variant="outline" 
                 size="sm" 
