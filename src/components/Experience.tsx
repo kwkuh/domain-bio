@@ -52,7 +52,7 @@ export const Experience = () => {
               {/* Animated ID Card */}
               <div className="id-card-container transform-style-3d w-64 hover:scale-105 transition-transform duration-300">
                 {/* Lanyard with orange and gold colors */}
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-1 h-12 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg">
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-1 h-12 bg-gradient-to-b from-[#F97316] via-[#FBBF24] to-[#F97316] origin-top animate-sway shadow-lg font-['Neo_Brutalism'] text-sm">
                   {/* Lanyard Clip with gold accent */}
                   <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] shadow-lg border border-[#F97316]/20"></div>
                 </div>
@@ -121,6 +121,10 @@ export const Experience = () => {
                               kukuh@aksaradata.id
                             </a>
                           </div>
+                          {/* Aksara Data Description */}
+                          <p className="mt-2 text-[10px] text-gray-400 px-2 sm:px-4 leading-relaxed">
+                            Aksara Data is a subsidiary of PT Qwords Company International, specializing in domain name services and digital identity solutions.
+                          </p>
                         </div>
                       </div>
                     </div>
