@@ -31,7 +31,38 @@ const currentProjects = [
 
 export const Experience = () => {
   return (
-    <section className="py-8">
+    <section className="py-8 space-y-8">
+      {/* Career Section */}
+      <div className="os-window">
+        <div className="os-window-header flex items-center justify-between p-2 border-b border-border">
+          <div className="flex items-center space-x-2">
+            <Terminal className="w-4 h-4 text-purple-400" />
+            <span className="font-mono">career.sh</span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Minus className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
+            <Maximize2 className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
+            <X className="w-4 h-4 text-gray-400 hover:text-white transition-colors" />
+          </div>
+        </div>
+        
+        <div className="p-6">
+          <div className="space-y-4">
+            <div className="border border-border rounded-lg p-4">
+              <h3 className="text-xl font-bold text-purple-400 mb-2">Qwords Cloud Web Hosting Indonesia</h3>
+              <p className="text-muted-foreground mb-2">Domain & Digital Marketing Specialist (2022 - Present)</p>
+              <ul className="list-disc list-inside space-y-2 text-sm">
+                <li>Managing and optimizing domain portfolios for business growth</li>
+                <li>Developing and implementing digital marketing strategies</li>
+                <li>Handling domain management and technical configurations</li>
+                <li>Collaborating with cross-functional teams for project success</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Projects Section */}
       <div className="os-window">
         <div className="os-window-header flex items-center justify-between p-2 border-b border-border">
           <div className="flex items-center justify-between w-full">
