@@ -213,7 +213,7 @@ export const Experience = () => {
             <div className="mt-4">
               <div className="relative bg-black/40 border border-purple-500/20 rounded-lg p-3">
                 <h3 className="text-sm font-bold text-center mb-2 text-purple-400 font-mono">
-                  Qwords Experience & Skills
+                  PT Qwords Company International - March 2024 - Present
                 </h3>
                 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
