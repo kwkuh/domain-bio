@@ -48,28 +48,36 @@ export const Experience = () => {
         
         <div className="p-6">
           <div className="space-y-4">
-            <div className="relative perspective-1000">
+            <div className="relative perspective-1000 flex justify-center">
               {/* Animated ID Card */}
-              <div className="id-card-container animate-swing transform-style-3d">
-                <div className="border border-border rounded-lg p-6 bg-gradient-to-br from-purple-400/10 via-pink-500/10 to-purple-600/10 backdrop-blur-sm shadow-xl hover:shadow-purple-500/20 transition-all duration-500 transform-gpu rotate-x-5 hover:rotate-x-0">
-                  {/* Lanyard */}
-                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-1 h-16 bg-gradient-to-b from-purple-400 to-pink-500 origin-top animate-sway"></div>
+              <div className="id-card-container transform-style-3d w-64">
+                {/* Lanyard */}
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-0.5 h-12 bg-black origin-top animate-sway"></div>
+                
+                <div className="border border-gray-800 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 shadow-xl transition-all duration-500 transform-gpu hover:rotate-y-10">
+                  {/* Card Header */}
+                  <div className="p-2 text-xs text-gray-400 font-mono border-b border-gray-800">
+                    <span>Coding with Qwords</span>
+                  </div>
                   
-                  {/* Company Logo */}
-                  <div className="mb-4 flex justify-center">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 via-pink-500 to-purple-600 p-1">
-                      <div className="w-full h-full rounded-full bg-background flex items-center justify-center">
-                        <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Q</span>
+                  {/* Card Content */}
+                  <div className="p-4 space-y-3">
+                    {/* Profile Picture Area */}
+                    <div className="w-20 h-20 mx-auto rounded-lg overflow-hidden border-2 border-gray-700">
+                      <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                        <span className="text-2xl font-black text-white">KL</span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* ID Card Content */}
-                  <div className="text-center space-y-2">
-                    <h3 className="text-xl font-bold text-purple-400">Kukuh Laksana</h3>
-                    <p className="text-muted-foreground font-mono">Corporate Sales / Domain Name Specialist</p>
-                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <Mail className="w-4 h-4" />
+                    
+                    {/* Name and Title */}
+                    <div className="text-center space-y-1">
+                      <h3 className="text-base font-bold text-white">Kukuh Laksana</h3>
+                      <p className="text-[10px] text-gray-400 font-mono">Corporate Sales / Domain Name Specialist</p>
+                    </div>
+                    
+                    {/* Contact Info */}
+                    <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400 pt-2 border-t border-gray-800">
+                      <Mail className="w-3 h-3" />
                       <a href="mailto:kukuh@qwords.co.id" className="hover:text-purple-400 transition-colors">
                         kukuh@qwords.co.id
                       </a>

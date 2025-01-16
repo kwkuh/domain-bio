@@ -140,7 +140,6 @@
 .glass-effect {
   @apply bg-opacity-20 backdrop-blur-lg;
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 @keyframes stamp-fade-in {
@@ -171,4 +170,22 @@
 
 .os-window-content {
   @apply bg-background/95 backdrop-blur-md;
+}
+
+@keyframes sway {
+  0% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+  100% { transform: rotate(-2deg); }
+}
+
+.animate-sway {
+  animation: sway 3s ease-in-out infinite;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
 }
