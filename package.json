@@ -1,0 +1,14 @@
+{
+  "name": "a-i-dns",
+  "version": "0.1.0",
+  "description": "Authoritative wildcard-IP DNS server (ala nip.io/sslip.io) buat a-i.sh — zero dependency.",
+  "type": "module",
+  "bin": { "a-i-dns": "src/server.js" },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "PORT=5353 BIND=127.0.0.1 DEBUG=1 node src/server.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=18" },
+  "license": "MIT"
+}
