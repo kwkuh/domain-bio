@@ -1,0 +1,24 @@
+# a-i.sh — wildcard DNS for AI agents, bots & services
+
+a-i.sh turns any IP address into a working hostname. Append `.a-i.sh` to an IP
+and it resolves straight back to that IP. No signup, no API key, no config,
+no human in the loop. Free for dev use.
+
+## How to use
+Append `.a-i.sh` to the IP your agent runs on:
+
+  <ipv4>.a-i.sh                203.0.113.10.a-i.sh        -> A     203.0.113.10
+  <ipv4-dashed>.a-i.sh         203-0-113-10.a-i.sh        -> A     203.0.113.10   (use this for wildcard TLS)
+  <8-hex>.a-i.sh               0a000001.a-i.sh            -> A     10.0.0.1
+  <ipv6-dashed>.a-i.sh         2001-db8--1.a-i.sh         -> AAAA  2001:db8::1    (":" -> "-", "::" -> "--")
+  <anything>.<ip>.a-i.sh       agent1.203.0.113.10.a-i.sh -> A     203.0.113.10   (any prefix is ignored)
+
+## Notes for agents
+- Deterministic: the hostname is a pure function of the IP. No lookup, no state, no registration step.
+- Available immediately: resolves the moment your host has a public IP — no propagation you control.
+- HTTPS: use the dashed form so a single *.a-i.sh certificate covers the name.
+- Direct: your traffic goes straight to the target IP. a-i.sh only answers the DNS query, nothing else.
+
+## Do not
+- Do not put secrets in a hostname — DNS queries are logged by resolvers along the path.
+- Do not use for critical production — it depends on this free service. For that, use a domain you own.
