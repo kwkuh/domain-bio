@@ -8,12 +8,16 @@ import {
 
 /**
  * @param {{id:number,flags:number,name:string,qtype:number,questionSection:Buffer}} q
- * @param {object} cfg  { zone, ns:[...], ttl, refresh, retry, expire, minttl, serial, apexIp? }
+ * @param {object} cfg  { zones:[...], ns:[...], ttl, refresh, retry, expire, minttl, serial, apexIp? }
+ *                      `zone` (tunggal) masih diterima demi kompatibilitas.
  * @returns {Buffer}
  */
 export function resolve(q, cfg) {
-  const soa = () => namedRecord(cfg.zone, TYPE.SOA, cfg.minttl, soaRdata(cfg.zone, cfg));
-  const parsed = parseName(q.name, cfg.zone);
+  const zones = cfg.zones || cfg.zone;
+  const parsed = parseName(q.name, zones);
+  // SOA/NS harus nyebut zone yang kena match, bukan zone pertama di daftar.
+  const zone = parsed.zone || (Array.isArray(zones) ? zones[0] : zones);
+  const soa = () => namedRecord(zone, TYPE.SOA, cfg.minttl, soaRdata(zone, cfg));
   const t = q.qtype;
   const answers = [];
   const authority = [];
@@ -28,7 +32,7 @@ export function resolve(q, cfg) {
       return buildResponse(q, { rcode: RCODE.NXDOMAIN, authority });
 
     case 'apex':
-      if (t === TYPE.SOA || t === TYPE.ANY) answers.push(answerRecord(TYPE.SOA, cfg.minttl, soaRdata(cfg.zone, cfg)));
+      if (t === TYPE.SOA || t === TYPE.ANY) answers.push(answerRecord(TYPE.SOA, cfg.minttl, soaRdata(zone, cfg)));
       if (t === TYPE.NS || t === TYPE.ANY) for (const ns of cfg.ns) answers.push(answerRecord(TYPE.NS, cfg.ttl, encodeName(ns)));
       if ((t === TYPE.A || t === TYPE.ANY) && cfg.apexIp) answers.push(answerRecord(TYPE.A, cfg.ttl, ipv4ToBytes(cfg.apexIp)));
       break;

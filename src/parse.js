@@ -1,6 +1,9 @@
 // parse.js — ekstraksi IP dari hostname (otak dari layanan wildcard-DNS).
 //
 // Semua jawaban DIHITUNG dari nama query, bukan disimpan di database.
+// Satu server bisa otoritatif buat BEBERAPA zone sekaligus (mis. a-i.sh + a-i.st);
+// tiap hasil bawa `zone` yang kena match, biar SOA/NS-nya nyambung ke zone yang bener.
+//
 // Contoh (zone = "a-i.sh"):
 //   1.2.3.4.a-i.sh          -> A     1.2.3.4      (dotted)
 //   1-2-3-4.a-i.sh          -> A     1.2.3.4      (dashed, buat wildcard TLS cert)
@@ -9,25 +12,49 @@
 //   app.1.2.3.4.a-i.sh      -> A     1.2.3.4      (prefix bebas, IP diambil yg nempel zone)
 //   a-i.sh                  -> apex  (SOA/NS)
 //   foo.bar.a-i.sh          -> nxdomain (dalam zone tapi bukan IP)
-//   google.com             -> refused (di luar zone)
+//   google.com             -> refused (di luar semua zone)
 
 import net from 'node:net';
 
 const isOctet = (s) => /^\d{1,3}$/.test(s) && Number(s) <= 255;
 
 /**
- * @returns {{kind:'apex'}
- *          |{kind:'A', ip:string}
- *          |{kind:'AAAA', ip:string}
- *          |{kind:'nxdomain'}
+ * Cari zone mana yang mencakup sebuah nama. Match terpanjang menang, jadi zone
+ * yang saling menaungi (mis. "a-i.sh" dan "dev.a-i.sh") tetap deterministik.
+ * @param {string} rawName
+ * @param {string|string[]} zones
+ * @returns {string|null} zone yang kena, atau null kalau di luar semuanya
+ */
+export function matchZone(rawName, zones) {
+  const name = String(rawName).toLowerCase().replace(/\.$/, '');
+  const list = (Array.isArray(zones) ? zones : [zones])
+    .map((z) => String(z).toLowerCase().replace(/^\.|\.$/g, ''))
+    .filter(Boolean);
+
+  let best = null;
+  for (const zone of list) {
+    if (name === zone || name.endsWith('.' + zone)) {
+      if (!best || zone.length > best.length) best = zone;
+    }
+  }
+  return best;
+}
+
+/**
+ * @param {string} rawName
+ * @param {string|string[]} zones  satu zone atau daftar zone
+ * @returns {{kind:'apex', zone:string}
+ *          |{kind:'A', ip:string, zone:string}
+ *          |{kind:'AAAA', ip:string, zone:string}
+ *          |{kind:'nxdomain', zone:string}
  *          |{kind:'refused'}}
  */
-export function parseName(rawName, zone) {
+export function parseName(rawName, zones) {
   const name = String(rawName).toLowerCase().replace(/\.$/, '');
-  zone = zone.toLowerCase();
+  const zone = matchZone(name, zones);
 
-  if (name === zone) return { kind: 'apex' };
-  if (!name.endsWith('.' + zone)) return { kind: 'refused' }; // di luar zone kita
+  if (!zone) return { kind: 'refused' }; // di luar semua zone kita
+  if (name === zone) return { kind: 'apex', zone };
 
   const sub = name.slice(0, -(zone.length + 1)); // sisa label sebelum zone
   const labels = sub.split('.');
@@ -36,29 +63,29 @@ export function parseName(rawName, zone) {
   // 1) IPv4 dashed: "1-2-3-4"
   const dash4 = last.match(/^(\d{1,3})-(\d{1,3})-(\d{1,3})-(\d{1,3})$/);
   if (dash4 && dash4.slice(1).every((o) => Number(o) <= 255)) {
-    return { kind: 'A', ip: dash4.slice(1).join('.') };
+    return { kind: 'A', ip: dash4.slice(1).join('.'), zone };
   }
 
   // 2) IPv6 dashed: "-" -> ":", "--" -> "::"
   if (last.includes('-') && /^[0-9a-f-]+$/.test(last) && /[0-9a-f]/.test(last)) {
     const v6 = last.replace(/-/g, ':');
-    if (net.isIPv6(v6)) return { kind: 'AAAA', ip: v6 };
+    if (net.isIPv6(v6)) return { kind: 'AAAA', ip: v6, zone };
   }
 
   // 3) Hex 8 digit -> IPv4 (mis. 0a000001 -> 10.0.0.1)
   if (/^[0-9a-f]{8}$/.test(last)) {
     const n = parseInt(last, 16);
     const ip = [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join('.');
-    return { kind: 'A', ip };
+    return { kind: 'A', ip, zone };
   }
 
   // 4) IPv4 dotted: 4 label numerik yang nempel ke zone
   if (labels.length >= 4) {
     const last4 = labels.slice(-4);
-    if (last4.every(isOctet)) return { kind: 'A', ip: last4.join('.') };
+    if (last4.every(isOctet)) return { kind: 'A', ip: last4.join('.'), zone };
   }
 
-  return { kind: 'nxdomain' }; // dalam zone tapi bukan bentuk IP
+  return { kind: 'nxdomain', zone }; // dalam zone tapi bukan bentuk IP
 }
 
 /** IPv4 string -> 4 byte Buffer */

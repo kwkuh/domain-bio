@@ -7,14 +7,20 @@ import { parseQuery } from './wire.js';
 import { resolve } from './resolve.js';
 
 // ---- Config dari env ----
-const ZONE = (process.env.ZONE || 'a-i.sh').toLowerCase();
+// ZONES = daftar zone yang kita layani, dipisah koma. Satu proses bisa otoritatif
+// buat beberapa suffix sekaligus (Open-Domain jalan di a-i.sh DAN a-i.st).
+// ZONE (tunggal) masih dibaca demi kompatibilitas ke belakang.
+const ZONES = (process.env.ZONES || process.env.ZONE || 'a-i.sh,a-i.st')
+  .split(',')
+  .map((s) => s.trim().toLowerCase().replace(/^\.|\.$/g, ''))
+  .filter(Boolean);
 const PORT = Number(process.env.PORT || 53); // lokal: pakai 5353 (port <1024 butuh root)
 const BIND = process.env.BIND || '0.0.0.0';
 const DEBUG = process.env.DEBUG === '1';
 
 const cfg = {
-  zone: ZONE,
-  ns: (process.env.NS_HOSTS || `ns1.${ZONE},ns2.${ZONE}`).split(',').map((s) => s.trim()),
+  zones: ZONES,
+  ns: (process.env.NS_HOSTS || 'ns1.open-domain.com,ns2.open-domain.com').split(',').map((s) => s.trim()),
   ttl: Number(process.env.TTL || 300),
   refresh: Number(process.env.SOA_REFRESH || 3600),
   retry: Number(process.env.SOA_RETRY || 600),
@@ -42,7 +48,7 @@ udp.on('message', (msg, rinfo) => {
   }
 });
 udp.on('error', (err) => { console.error('udp fatal:', err.message); process.exit(1); });
-udp.bind(PORT, BIND, () => console.log(`UDP  :${PORT} zone=${ZONE} ns=${cfg.ns.join(',')}`));
+udp.bind(PORT, BIND, () => console.log(`UDP  :${PORT} zones=${ZONES.join(',')} ns=${cfg.ns.join(',')}`));
 
 // ---- TCP (fallback: paket diawali 2 byte panjang) ----
 const tcp = net.createServer((sock) => {
