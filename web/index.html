@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>a-i.sh — the open-source address layer for AI agents</title>
-<meta name="description" content="a-i.sh turns any IP into a working hostname — instantly, no signup, no dashboard. Open-source, MIT-licensed public infrastructure for the open agent ecosystem: every agent gets an address." />
+<title>Open-Domain — the open-source address layer for AI agents</title>
+<meta name="description" content="Open-Domain turns any IP into a working hostname — instantly, no signup, no dashboard. Open-source, MIT-licensed public infrastructure for the open agent ecosystem: every agent gets an address." />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <meta name="theme-color" content="#080b0f" />
 <meta property="og:type" content="website" />
-<meta property="og:title" content="a-i.sh — the open-source address layer for AI agents" />
+<meta property="og:title" content="Open-Domain — the open-source address layer for AI agents" />
 <meta property="og:description" content="Give every agent, bot, and service an address. Append .a-i.sh to any IP — instant, no signup, no human in the loop. Open-source, MIT, self-hostable." />
-<meta property="og:url" content="https://a-i.sh" />
-<meta property="og:image" content="https://a-i.sh/og-image.png" />
+<meta property="og:url" content="https://open-domain.com" />
+<meta property="og:image" content="https://open-domain.com/og-image.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="https://a-i.sh/og-image.png" />
+<meta name="twitter:image" content="https://open-domain.com/og-image.png" />
 <style>
   :root{
     --bg:#080b0f;
@@ -52,7 +52,7 @@
     border-bottom:1px solid var(--border);
   }
   nav .wrap{display:flex;align-items:center;gap:24px;height:60px}
-  .brand{font-family:var(--mono);font-weight:600;font-size:17px;letter-spacing:-.02em}
+  .brand{font-family:var(--mono);font-weight:600;font-size:17px;letter-spacing:-.02em;white-space:nowrap;flex:none}
   .brand .cursor{color:var(--mint);animation:blink 1.2s steps(1) infinite}
   @keyframes blink{50%{opacity:0}}
   .nav-links{margin-left:auto;display:flex;gap:26px;align-items:center;font-size:14px}
@@ -249,7 +249,7 @@
 
 <nav>
   <div class="wrap">
-    <div class="brand">a-i.sh<span class="cursor">▊</span></div>
+    <div class="brand">open-domain<span class="cursor">▊</span></div>
     <div class="nav-links">
       <a href="#agents" class="hide-sm">For agents</a>
       <a href="#formats" class="hide-sm">Formats</a>
@@ -265,7 +265,7 @@
   <div class="wrap">
     <div class="eyebrow"><span class="dot"></span> DNS for AI agents · open source · no signup</div>
     <h1>Every agent needs<br><span class="g">an address.</span></h1>
-    <p class="sub"><b>a-i.sh</b> turns the IP your agent, bot, or service runs on into a working hostname — the instant it boots. No signup, no dashboard, no human in the loop. Free, open-source, and self-hostable: shared infrastructure for the open agent ecosystem.</p>
+    <p class="sub"><b>Open-Domain</b> turns the IP your agent, bot, or service runs on into a working hostname — the instant it boots. No signup, no dashboard, no human in the loop. Free, open-source, and self-hostable: shared infrastructure for the open agent ecosystem.</p>
 
     <div class="conv">
       <div class="conv-top"><span class="lbl">// paste your agent's IP — any IPv4 or IPv6</span></div>
@@ -279,7 +279,7 @@
         <div class="row"><span class="k">https</span><span class="v" id="v-url"></span><button class="copy" data-t="v-url">copy</button></div>
       </div>
     </div>
-    <p class="hint">dashed form → wildcard TLS certs · resolves worldwide in ~1&nbsp;query</p>
+    <p class="hint">dashed form → wildcard TLS certs · resolves worldwide in ~1&nbsp;query · same name works on <span class="mono">.a-i.sh</span> and <span class="mono">.a-i.st</span></p>
   </div>
 </header>
 
@@ -308,14 +308,14 @@
   <div class="wrap">
     <div class="sec-label">// built for agents</div>
     <h2>Made for machines, not dashboards.</h2>
-    <p class="lead">AI agents spin up on ephemeral boxes with nothing but an IP — and they can't click through a DNS console. a-i.sh is the address layer they use without a human. Open, MIT-licensed, and self-hostable — infrastructure the whole agent ecosystem can build on, not a black box you have to trust.</p>
+    <p class="lead">AI agents spin up on ephemeral boxes with nothing but an IP — and they can't click through a DNS console. Open-Domain is the address layer they use without a human. Open, MIT-licensed, and self-hostable — infrastructure the whole agent ecosystem can build on, not a black box you have to trust.</p>
     <div class="uc">
       <div class="card"><div class="ic">🤖</div><div><h3>No human in the loop</h3><div class="desc">No signup, no console, no consent screen. An agent can't click a dashboard — here it doesn't have to.</div></div></div>
       <div class="card"><div class="ic">⚡</div><div><h3>Live the moment it boots</h3><div class="desc">The hostname resolves as soon as the box has a public IP. Perfect for sandboxes, previews &amp; per-run infra.</div></div></div>
       <div class="card"><div class="ic">🔐</div><div><h3>HTTPS between agents</h3><div class="desc">The dashed form gets real Let's Encrypt certs, so agent-to-agent and tool calls stay encrypted.</div></div></div>
       <div class="card"><div class="ic">🔗</div><div><h3>Deterministic &amp; stable</h3><div class="desc">Append <span class="mono">.a-i.sh</span> and you already know the name. Ideal for webhooks, callbacks &amp; MCP/A2A endpoints.</div></div></div>
     </div>
-    <div class="note">Agents → machine-readable usage at <a href="/llms.txt" style="color:var(--mint)">a-i.sh/llms.txt</a>. No docs to parse, just the rules.</div>
+    <div class="note">Agents → machine-readable usage at <a href="/llms.txt" style="color:var(--mint)">open-domain.com/llms.txt</a>. No docs to parse, just the rules.</div>
   </div>
 </section>
 
@@ -367,9 +367,9 @@
   <div class="wrap">
     <div class="sec-label">// how it works</div>
     <h2>No database. That's the trick.</h2>
-    <p class="lead">a-i.sh runs an authoritative DNS server and nothing else. It never stores a single record.</p>
+    <p class="lead">Open-Domain runs an authoritative DNS server and nothing else. It never stores a single record.</p>
     <div class="steps">
-      <div class="step"><h3>You query</h3><p>A resolver asks a-i.sh for <span class="mono">1.2.3.4.a-i.sh</span>.</p></div>
+      <div class="step"><h3>You query</h3><p>A resolver asks Open-Domain for <span class="mono">1.2.3.4.a-i.sh</span>.</p></div>
       <div class="step"><h3>It reads the name</h3><p>A tiny regex pulls the IP straight out of the hostname — no lookup.</p></div>
       <div class="step"><h3>It answers</h3><p>Returns <span class="mono">1.2.3.4</span>. Your traffic then goes <b class="mint">direct</b> to that IP.</p></div>
     </div>
@@ -381,10 +381,10 @@
   <div class="wrap">
     <div class="sec-label">// vs the classics</div>
     <h2>Same trick, built for agents.</h2>
-    <p class="lead">a-i.sh runs the same proven wildcard-DNS mechanism nip.io and sslip.io pioneered. The difference is who it's for — and that it tells machines how to use it.</p>
+    <p class="lead">Open-Domain runs the same proven wildcard-DNS mechanism nip.io and sslip.io pioneered. The difference is who it's for — and that it tells machines how to use it.</p>
     <div class="cmp-wrap">
       <table class="cmp">
-        <thead><tr><th>&nbsp;</th><th class="me">a-i.sh</th><th>nip.io</th><th>sslip.io</th></tr></thead>
+        <thead><tr><th>&nbsp;</th><th class="me">Open-Domain</th><th>nip.io</th><th>sslip.io</th></tr></thead>
         <tbody>
           <tr><td>IP → hostname</td><td class="c mecol yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
           <tr><td>Dashed form (wildcard TLS)</td><td class="c mecol yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
@@ -395,7 +395,7 @@
         </tbody>
       </table>
     </div>
-    <div class="note">No knock on the classics — they're battle-tested and a-i.sh stands on their shoulders. It just picks a lane: the agent era — and keeps it open. a-i.sh is MIT-licensed public infrastructure anyone can read, fork, self-host, or help fund.</div>
+    <div class="note">No knock on the classics — they're battle-tested and Open-Domain stands on their shoulders. It just picks a lane: the agent era — and keeps it open. Open-Domain is MIT-licensed public infrastructure anyone can read, fork, self-host, or help fund.</div>
   </div>
 </section>
 
@@ -406,10 +406,10 @@
     <div class="faq">
       <details><summary>Is it really free?</summary><p>Yes. The answer is computed straight from the hostname — there's no database and no per-record cost, so serving it is almost free. It's open-source (MIT) and community-funded, and the whole server is self-hostable, so it isn't riding on one company's goodwill. Free for dev, testing, and agent use.</p></details>
       <details><summary>Can I use it in production?</summary><p>For side projects, demos, sandboxes, and agents — go for it. For anything critical, run it on a domain you own: a public service can rate-limit or go down, and you don't want your uptime tied to ours.</p></details>
-      <details><summary>Who runs it — and will it stay up?</summary><p>a-i.sh is open-source, MIT-licensed public infrastructure for the agent ecosystem, maintained in the open and community-funded via <a href="https://github.com/sponsors/kwkuh">GitHub Sponsors</a>. Because the entire DNS server is a tiny zero-dependency Node app, you're never locked in: if the public endpoint ever rate-limits or goes away, you can <a href="https://github.com/kwkuh/open-domain">self-host the exact same thing</a> on a domain you own in minutes.</p></details>
+      <details><summary>Who runs it — and will it stay up?</summary><p>Open-Domain is open-source, MIT-licensed public infrastructure for the agent ecosystem, maintained in the open and community-funded via <a href="https://github.com/sponsors/kwkuh">GitHub Sponsors</a>. Because the entire DNS server is a tiny zero-dependency Node app, you're never locked in: if the public endpoint ever rate-limits or goes away, you can <a href="https://github.com/kwkuh/open-domain">self-host the exact same thing</a> on a domain you own in minutes.</p></details>
       <details><summary>How do I get HTTPS?</summary><p>Use the dashed form (<span class="mono">192-168-1-20.a-i.sh</span>). Because it's a single label, one <span class="mono">*.a-i.sh</span> Let's Encrypt certificate covers it — no per-IP cert dance.</p></details>
       <details><summary>Does it support IPv6?</summary><p>Yes. Swap the colons for dashes, and use a double dash for <span class="mono">::</span> — so <span class="mono">2001-db8--1.a-i.sh</span> resolves to <span class="mono">2001:db8::1</span>.</p></details>
-      <details><summary>Do you log my IP addresses?</summary><p>a-i.sh answers a DNS query and nothing more, but every resolver between you and it can log the names it sees. Treat hostnames as public — never put a secret, token, or private detail in one.</p></details>
+      <details><summary>Do you log my IP addresses?</summary><p>Open-Domain answers a DNS query and nothing more, but every resolver between you and it can log the names it sees. Treat hostnames as public — never put a secret, token, or private detail in one.</p></details>
       <details><summary>Is it open source?</summary><p>Yes — the whole DNS server is a tiny zero-dependency Node app. Read it, fork it, or self-host it on your own domain. <a href="https://github.com/kwkuh/open-domain">GitHub →</a></p></details>
     </div>
   </div>
@@ -431,7 +431,7 @@
 
 <footer>
   <div class="wrap">
-    <span class="brand mono">a-i.sh<span class="cursor">▊</span></span>
+    <span class="brand mono">open-domain<span class="cursor">▊</span></span>
     <span class="mono" style="color:var(--faint)">wildcard DNS · MIT</span>
     <span class="r">
       <a href="#formats">Formats</a>

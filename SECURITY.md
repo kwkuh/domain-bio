@@ -1,6 +1,6 @@
 # Security Policy
 
-`a-i-dns` is the authoritative DNS server behind `a-i.sh`, a stateless
+Open-Domain is the authoritative DNS server behind `a-i.sh` and `a-i.st`, a stateless
 wildcard-IP resolver in the spirit of [nip.io](https://nip.io) /
 [sslip.io](https://sslip.io). It stores no data: every answer is computed
 directly from the query name. This document explains how to report
@@ -47,7 +47,7 @@ Target response times (best-effort for a volunteer-maintained project):
 
 **Out of scope**
 
-- The content that a resolved IP address points to. `a-i.sh` only maps a
+- The content that a resolved IP address points to. Open-Domain only maps a
   hostname to the IP encoded in it; it does not host, proxy, or control
   anything at that IP. Abuse of a destination IP is not a vulnerability in this
   project.
@@ -58,7 +58,7 @@ Target response times (best-effort for a volunteer-maintained project):
 
 ## Important: Privacy and Safe Use
 
-`a-i.sh` is a **public, unauthenticated DNS service**. Please understand the
+Open-Domain is a **public, unauthenticated DNS service**. Please understand the
 following before using it:
 
 - **Never put secrets in a hostname.** Anything you place in a DNS query name

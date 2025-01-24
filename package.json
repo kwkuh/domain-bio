@@ -1,9 +1,9 @@
 {
-  "name": "a-i-dns",
+  "name": "open-domain",
   "version": "0.1.0",
-  "description": "Authoritative wildcard-IP DNS server (ala nip.io/sslip.io) buat a-i.sh — zero dependency.",
+  "description": "Open-Domain — authoritative wildcard-IP DNS server (ala nip.io/sslip.io) buat a-i.sh + a-i.st, zero dependency.",
   "type": "module",
-  "bin": { "a-i-dns": "src/server.js" },
+  "bin": { "open-domain": "src/server.js" },
   "scripts": {
     "start": "node src/server.js",
     "dev": "PORT=5353 BIND=127.0.0.1 DEBUG=1 node src/server.js",

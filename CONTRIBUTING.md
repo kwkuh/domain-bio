@@ -1,7 +1,7 @@
 # Contributing to a-i-dns
 
 Thanks for your interest in `a-i-dns` — the authoritative wildcard-IP DNS server
-behind [`a-i.sh`](https://a-i.sh). It encodes an IP address in the hostname
+behind [Open-Domain](https://open-domain.com). It encodes an IP address in the hostname
 (like [nip.io](https://nip.io) / [sslip.io](https://sslip.io)) and computes every
 answer from the query name. It is **stateless** (no database), **zero-dependency**
 (Node built-ins only), and MIT licensed.
@@ -15,7 +15,7 @@ Requires **Node >= 18**. No `npm install` step — there are no dependencies.
 
 ```sh
 git clone https://github.com/kwkuh/open-domain
-cd a-i.sh          # or wherever you cloned it
+cd open-domain     # or wherever you cloned it
 npm test           # run the unit tests
 npm run dev        # start a local dev server
 ```

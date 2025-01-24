@@ -7,7 +7,7 @@ the hostname itself. This roadmap tracks where the project is and where it's goi
 **Why this matters for the open agent ecosystem.** Agents get spawned on ephemeral
 boxes with a raw IP and no human at the keyboard to click through a DNS control
 panel. Every one of them still needs a stable, TLS-friendly address to be reached
-at. `a-i.sh` is the missing address primitive: stateless, self-hostable, MIT, and
+at. Open-Domain is the missing address primitive: stateless, self-hostable, MIT, and
 designed to be embedded as a default in agent tooling rather than "discovered" by
 a person. The incumbents (nip.io, sslip.io, traefik.me, backname.io) solve the
 IP-in-hostname trick but none of them are built for agents. That gap is the whole
@@ -53,7 +53,7 @@ Rough order of priority, not fixed dates.
   can't complete a TLS handshake it has to click through.
 
 - **MCP server**
-  A Model Context Protocol server so an agent can call `a-i.sh` directly as a tool:
+  A Model Context Protocol server so an agent can call Open-Domain directly as a tool:
   "encode this IP into a hostname", "give me a TLS-ready address for this box",
   "what does this name resolve to". This is the most direct expression of
   agent-native: the agent uses the address layer as a capability, no human and no
@@ -88,7 +88,7 @@ Hardening and reach, once the core and the agent-facing features are proven.
   redundancy plus self-hostability is the honest answer to it.
 
 - **Self-host guide**
-  First-class docs for running your own `a-i.sh` instance on your own domain. This
+  First-class docs for running your own Open-Domain instance on your own domain. This
   is the antidote to "what if the maintainer turns it off" and a hard requirement
   for adoption inside security-conscious environments. Being trivially
   self-hostable is a differentiator against closed incumbents, not just a nicety.
@@ -98,7 +98,7 @@ Hardening and reach, once the core and the agent-facing features are proven.
   and full parity in tests and docs with the IPv4 path.
 
 - **Distribution & integrations** (ongoing, not a single milestone)
-  Land `a-i.sh` as a documented or default option inside agent sandboxes and
+  Land Open-Domain as a documented or default option inside agent sandboxes and
   frameworks (the way nip.io became a default in Knative). This is how utilities
   like this actually get adopted — embedded in tooling other people already run,
   not via a single launch post. Concrete, useful PRs to relevant docs and
