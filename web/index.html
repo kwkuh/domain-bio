@@ -1,502 +1,134 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Open-Domain — the open-source address layer for AI agents</title>
-<meta name="description" content="Open-Domain turns any IP into a working hostname — instantly, no signup, no dashboard. Open-source, MIT-licensed public infrastructure for the open agent ecosystem: every agent gets an address." />
+<title>Open-Domain — wildcard DNS for IP addresses</title>
+<meta name="description" content="Open-Domain is a DNS service that, when queried with a hostname containing an embedded IP address, returns that IP address. Free, stateless, open source. Runs on a-i.sh and a-i.st." />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-<meta name="theme-color" content="#080b0f" />
-<meta property="og:type" content="website" />
-<meta property="og:title" content="Open-Domain — the open-source address layer for AI agents" />
-<meta property="og:description" content="Give every agent, bot, and service an address. Append .a-i.sh to any IP — instant, no signup, no human in the loop. Open-source, MIT, self-hostable." />
+<meta property="og:title" content="Open-Domain — wildcard DNS for IP addresses" />
+<meta property="og:description" content="Query a hostname with an IP address in it, get that IP address back. No signup, no state. Free and open source." />
 <meta property="og:url" content="https://open-domain.com" />
 <meta property="og:image" content="https://open-domain.com/og-image.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://open-domain.com/og-image.png" />
 <style>
   :root{
-    --bg:#080b0f;
-    --bg-2:#0d1218;
-    --surface:#111820;
-    --surface-2:#0f151c;
-    --border:#1e2a35;
-    --border-hi:#2b3d4b;
-    --text:#e7eef4;
-    --muted:#8496a5;
-    --faint:#5b6b78;
-    --mint:#3ddc97;
-    --mint-dim:#2a9d6f;
-    --blue:#5bb0ff;
-    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
-    --sans:system-ui,-apple-system,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    --bg:#fff; --fg:#1a1a1a; --muted:#5c5c5c; --line:#e0e0e0;
+    --link:#0b5fbe; --code-bg:#f6f6f4;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#15171a; --fg:#e6e6e6; --muted:#9aa0a6; --line:#2c3036;
+      --link:#7fb4f5; --code-bg:#1d2024;
+    }
   }
   *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
+  html{-webkit-text-size-adjust:100%}
   body{
-    margin:0;background:var(--bg);color:var(--text);
-    font-family:var(--sans);line-height:1.6;
-    -webkit-font-smoothing:antialiased;
+    margin:0; background:var(--bg); color:var(--fg);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
-  a{color:inherit;text-decoration:none}
-  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
-  .mono{font-family:var(--mono)}
-  .mint{color:var(--mint)}
-
-  /* ---- nav ---- */
-  nav{
-    position:sticky;top:0;z-index:50;
-    background:rgba(8,11,15,.72);backdrop-filter:blur(12px);
-    border-bottom:1px solid var(--border);
-  }
-  nav .wrap{display:flex;align-items:center;gap:24px;height:60px}
-  .brand{font-family:var(--mono);font-weight:600;font-size:17px;letter-spacing:-.02em;white-space:nowrap;flex:none}
-  .brand .cursor{color:var(--mint);animation:blink 1.2s steps(1) infinite}
-  @keyframes blink{50%{opacity:0}}
-  .nav-links{margin-left:auto;display:flex;gap:26px;align-items:center;font-size:14px}
-  .nav-links a{color:var(--muted);transition:color .15s}
-  .nav-links a:hover{color:var(--text)}
-  .badge-free{
-    font-family:var(--mono);font-size:11px;color:var(--mint);
-    border:1px solid var(--mint-dim);border-radius:999px;padding:3px 10px;
-    background:rgba(61,220,151,.06);
-  }
-  @media(max-width:640px){.nav-links a.hide-sm{display:none}}
-
-  /* ---- hero ---- */
-  .hero{position:relative;overflow:hidden;padding:88px 0 64px;text-align:center}
-  .hero::before{
-    content:"";position:absolute;inset:0;z-index:0;
-    background:
-      radial-gradient(600px 320px at 50% -40px,rgba(61,220,151,.13),transparent 70%),
-      linear-gradient(180deg,transparent,var(--bg));
-  }
-  .hero::after{
-    content:"";position:absolute;inset:0;z-index:0;opacity:.4;
-    background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
-    background-size:44px 44px;
-    -webkit-mask-image:radial-gradient(circle at 50% 20%,#000 0%,transparent 60%);
-    mask-image:radial-gradient(circle at 50% 20%,#000 0%,transparent 60%);
-  }
-  .hero .wrap{position:relative;z-index:1}
-  .eyebrow{
-    font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--mint);
-    text-transform:uppercase;margin-bottom:22px;display:inline-flex;gap:8px;align-items:center;
-  }
-  .dot{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint)}
-  h1{
-    font-size:clamp(34px,6vw,60px);line-height:1.04;margin:0 0 18px;
-    letter-spacing:-.035em;font-weight:700;
-  }
-  h1 .g{
-    background:linear-gradient(120deg,#fff,var(--mint));
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-  }
-  .sub{font-size:clamp(16px,2.2vw,20px);color:var(--muted);max-width:600px;margin:0 auto 40px}
-  .sub b{color:var(--text);font-weight:600}
-
-  /* ---- converter ---- */
-  .conv{
-    max-width:600px;margin:0 auto;text-align:left;
-    background:linear-gradient(180deg,var(--surface),var(--surface-2));
-    border:1px solid var(--border-hi);border-radius:16px;padding:8px;
-    box-shadow:0 24px 60px -20px rgba(0,0,0,.7),0 0 0 1px rgba(61,220,151,.04);
-  }
-  .conv-top{display:flex;align-items:center;gap:8px;padding:10px 12px 12px}
-  .conv-top .lbl{font-family:var(--mono);font-size:12px;color:var(--faint)}
-  .conv-input{
-    display:flex;align-items:center;gap:10px;
-    background:var(--bg);border:1px solid var(--border);border-radius:11px;
-    padding:14px 16px;transition:border-color .15s,box-shadow .15s;
-  }
-  .conv-input:focus-within{border-color:var(--mint-dim);box-shadow:0 0 0 3px rgba(61,220,151,.1)}
-  .conv-input .p{font-family:var(--mono);color:var(--faint);font-size:15px}
-  #ip{
-    flex:1;background:transparent;border:0;outline:0;color:var(--text);
-    font-family:var(--mono);font-size:clamp(16px,3.5vw,20px);letter-spacing:-.01em;min-width:0;
-  }
-  #ip::placeholder{color:var(--faint)}
-  .conv-out{padding:14px 12px 8px;display:flex;flex-direction:column;gap:8px}
-  .row{
-    display:flex;align-items:center;gap:10px;
-    background:var(--bg);border:1px solid var(--border);border-radius:10px;
-    padding:11px 14px;
-  }
-  .row .k{font-family:var(--mono);font-size:11px;color:var(--faint);width:64px;flex:none;text-transform:uppercase;letter-spacing:.05em}
-  .row .v{font-family:var(--mono);font-size:15px;color:var(--text);flex:1;overflow:auto;white-space:nowrap}
-  .row .v .h{color:var(--mint)}
-  .row.bad .v{color:#ff7a7a}
-  .copy{
-    font-family:var(--mono);font-size:11px;color:var(--muted);cursor:pointer;
-    border:1px solid var(--border-hi);background:transparent;border-radius:7px;padding:5px 10px;
-    transition:all .15s;flex:none;
-  }
-  .copy:hover{color:var(--mint);border-color:var(--mint-dim)}
-  .copy.ok{color:var(--mint);border-color:var(--mint-dim)}
-  .hint{font-family:var(--mono);font-size:12px;color:var(--faint);text-align:center;margin-top:16px}
-  /* mobile: jangan potong hostname — key+copy di atas, value penuh di bawah */
-  @media(max-width:560px){
-    .row{flex-wrap:wrap;row-gap:9px}
-    .row .k{order:1;width:auto}
-    .copy{order:2;margin-left:auto}
-    .row .v{order:3;flex-basis:100%;white-space:normal;word-break:break-all;overflow:visible;font-size:15px}
-  }
-
-  /* ---- sections ---- */
-  section{padding:64px 0;border-top:1px solid var(--border)}
-  .sec-label{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--mint);text-transform:uppercase;margin-bottom:12px}
-  h2{font-size:clamp(24px,4vw,34px);letter-spacing:-.03em;margin:0 0 12px;font-weight:700}
-  .lead{color:var(--muted);max-width:560px;margin:0 0 36px;font-size:16px}
-
-  /* ---- terminal ---- */
-  .term{
-    background:var(--surface-2);border:1px solid var(--border);border-radius:12px;overflow:hidden;
-    box-shadow:0 20px 50px -24px rgba(0,0,0,.7);
-  }
-  .term-bar{display:flex;align-items:center;gap:7px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface)}
-  .tb{width:11px;height:11px;border-radius:50%}
-  .tb.r{background:#ff5f57}.tb.y{background:#febc2e}.tb.g{background:#28c840}
-  .term-title{margin-left:8px;font-family:var(--mono);font-size:12px;color:var(--faint)}
-  .term-body{padding:18px 18px 20px;font-family:var(--mono);font-size:13.5px;line-height:1.9;overflow-x:auto}
-  .term-body .c{color:var(--faint)}
-  .term-body .pr{color:var(--mint)}
-  .term-body .cmd{color:var(--text)}
-  .term-body .o{color:var(--muted)}
-  .term-body .hl{color:var(--mint)}
-
-  /* ---- format grid ---- */
-  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-  @media(max-width:640px){.grid{grid-template-columns:1fr}}
-  .card{
-    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;
-    transition:border-color .15s,transform .15s;
-  }
-  .card:hover{border-color:var(--border-hi);transform:translateY(-2px)}
-  .card h3{margin:0 0 6px;font-size:15px;font-weight:600}
-  .card .desc{color:var(--muted);font-size:13.5px;margin-bottom:14px}
-  .card .ex{font-family:var(--mono);font-size:13px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:nowrap}
-  .card .ex .a{color:var(--mint)}
-  .card .ex .arw{color:var(--faint)}
-
-  /* ---- use cases ---- */
-  .uc{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-  @media(max-width:640px){.uc{grid-template-columns:1fr}}
-  .uc .card{display:flex;gap:14px;align-items:flex-start}
-  .uc .ic{width:34px;height:34px;flex:none;border-radius:9px;background:rgba(61,220,151,.09);border:1px solid var(--mint-dim);display:grid;place-items:center;color:var(--mint);font-size:17px}
-  .uc h3{margin:2px 0 4px}
-
-  /* ---- steps ---- */
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;counter-reset:s}
-  @media(max-width:720px){.steps{grid-template-columns:1fr}}
-  .step{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 20px;position:relative}
-  .step::before{
-    counter-increment:s;content:counter(s);
-    font-family:var(--mono);font-size:13px;color:var(--bg);font-weight:700;
-    width:26px;height:26px;border-radius:7px;background:var(--mint);display:grid;place-items:center;margin-bottom:14px;
-  }
-  .step h3{margin:0 0 6px;font-size:15px}
-  .step p{margin:0;color:var(--muted);font-size:13.5px}
-  .note{margin-top:24px;font-size:13.5px;color:var(--faint);font-family:var(--mono);border-left:2px solid var(--mint-dim);padding:6px 0 6px 16px}
-  .note a{color:var(--mint)}
-
-  /* ---- compare table ---- */
-  .cmp-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
-  .cmp{width:100%;border-collapse:collapse;font-size:14.5px;min-width:520px}
-  .cmp th,.cmp td{text-align:left;padding:14px 18px;border-bottom:1px solid var(--border)}
-  .cmp tbody tr:last-child td{border-bottom:0}
-  .cmp thead th{font-family:var(--mono);font-size:12px;color:var(--faint);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
-  .cmp thead th.me{color:var(--mint)}
-  .cmp td:first-child{color:var(--muted)}
-  .cmp td.c{text-align:center;font-family:var(--mono)}
-  .cmp .yes{color:var(--mint)}
-  .cmp .no{color:var(--faint)}
-  .cmp td.mecol{background:rgba(61,220,151,.05)}
-
-  /* ---- faq ---- */
-  .faq{display:flex;flex-direction:column;gap:10px;max-width:760px}
-  .faq details{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:0 18px;transition:border-color .15s}
-  .faq details[open]{border-color:var(--border-hi)}
-  .faq summary{cursor:pointer;padding:16px 0;font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px}
-  .faq summary::-webkit-details-marker{display:none}
-  .faq summary::after{content:"+";color:var(--mint);font-family:var(--mono);font-size:20px;line-height:1}
-  .faq details[open] summary::after{content:"\2013"}
-  .faq p{margin:0 0 18px;color:var(--muted);font-size:14px;line-height:1.7}
-  .faq p a{color:var(--mint)}
-
-  /* ---- cta ---- */
-  .cta{text-align:center}
-  .cta .box{
-    background:linear-gradient(180deg,var(--surface),var(--surface-2));
-    border:1px solid var(--border-hi);border-radius:16px;padding:48px 28px;
-  }
-  .btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px}
-  .btn{font-family:var(--mono);font-size:14px;padding:12px 22px;border-radius:10px;cursor:pointer;transition:all .15s;border:1px solid transparent}
-  .btn.primary{background:var(--mint);color:#04140c;font-weight:600}
-  .btn.primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
-  .btn.ghost{border-color:var(--border-hi);color:var(--text)}
-  .btn.ghost:hover{border-color:var(--mint-dim);color:var(--mint)}
-
-  footer{border-top:1px solid var(--border);padding:36px 0;color:var(--faint);font-size:13px}
-  footer .wrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-  footer .mono{font-size:13px}
-  footer .r{margin-left:auto;display:flex;gap:20px}
-  footer a{color:var(--muted)}footer a:hover{color:var(--text)}
+  main{max-width:46rem; margin:0 auto; padding:2.5rem 1.25rem 4rem}
+  h1{font-size:1.6rem; font-weight:600; margin:0 0 .25rem; letter-spacing:-.01em}
+  h2{font-size:1.15rem; font-weight:600; margin:2.5rem 0 .6rem; letter-spacing:-.01em}
+  .tagline{color:var(--muted); margin:0 0 2rem}
+  p{margin:0 0 1rem}
+  a{color:var(--link)}
+  a:hover{text-decoration:none}
+  code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em}
+  code{background:var(--code-bg); padding:.12em .35em; border-radius:3px}
+  pre{background:var(--code-bg); padding:.85rem 1rem; border-radius:4px; overflow-x:auto; margin:0 0 1rem}
+  pre code{background:none; padding:0}
+  .scroll{overflow-x:auto; margin:0 0 1rem}
+  table{border-collapse:collapse; width:100%; font-size:.94rem}
+  th,td{text-align:left; padding:.5rem .65rem; border-bottom:1px solid var(--line); vertical-align:top}
+  th{font-weight:600; white-space:nowrap}
+  td:first-child{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; white-space:nowrap}
+  td.note{color:var(--muted)}
+  ul{margin:0 0 1rem; padding-left:1.25rem}
+  li{margin:.25rem 0}
+  hr{border:0; border-top:1px solid var(--line); margin:2.5rem 0 1.25rem}
+  footer{color:var(--muted); font-size:.9rem}
+  footer a{color:var(--muted)}
 </style>
 </head>
 <body>
+<main>
 
-<nav>
-  <div class="wrap">
-    <div class="brand">open-domain<span class="cursor">▊</span></div>
-    <div class="nav-links">
-      <a href="#agents" class="hide-sm">For agents</a>
-      <a href="#formats" class="hide-sm">Formats</a>
-      <a href="#how" class="hide-sm">How it works</a>
-      <a href="https://github.com/sponsors/kwkuh" class="hide-sm">Sponsor</a>
-      <a href="#start">Get started</a>
-      <span class="badge-free">free · open source</span>
-    </div>
+  <h1>Open-Domain</h1>
+  <p class="tagline">Wildcard DNS for IP addresses. Free, stateless, open source.</p>
+
+  <p>Open-Domain is a DNS service that, when queried with a hostname that has an IP address embedded in it, returns that IP address. Append <code>.a-i.sh</code> to an IP and you have a working hostname — no signup, no API key, no dashboard, and nothing to wait for.</p>
+
+  <p>Every answer is computed from the query name itself. There is no database and no stored record: <code>203.0.113.10.a-i.sh</code> resolves to <code>203.0.113.10</code> because the name says so.</p>
+
+  <p>The service runs on two domains, <strong>a-i.sh</strong> and <strong>a-i.st</strong>, which are interchangeable — the same name works under either. They are separate registrations answered by the same resolver, so a problem at one registry or registrar does not take the whole thing down.</p>
+
+  <h2>Examples</h2>
+
+  <div class="scroll">
+  <table>
+    <thead>
+      <tr><th>Hostname</th><th>Resolves to</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>203.0.113.10.a-i.sh</td><td>203.0.113.10</td><td class="note">dot separators (IPv4)</td></tr>
+      <tr><td>203-0-113-10.a-i.sh</td><td>203.0.113.10</td><td class="note">dash separators — use this for wildcard TLS</td></tr>
+      <tr><td>203.0.113.10.a-i.st</td><td>203.0.113.10</td><td class="note">the other domain, same answer</td></tr>
+      <tr><td>www.192.168.0.1.a-i.sh</td><td>192.168.0.1</td><td class="note">any prefix is ignored</td></tr>
+      <tr><td>www-192-168-0-1.a-i.sh</td><td>192.168.0.1</td><td class="note">prefix + dashes</td></tr>
+      <tr><td>0a000001.a-i.sh</td><td>10.0.0.1</td><td class="note">hexadecimal notation (8 digits)</td></tr>
+      <tr><td>2001-db8--1.a-i.sh</td><td>2001:db8::1</td><td class="note">IPv6 — always dashes, never dots</td></tr>
+      <tr><td>foo.bar.a-i.sh</td><td>NXDOMAIN</td><td class="note">no IP address in the name</td></tr>
+      <tr><td>example.com</td><td>REFUSED</td><td class="note">outside our zones</td></tr>
+    </tbody>
+  </table>
   </div>
-</nav>
 
-<header class="hero">
-  <div class="wrap">
-    <div class="eyebrow"><span class="dot"></span> DNS for AI agents · open source · no signup</div>
-    <h1>Every agent needs<br><span class="g">an address.</span></h1>
-    <p class="sub"><b>Open-Domain</b> turns the IP your agent, bot, or service runs on into a working hostname — the instant it boots. No signup, no dashboard, no human in the loop. Free, open-source, and self-hostable: shared infrastructure for the open agent ecosystem.</p>
+  <p>Try it:</p>
+  <pre><code>dig +short 203.0.113.10.a-i.sh
+dig +short 203.0.113.10.a-i.st</code></pre>
 
-    <div class="conv">
-      <div class="conv-top"><span class="lbl">// paste your agent's IP — any IPv4 or IPv6</span></div>
-      <div class="conv-input">
-        <span class="p">$</span>
-        <input id="ip" spellcheck="false" autocomplete="off" value="203.0.113.10" />
-      </div>
-      <div class="conv-out" id="out">
-        <div class="row"><span class="k">host</span><span class="v" id="v-dot"></span><button class="copy" data-t="v-dot">copy</button></div>
-        <div class="row"><span class="k">dashed</span><span class="v" id="v-dash"></span><button class="copy" data-t="v-dash">copy</button></div>
-        <div class="row"><span class="k">https</span><span class="v" id="v-url"></span><button class="copy" data-t="v-url">copy</button></div>
-      </div>
-    </div>
-    <p class="hint">dashed form → wildcard TLS certs · resolves worldwide in ~1&nbsp;query · same name works on <span class="mono">.a-i.sh</span> and <span class="mono">.a-i.st</span></p>
-  </div>
-</header>
+  <h2>HTTPS</h2>
 
-<section id="demo">
-  <div class="wrap">
-    <div class="sec-label">// see it work</div>
-    <h2>It just resolves.</h2>
-    <p class="lead">No account, no zone file, no waiting. The IP is in the name — the answer is computed on the fly.</p>
-    <div class="term">
-      <div class="term-bar"><span class="tb r"></span><span class="tb y"></span><span class="tb g"></span><span class="term-title">zsh — you@laptop</span></div>
-      <div class="term-body">
-<span class="pr">$</span> <span class="cmd">dig +short 203.0.113.10.a-i.sh</span><br>
-<span class="hl">203.0.113.10</span><br>
-<span class="c">&nbsp;</span><br>
-<span class="pr">$</span> <span class="cmd">dig +short app.10.0.0.1.a-i.sh</span> <span class="c"># any prefix works</span><br>
-<span class="hl">10.0.0.1</span><br>
-<span class="c">&nbsp;</span><br>
-<span class="pr">$</span> <span class="cmd">curl https://192-168-1-20.a-i.sh/health</span> <span class="c"># your agent, over HTTPS</span><br>
-<span class="o">{"agent":"ok","uptime":42}</span>
-      </div>
-    </div>
-  </div>
-</section>
+  <p>A dotted name such as <code>1.2.3.4.a-i.sh</code> has too many labels for a single <code>*.a-i.sh</code> wildcard certificate to cover. The dashed form collapses the IP into one label, so <code>1-2-3-4.a-i.sh</code> is matched by an ordinary wildcard certificate and HTTPS works normally. Let's Encrypt will not issue a certificate for a bare IP address, but it will for a hostname — which is what this gives you.</p>
 
-<section id="agents">
-  <div class="wrap">
-    <div class="sec-label">// built for agents</div>
-    <h2>Made for machines, not dashboards.</h2>
-    <p class="lead">AI agents spin up on ephemeral boxes with nothing but an IP — and they can't click through a DNS console. Open-Domain is the address layer they use without a human. Open, MIT-licensed, and self-hostable — infrastructure the whole agent ecosystem can build on, not a black box you have to trust.</p>
-    <div class="uc">
-      <div class="card"><div class="ic">🤖</div><div><h3>No human in the loop</h3><div class="desc">No signup, no console, no consent screen. An agent can't click a dashboard — here it doesn't have to.</div></div></div>
-      <div class="card"><div class="ic">⚡</div><div><h3>Live the moment it boots</h3><div class="desc">The hostname resolves as soon as the box has a public IP. Perfect for sandboxes, previews &amp; per-run infra.</div></div></div>
-      <div class="card"><div class="ic">🔐</div><div><h3>HTTPS between agents</h3><div class="desc">The dashed form gets real Let's Encrypt certs, so agent-to-agent and tool calls stay encrypted.</div></div></div>
-      <div class="card"><div class="ic">🔗</div><div><h3>Deterministic &amp; stable</h3><div class="desc">Append <span class="mono">.a-i.sh</span> and you already know the name. Ideal for webhooks, callbacks &amp; MCP/A2A endpoints.</div></div></div>
-    </div>
-    <div class="note">Agents → machine-readable usage at <a href="/llms.txt" style="color:var(--mint)">open-domain.com/llms.txt</a>. No docs to parse, just the rules.</div>
-  </div>
-</section>
+  <h2>For agents and automated tools</h2>
 
-<section id="formats">
-  <div class="wrap">
-    <div class="sec-label">// formats</div>
-    <h2>Four ways to write an IP.</h2>
-    <p class="lead">Pick whichever fits. Dotted for humans, dashed for TLS wildcards, hex when you're feeling fancy, and full IPv6 support.</p>
-    <div class="grid">
-      <div class="card">
-        <h3>Dotted <span class="mint mono">·default</span></h3>
-        <div class="desc">The natural way. An optional prefix in front is ignored.</div>
-        <div class="ex"><span class="a">app.10.0.0.1</span>.a-i.sh <span class="arw">→</span> 10.0.0.1</div>
-      </div>
-      <div class="card">
-        <h3>Dashed <span class="mint mono">·for TLS</span></h3>
-        <div class="desc">One label, so a single <span class="mono">*.a-i.sh</span> cert covers it.</div>
-        <div class="ex"><span class="a">192-168-1-20</span>.a-i.sh <span class="arw">→</span> 192.168.1.20</div>
-      </div>
-      <div class="card">
-        <h3>Hex</h3>
-        <div class="desc">Eight hex digits pack a full IPv4 into one short label.</div>
-        <div class="ex"><span class="a">0a000001</span>.a-i.sh <span class="arw">→</span> 10.0.0.1</div>
-      </div>
-      <div class="card">
-        <h3>IPv6</h3>
-        <div class="desc">Swap colons for dashes; <span class="mono">--</span> stands in for <span class="mono">::</span>.</div>
-        <div class="ex"><span class="a">2001-db8--1</span>.a-i.sh <span class="arw">→</span> 2001:db8::1</div>
-      </div>
-    </div>
-  </div>
-</section>
+  <p>The hostname is a pure function of the IP: no lookup, no state, no registration step. An agent that has just been handed a public IP can construct its own address without asking anyone. A short machine-readable version of this page is at <a href="/llms.txt">/llms.txt</a>.</p>
 
-<section id="uses">
-  <div class="wrap">
-    <div class="sec-label">// why</div>
-    <h2>What it's for.</h2>
-    <p class="lead">Anywhere you need a hostname but only have an IP.</p>
-    <div class="uc">
-      <div class="card"><div class="ic">⧉</div><div><h3>Subdomains on localhost</h3><div class="desc">Multi-tenant dev without touching <span class="mono">/etc/hosts</span>: <span class="mono">t1.127.0.0.1.a-i.sh</span>.</div></div></div>
-      <div class="card"><div class="ic">🔒</div><div><h3>Real HTTPS certs</h3><div class="desc">Let's Encrypt can't issue for a bare IP — but it can for a hostname. Now you have one.</div></div></div>
-      <div class="card"><div class="ic">◈</div><div><h3>Demos &amp; staging</h3><div class="desc">Share a fresh box before DNS is set up. The hostname works the second the server does.</div></div></div>
-      <div class="card"><div class="ic">⇄</div><div><h3>Ingress &amp; proxy testing</h3><div class="desc">Host-based routing for Traefik, Caddy, nginx, k8s ingress — no config needed.</div></div></div>
-    </div>
-  </div>
-</section>
+  <p>Two cautions. Do not put secrets in a hostname — every resolver along the path can log the names it sees. And if <code>a-i.sh</code> fails to resolve for you, retry the identical name under <code>a-i.st</code> before assuming the IP is down.</p>
 
-<section id="how">
-  <div class="wrap">
-    <div class="sec-label">// how it works</div>
-    <h2>No database. That's the trick.</h2>
-    <p class="lead">Open-Domain runs an authoritative DNS server and nothing else. It never stores a single record.</p>
-    <div class="steps">
-      <div class="step"><h3>You query</h3><p>A resolver asks Open-Domain for <span class="mono">1.2.3.4.a-i.sh</span>.</p></div>
-      <div class="step"><h3>It reads the name</h3><p>A tiny regex pulls the IP straight out of the hostname — no lookup.</p></div>
-      <div class="step"><h3>It answers</h3><p>Returns <span class="mono">1.2.3.4</span>. Your traffic then goes <b class="mint">direct</b> to that IP.</p></div>
-    </div>
-    <div class="note">Stateless = featherweight. The answer is computed, never stored — which is exactly why it can be free forever.</div>
-  </div>
-</section>
+  <h2>Run your own</h2>
 
-<section id="compare">
-  <div class="wrap">
-    <div class="sec-label">// vs the classics</div>
-    <h2>Same trick, built for agents.</h2>
-    <p class="lead">Open-Domain runs the same proven wildcard-DNS mechanism nip.io and sslip.io pioneered. The difference is who it's for — and that it tells machines how to use it.</p>
-    <div class="cmp-wrap">
-      <table class="cmp">
-        <thead><tr><th>&nbsp;</th><th class="me">Open-Domain</th><th>nip.io</th><th>sslip.io</th></tr></thead>
-        <tbody>
-          <tr><td>IP → hostname</td><td class="c mecol yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
-          <tr><td>Dashed form (wildcard TLS)</td><td class="c mecol yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
-          <tr><td>Built &amp; documented for AI agents</td><td class="c mecol yes">✓</td><td class="c no">—</td><td class="c no">—</td></tr>
-          <tr><td>llms.txt for machine self-serve</td><td class="c mecol yes">✓</td><td class="c no">—</td><td class="c no">—</td></tr>
-          <tr><td>Open-source &amp; self-hostable</td><td class="c mecol yes">✓</td><td class="c no">—</td><td class="c yes">✓</td></tr>
-          <tr><td>Free</td><td class="c mecol yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="note">No knock on the classics — they're battle-tested and Open-Domain stands on their shoulders. It just picks a lane: the agent era — and keeps it open. Open-Domain is MIT-licensed public infrastructure anyone can read, fork, self-host, or help fund.</div>
-  </div>
-</section>
+  <p>The resolver is a zero-dependency Node program. One process can be authoritative for any number of zones:</p>
 
-<section id="faq">
-  <div class="wrap">
-    <div class="sec-label">// faq</div>
-    <h2>Questions.</h2>
-    <div class="faq">
-      <details><summary>Is it really free?</summary><p>Yes. The answer is computed straight from the hostname — there's no database and no per-record cost, so serving it is almost free. It's open-source (MIT) and community-funded, and the whole server is self-hostable, so it isn't riding on one company's goodwill. Free for dev, testing, and agent use.</p></details>
-      <details><summary>Can I use it in production?</summary><p>For side projects, demos, sandboxes, and agents — go for it. For anything critical, run it on a domain you own: a public service can rate-limit or go down, and you don't want your uptime tied to ours.</p></details>
-      <details><summary>Who runs it — and will it stay up?</summary><p>Open-Domain is open-source, MIT-licensed public infrastructure for the agent ecosystem, maintained in the open and community-funded via <a href="https://github.com/sponsors/kwkuh">GitHub Sponsors</a>. Because the entire DNS server is a tiny zero-dependency Node app, you're never locked in: if the public endpoint ever rate-limits or goes away, you can <a href="https://github.com/kwkuh/open-domain">self-host the exact same thing</a> on a domain you own in minutes.</p></details>
-      <details><summary>How do I get HTTPS?</summary><p>Use the dashed form (<span class="mono">192-168-1-20.a-i.sh</span>). Because it's a single label, one <span class="mono">*.a-i.sh</span> Let's Encrypt certificate covers it — no per-IP cert dance.</p></details>
-      <details><summary>Does it support IPv6?</summary><p>Yes. Swap the colons for dashes, and use a double dash for <span class="mono">::</span> — so <span class="mono">2001-db8--1.a-i.sh</span> resolves to <span class="mono">2001:db8::1</span>.</p></details>
-      <details><summary>Do you log my IP addresses?</summary><p>Open-Domain answers a DNS query and nothing more, but every resolver between you and it can log the names it sees. Treat hostnames as public — never put a secret, token, or private detail in one.</p></details>
-      <details><summary>Is it open source?</summary><p>Yes — the whole DNS server is a tiny zero-dependency Node app. Read it, fork it, or self-host it on your own domain. <a href="https://github.com/kwkuh/open-domain">GitHub →</a></p></details>
-    </div>
-  </div>
-</section>
+  <pre><code>git clone https://github.com/kwkuh/open-domain
+cd open-domain
+npm test
 
-<section id="start" class="cta">
-  <div class="wrap">
-    <div class="box">
-      <div class="sec-label" style="text-align:center">// get started</div>
-      <h2>Give your IP a name.</h2>
-      <p class="lead" style="margin:0 auto">Append <span class="mono mint">.a-i.sh</span> to any IP. No account. No config. It already works.</p>
-      <div class="btns">
-        <button class="btn primary" onclick="document.getElementById('ip').scrollIntoView({block:'center'});document.getElementById('ip').focus()">Try the converter</button>
-        <a class="btn ghost" href="https://github.com/kwkuh/open-domain">View on GitHub</a>
-      </div>
-    </div>
-  </div>
-</section>
+ZONES=example.dev,example.test PORT=15353 BIND=127.0.0.1 node src/server.js
+dig +short -p 15353 @127.0.0.1 1.2.3.4.example.dev</code></pre>
 
-<footer>
-  <div class="wrap">
-    <span class="brand mono">open-domain<span class="cursor">▊</span></span>
-    <span class="mono" style="color:var(--faint)">wildcard DNS · MIT</span>
-    <span class="r">
-      <a href="#formats">Formats</a>
-      <a href="#how">How</a>
-      <a href="#faq">FAQ</a>
-      <a href="/llms.txt">llms.txt</a>
-      <a href="https://github.com/kwkuh/open-domain">GitHub</a>
-    </span>
-  </div>
-</footer>
+  <p>Each zone gets its own <code>SOA</code> and apex, and the longest matching zone wins. To serve the public internet you need a host with a static IPv4 address and UDP and TCP port 53 reachable, then delegate NS and glue records to it. Configuration is all environment variables: <code>ZONES</code>, <code>PORT</code>, <code>BIND</code>, <code>NS_HOSTS</code>, <code>APEX_IP</code>, <code>TTL</code>, <code>DEBUG</code>.</p>
 
-<script>
-  const $ = (id)=>document.getElementById(id);
-  const ZONE = 'a-i.sh';
+  <h2>Reliability</h2>
 
-  function classify(v){
-    v = v.trim().toLowerCase();
-    if(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.test(v)){
-      if(v.split('.').every(o=>+o<=255)) return {kind:'v4', ip:v};
-      return {kind:'bad'};
-    }
-    // rough IPv6 check (hex groups + at most one ::)
-    if(/^[0-9a-f:]+$/.test(v) && v.includes(':') && (v.match(/::/g)||[]).length<=1){
-      return {kind:'v6', ip:v};
-    }
-    return v ? {kind:'bad'} : {kind:'empty'};
-  }
+  <p>This is community-run infrastructure offered as a public good, with no SLA. It is meant for development, previews, demos, CI, and giving ephemeral machines an address. It is not meant to sit in the critical path of a production system that depends on a free third party — for that, run your own from the source above, on a domain you control. That the code is MIT-licensed and trivially self-hostable is the point: there is nothing to be locked into.</p>
 
-  function render(){
-    const {kind, ip} = classify($('ip').value);
-    const rows = document.querySelectorAll('#out .row');
-    if(kind==='v4'){
-      const host = ip+'.'+ZONE, dash = ip.replace(/\./g,'-')+'.'+ZONE;
-      set('v-dot', host); set('v-dash', dash); set('v-url', 'https://'+dash);
-      rows.forEach(r=>r.classList.remove('bad'));
-      $('v-dash').parentElement.style.display='';
-    }else if(kind==='v6'){
-      const host = ip.replace(/:/g,'-')+'.'+ZONE;
-      set('v-dot', host); set('v-url', 'https://'+host);
-      $('v-dash').parentElement.style.display='none';
-      rows.forEach(r=>r.classList.remove('bad'));
-    }else{
-      const msg = kind==='empty' ? 'type an IP above…' : 'not a valid IP address';
-      $('v-dot').textContent=msg; $('v-dash').textContent=''; $('v-url').textContent='';
-      rows.forEach(r=>r.classList.add('bad'));
-      if(kind==='empty') rows.forEach(r=>r.classList.remove('bad'));
-    }
-  }
-  function set(id, host){
-    // wrap the label part in mint
-    const el = $(id);
-    if(id==='v-url'){ el.innerHTML = host.replace(/(\.a-i\.sh)$/, '<span class="h">$1</span>'); return; }
-    el.innerHTML = host.replace(/(\.a-i\.sh)$/, '<span class="h">$1</span>');
-  }
+  <h2>Sponsor</h2>
 
-  $('ip').addEventListener('input', render);
-  document.querySelectorAll('.copy').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      const txt = $(btn.dataset.t).textContent;
-      try{ await navigator.clipboard.writeText(txt); }catch(e){}
-      const old = btn.textContent; btn.textContent='copied'; btn.classList.add('ok');
-      setTimeout(()=>{btn.textContent=old;btn.classList.remove('ok')},1100);
-    });
-  });
-  render();
-</script>
+  <p>Open-Domain is free and intends to stay free. Running authoritative nameservers costs something; keeping the service stateless keeps that cost small, and <a href="https://github.com/sponsors/kwkuh">sponsors</a> cover the rest.</p>
+
+  <hr />
+  <footer>
+    <a href="https://github.com/kwkuh/open-domain">Source on GitHub</a> ·
+    <a href="/llms.txt">llms.txt</a> ·
+    MIT licensed ·
+    In the tradition of <a href="https://nip.io">nip.io</a> and <a href="https://sslip.io">sslip.io</a>
+  </footer>
+
+</main>
 </body>
 </html>
