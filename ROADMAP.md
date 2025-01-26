@@ -1,6 +1,6 @@
 # Roadmap
 
-`a-i.sh` is a wildcard DNS address layer for AI agents. `1.2.3.4.a-i.sh` resolves
+`a-i.st` is a wildcard DNS address layer for AI agents. `1.2.3.4.a-i.st` resolves
 to `1.2.3.4` — no dashboard, no account, no database. The answer is computed from
 the hostname itself. This roadmap tracks where the project is and where it's going.
 
@@ -23,9 +23,9 @@ tier unless explicitly noted, and even paid tiers keep the core self-hostable.
 The core resolver, shipped and verifiable today.
 
 - **v0.1 — Wildcard IP resolution** ✅ **DONE**
-  - Dotted (`1.2.3.4.a-i.sh`), dashed (`1-2-3-4.a-i.sh`), hex (`0a000001.a-i.sh`),
-    and IPv6 (`2001-db8--1.a-i.sh`) encodings.
-  - Free-form prefixes (`app.1.2.3.4.a-i.sh`) for per-service subdomains.
+  - Dotted (`1.2.3.4.a-i.st`), dashed (`1-2-3-4.a-i.st`), hex (`0a000001.a-i.st`),
+    and IPv6 (`2001-db8--1.a-i.st`) encodings.
+  - Free-form prefixes (`app.1.2.3.4.a-i.st`) for per-service subdomains.
   - Zero-dependency Node DNS server over UDP + TCP on port 53. Stateless — every
     answer is derived from the name, so there is no database to run or back up.
   - 12 unit tests passing, `dig`-verified locally.
@@ -34,7 +34,7 @@ The core resolver, shipped and verifiable today.
   running (awesome-lists and grant programs both care about repo age and usage
   history). Status: repo not yet public — [TODO: publish date].
 - **Public deploy** — stand the resolver up on a static public IPv4 with inbound
-  UDP/TCP 53 open, delegate `a-i.sh` NS records to it. Target host: Oracle Cloud
+  UDP/TCP 53 open, delegate `a-i.st` NS records to it. Target host: Oracle Cloud
   Always Free (free forever, reserved static IP, port 53 allowed). Status: not yet
   deployed — [TODO: deploy date, public IP].
 
@@ -47,7 +47,7 @@ Rough order of priority, not fixed dates.
 
 - **Managed HTTPS / wildcard TLS certificates**
   Ship a wildcard cert story so agents get working HTTPS out of the box, not just
-  a resolvable name. The dashed encoding (`1-2-3-4.a-i.sh`) already exists
+  a resolvable name. The dashed encoding (`1-2-3-4.a-i.st`) already exists
   precisely because it fits under a single wildcard certificate. This is the
   feature that made traefik.me sticky; for agents it's table stakes — an agent
   can't complete a TLS handshake it has to click through.
@@ -62,11 +62,11 @@ Rough order of priority, not fixed dates.
 - **Tunnel / reachability for agents behind NAT** — *key differentiator*
   Every incumbent only works when you already have a public IP. Most agents don't:
   they run behind NAT on an ephemeral box and have no inbound path. A lightweight
-  tunnel (agent dials out, `a-i.sh` gives it a stable public address that routes
+  tunnel (agent dials out, `a-i.st` gives it a stable public address that routes
   back in) makes the address layer useful for the majority of agents that the
   IP-in-hostname trick can't help at all. No competitor covers this.
 
-- **Named handles — `myagent.a-i.sh` tier**
+- **Named handles — `myagent.a-i.st` tier**
   Human/agent-memorable names mapped to a current address, for agents that need a
   stable identity across restarts and re-IPs. Kept optional and layered on top of
   the stateless core so the free IP-encoding path never depends on it. This is the
@@ -114,7 +114,7 @@ Hardening and reach, once the core and the agent-facing features are proven.
   feature, not a limitation — it's what makes the thing cheap, fast, and
   trivially reproducible.
 - **Agent-first, honestly.** `llms.txt` exists to save tokens once an agent has
-  already been handed an `a-i.sh` address — it is ergonomics, not a discovery or
+  already been handed an `a-i.st` address — it is ergonomics, not a discovery or
   SEO channel, and we won't claim otherwise. Real adoption comes from being
   embedded as a default in agent tooling.
 - **No invented metrics.** Usage numbers in this repo and in any funding

@@ -1,28 +1,28 @@
 # Open-Domain — wildcard DNS for AI agents, bots & services
 
-Open-Domain turns any IP address into a working hostname. Append `.a-i.sh` to an IP
+Open-Domain turns any IP address into a working hostname. Append `.a-i.st` to an IP
 and it resolves straight back to that IP. No signup, no API key, no config,
 no human in the loop. Free for dev use. Project home: https://open-domain.com
 
 ## How to use
-Append `.a-i.sh` to the IP your agent runs on:
+Append `.a-i.st` to the IP your agent runs on:
 
-  <ipv4>.a-i.sh                203.0.113.10.a-i.sh        -> A     203.0.113.10
-  <ipv4-dashed>.a-i.sh         203-0-113-10.a-i.sh        -> A     203.0.113.10   (use this for wildcard TLS)
-  <8-hex>.a-i.sh               0a000001.a-i.sh            -> A     10.0.0.1
-  <ipv6-dashed>.a-i.sh         2001-db8--1.a-i.sh         -> AAAA  2001:db8::1    (":" -> "-", "::" -> "--")
-  <anything>.<ip>.a-i.sh       agent1.203.0.113.10.a-i.sh -> A     203.0.113.10   (any prefix is ignored)
+  <ipv4>.a-i.st                203.0.113.10.a-i.st        -> A     203.0.113.10
+  <ipv4-dashed>.a-i.st         203-0-113-10.a-i.st        -> A     203.0.113.10   (use this for wildcard TLS)
+  <8-hex>.a-i.st               0a000001.a-i.st            -> A     10.0.0.1
+  <ipv6-dashed>.a-i.st         2001-db8--1.a-i.st         -> AAAA  2001:db8::1    (":" -> "-", "::" -> "--")
+  <anything>.<ip>.a-i.st       agent1.203.0.113.10.a-i.st -> A     203.0.113.10   (any prefix is ignored)
 
 ## Two suffixes
-`.a-i.st` is an independent alternate suffix. Every form above works identically
-under it — `203.0.113.10.a-i.st` resolves exactly like `203.0.113.10.a-i.sh`.
+`.a-i.sh` is an independent alternate suffix. Every form above works identically
+under it — `203.0.113.10.a-i.sh` resolves exactly like `203.0.113.10.a-i.st`.
 They are separate domains answered by the same stateless resolver, so if one
 fails to resolve for you, retry the identical name under the other.
 
 ## Notes for agents
 - Deterministic: the hostname is a pure function of the IP. No lookup, no state, no registration step.
 - Available immediately: resolves the moment your host has a public IP — no propagation you control.
-- HTTPS: use the dashed form so a single *.a-i.sh certificate covers the name.
+- HTTPS: use the dashed form so a single *.a-i.st certificate covers the name.
 - Direct: your traffic goes straight to the target IP. Open-Domain only answers the DNS query, nothing else.
 
 ## Do not

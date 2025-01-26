@@ -1,6 +1,6 @@
 # Open-Domain
 
-**A free, stateless address layer for the open agent ecosystem.** Append `.a-i.sh` or `.a-i.st` to any IP address and it resolves right back to that IP — no signup, no API key, no dashboard, no human in the loop.
+**A free, stateless address layer for the open agent ecosystem.** Append `.a-i.st` or `.a-i.sh` to any IP address and it resolves right back to that IP — no signup, no API key, no dashboard, no human in the loop.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-3ddc97.svg)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-3ddc97.svg)](./CONTRIBUTING.md)
@@ -8,22 +8,22 @@
 ![Sponsors](https://img.shields.io/badge/sponsors-%5BTODO%5D-lightgrey.svg)
 
 ```
-203.0.113.10.a-i.sh      -> A     203.0.113.10
 203.0.113.10.a-i.st      -> A     203.0.113.10
+203.0.113.10.a-i.sh      -> A     203.0.113.10
 ```
 
 That's it. Any IP, plus one of our suffixes, becomes a working hostname.
 
 ## What is Open-Domain
 
-Open-Domain is a wildcard-IP DNS service in the tradition of [nip.io](https://nip.io) and [sslip.io](https://sslip.io): it turns an IP address into a hostname you can point tools, browsers, and TLS certificates at. The answer is **computed from the query name itself** — there is no database, no registration, and no state anywhere. `203.0.113.10.a-i.sh` resolves to `203.0.113.10` because the name *says so*, not because anyone stored a record.
+Open-Domain is a wildcard-IP DNS service in the tradition of [nip.io](https://nip.io) and [sslip.io](https://sslip.io): it turns an IP address into a hostname you can point tools, browsers, and TLS certificates at. The answer is **computed from the query name itself** — there is no database, no registration, and no state anywhere. `203.0.113.10.a-i.st` resolves to `203.0.113.10` because the name *says so*, not because anyone stored a record.
 
 The project lives at **[open-domain.com](https://open-domain.com)** and serves two suffixes:
 
 | Suffix | Use it for |
 |---|---|
-| `a-i.sh` | the primary, shortest form |
-| `a-i.st` | an independent alternate — if one zone has a problem, the other is a drop-in swap |
+| `a-i.st` | the primary form used throughout these docs |
+| `a-i.sh` | an independent alternate — if one zone has a problem, the other is a drop-in swap |
 
 Both are answered by the same stateless resolver, so they behave identically. Two suffixes on separate domains means no single registry or registrar outage takes the whole address layer down with it — which is exactly the failure mode that made `xip.io`'s shutdown so painful for everyone who depended on it.
 
@@ -42,17 +42,17 @@ Open-Domain is our answer to both:
 
 ## Quick start
 
-Append `.a-i.sh` to the IP your service or agent runs on. No account, no propagation you have to wait on — it resolves the moment your host has a public IP.
+Append `.a-i.st` to the IP your service or agent runs on. No account, no propagation you have to wait on — it resolves the moment your host has a public IP.
 
 ```
-203.0.113.10.a-i.sh   ->  A     203.0.113.10
+203.0.113.10.a-i.st   ->  A     203.0.113.10
 ```
 
 Test it:
 
 ```sh
-dig +short 203.0.113.10.a-i.sh
 dig +short 203.0.113.10.a-i.st
+dig +short 203.0.113.10.a-i.sh
 ```
 
 ## Supported formats
@@ -61,30 +61,30 @@ All formats are computed purely from the name, and every one of them works on **
 
 | Form | Example | Resolves to | Notes |
 |---|---|---|---|
-| Dotted IPv4 | `1.2.3.4.a-i.sh` | `A` → `1.2.3.4` | the plain form |
-| Dashed IPv4 | `1-2-3-4.a-i.sh` | `A` → `1.2.3.4` | **use this for wildcard TLS** (see below) |
-| Hex IPv4 | `0a000001.a-i.sh` | `A` → `10.0.0.1` | 8 hex digits |
-| IPv6 (dashed) | `2001-db8--1.a-i.sh` | `AAAA` → `2001:db8::1` | `:` → `-`, `::` → `--` |
-| Any prefix | `app.1.2.3.4.a-i.sh` | `A` → `1.2.3.4` | anything before the IP is ignored |
-| Apex | `a-i.sh` | `SOA` / `NS` | the zone itself |
-| No IP in name | `foo.bar.a-i.sh` | `NXDOMAIN` | nothing to compute |
+| Dotted IPv4 | `1.2.3.4.a-i.st` | `A` → `1.2.3.4` | the plain form |
+| Dashed IPv4 | `1-2-3-4.a-i.st` | `A` → `1.2.3.4` | **use this for wildcard TLS** (see below) |
+| Hex IPv4 | `0a000001.a-i.st` | `A` → `10.0.0.1` | 8 hex digits |
+| IPv6 (dashed) | `2001-db8--1.a-i.st` | `AAAA` → `2001:db8::1` | `:` → `-`, `::` → `--` |
+| Any prefix | `app.1.2.3.4.a-i.st` | `A` → `1.2.3.4` | anything before the IP is ignored |
+| Apex | `a-i.st` | `SOA` / `NS` | the zone itself |
+| No IP in name | `foo.bar.a-i.st` | `NXDOMAIN` | nothing to compute |
 | Outside our zones | `example.com` | `REFUSED` | not authoritative |
 
-Prefixes compose with every form, e.g. `agent1.203-0-113-10.a-i.st` → `203.0.113.10`.
+Prefixes compose with every form, e.g. `agent1.203-0-113-10.a-i.sh` → `203.0.113.10`.
 
 ## HTTPS via the dashed form
 
-A dotted name like `1.2.3.4.a-i.sh` has too many labels for a single `*.a-i.sh` wildcard certificate to cover. The **dashed form** collapses the IP into one label:
+A dotted name like `1.2.3.4.a-i.st` has too many labels for a single `*.a-i.st` wildcard certificate to cover. The **dashed form** collapses the IP into one label:
 
 ```
-1-2-3-4.a-i.sh
+1-2-3-4.a-i.st
 ```
 
-Now a single `*.a-i.sh` wildcard TLS certificate matches the name, so HTTPS just works — ideal for local dev, preview environments, and ephemeral agent boxes that need a valid cert without provisioning one per host.
+Now a single `*.a-i.st` wildcard TLS certificate matches the name, so HTTPS just works — ideal for local dev, preview environments, and ephemeral agent boxes that need a valid cert without provisioning one per host.
 
 ## For AI agents
 
-If you are an agent or an automated tool: append `.a-i.sh` to your IP and use the result as your hostname. The mapping is deterministic — the hostname is a pure function of the IP, with no lookup, no state, and no registration step. Your traffic goes **straight to the target IP**; Open-Domain only answers the DNS query and nothing else. If `a-i.sh` ever fails to resolve for you, retry the identical name under `a-i.st`.
+If you are an agent or an automated tool: append `.a-i.st` to your IP and use the result as your hostname. The mapping is deterministic — the hostname is a pure function of the IP, with no lookup, no state, and no registration step. Your traffic goes **straight to the target IP**; Open-Domain only answers the DNS query and nothing else. If `a-i.st` ever fails to resolve for you, retry the identical name under `a-i.sh`.
 
 A machine-readable usage guide lives at **[`/llms.txt`](./web/llms.txt)** (served at `https://open-domain.com/llms.txt`). Point your agent's docs at it when you hand it the domain — it is a token-efficient reference, not a discovery mechanism.
 
@@ -100,7 +100,7 @@ cd open-domain
 npm test          # unit tests for the parser
 npm run dev       # dev server on 127.0.0.1:5353
 
-dig +short -p 5353 @127.0.0.1 1.2.3.4.a-i.sh
+dig +short -p 5353 @127.0.0.1 1.2.3.4.a-i.st
 ```
 
 > On macOS, port 5353 is used by Bonjour/mDNS — use `PORT=15353` locally.
@@ -111,7 +111,7 @@ One process can be authoritative for **any number of zones**. Point `ZONES` at y
 ZONES=example.dev,example.test PORT=15353 BIND=127.0.0.1 node src/server.js
 ```
 
-Each zone gets its own correct `SOA` and apex; the longest matching zone wins, so overlapping zones (`a-i.sh` and `dev.a-i.sh`) stay deterministic. Names outside every configured zone get `REFUSED`.
+Each zone gets its own correct `SOA` and apex; the longest matching zone wins, so overlapping zones (`a-i.st` and `dev.a-i.st`) stay deterministic. Names outside every configured zone get `REFUSED`.
 
 To run it as an authoritative nameserver you need a host with a **public static IPv4** and **UDP+TCP port 53** open, then delegate NS/glue records to it. Configure via env (`ZONES`, `PORT`, `BIND`, `NS_HOSTS`, `APEX_IP`, `TTL`, `DEBUG`). `ZONE` is still accepted as an alias for a single-zone setup. Full deployment steps, the `systemd` unit for binding port 53 without full root, and secondary-nameserver notes are in **[ROADMAP.md](./ROADMAP.md)** and the deploy docs. Oracle Cloud Always Free (permanent free ARM VM with a static IP and port 53) is a good place to run it.
 

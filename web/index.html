@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Open-Domain — wildcard DNS for IP addresses</title>
-<meta name="description" content="Open-Domain is a DNS service that, when queried with a hostname containing an embedded IP address, returns that IP address. Free, stateless, open source. Runs on a-i.sh and a-i.st." />
+<meta name="description" content="Open-Domain is a DNS service that, when queried with a hostname containing an embedded IP address, returns that IP address. Free, stateless, open source. Runs on a-i.st and a-i.sh." />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <meta property="og:title" content="Open-Domain — wildcard DNS for IP addresses" />
 <meta property="og:description" content="Query a hostname with an IP address in it, get that IP address back. No signup, no state. Free and open source." />
@@ -59,11 +59,11 @@
   <h1>Open-Domain</h1>
   <p class="tagline">Wildcard DNS for IP addresses. Free, stateless, open source.</p>
 
-  <p>Open-Domain is a DNS service that, when queried with a hostname that has an IP address embedded in it, returns that IP address. Append <code>.a-i.sh</code> to an IP and you have a working hostname — no signup, no API key, no dashboard, and nothing to wait for.</p>
+  <p>Open-Domain is a DNS service that, when queried with a hostname that has an IP address embedded in it, returns that IP address. Append <code>.a-i.st</code> to an IP and you have a working hostname — no signup, no API key, no dashboard, and nothing to wait for.</p>
 
-  <p>Every answer is computed from the query name itself. There is no database and no stored record: <code>203.0.113.10.a-i.sh</code> resolves to <code>203.0.113.10</code> because the name says so.</p>
+  <p>Every answer is computed from the query name itself. There is no database and no stored record: <code>203.0.113.10.a-i.st</code> resolves to <code>203.0.113.10</code> because the name says so.</p>
 
-  <p>The service runs on two domains, <strong>a-i.sh</strong> and <strong>a-i.st</strong>, which are interchangeable — the same name works under either. They are separate registrations answered by the same resolver, so a problem at one registry or registrar does not take the whole thing down.</p>
+  <p>The service runs on two domains, <strong>a-i.st</strong> and <strong>a-i.sh</strong>, which are interchangeable — the same name works under either. They are separate registrations answered by the same resolver, so a problem at one registry or registrar does not take the whole thing down.</p>
 
   <h2>Examples</h2>
 
@@ -73,32 +73,32 @@
       <tr><th>Hostname</th><th>Resolves to</th><th>Notes</th></tr>
     </thead>
     <tbody>
-      <tr><td>203.0.113.10.a-i.sh</td><td>203.0.113.10</td><td class="note">dot separators (IPv4)</td></tr>
-      <tr><td>203-0-113-10.a-i.sh</td><td>203.0.113.10</td><td class="note">dash separators — use this for wildcard TLS</td></tr>
-      <tr><td>203.0.113.10.a-i.st</td><td>203.0.113.10</td><td class="note">the other domain, same answer</td></tr>
-      <tr><td>www.192.168.0.1.a-i.sh</td><td>192.168.0.1</td><td class="note">any prefix is ignored</td></tr>
-      <tr><td>www-192-168-0-1.a-i.sh</td><td>192.168.0.1</td><td class="note">prefix + dashes</td></tr>
-      <tr><td>0a000001.a-i.sh</td><td>10.0.0.1</td><td class="note">hexadecimal notation (8 digits)</td></tr>
-      <tr><td>2001-db8--1.a-i.sh</td><td>2001:db8::1</td><td class="note">IPv6 — always dashes, never dots</td></tr>
-      <tr><td>foo.bar.a-i.sh</td><td>NXDOMAIN</td><td class="note">no IP address in the name</td></tr>
+      <tr><td>203.0.113.10.a-i.st</td><td>203.0.113.10</td><td class="note">dot separators (IPv4)</td></tr>
+      <tr><td>203-0-113-10.a-i.st</td><td>203.0.113.10</td><td class="note">dash separators — use this for wildcard TLS</td></tr>
+      <tr><td>203.0.113.10.a-i.sh</td><td>203.0.113.10</td><td class="note">the other domain, same answer</td></tr>
+      <tr><td>www.192.168.0.1.a-i.st</td><td>192.168.0.1</td><td class="note">any prefix is ignored</td></tr>
+      <tr><td>www-192-168-0-1.a-i.st</td><td>192.168.0.1</td><td class="note">prefix + dashes</td></tr>
+      <tr><td>0a000001.a-i.st</td><td>10.0.0.1</td><td class="note">hexadecimal notation (8 digits)</td></tr>
+      <tr><td>2001-db8--1.a-i.st</td><td>2001:db8::1</td><td class="note">IPv6 — always dashes, never dots</td></tr>
+      <tr><td>foo.bar.a-i.st</td><td>NXDOMAIN</td><td class="note">no IP address in the name</td></tr>
       <tr><td>example.com</td><td>REFUSED</td><td class="note">outside our zones</td></tr>
     </tbody>
   </table>
   </div>
 
   <p>Try it:</p>
-  <pre><code>dig +short 203.0.113.10.a-i.sh
-dig +short 203.0.113.10.a-i.st</code></pre>
+  <pre><code>dig +short 203.0.113.10.a-i.st
+dig +short 203.0.113.10.a-i.sh</code></pre>
 
   <h2>HTTPS</h2>
 
-  <p>A dotted name such as <code>1.2.3.4.a-i.sh</code> has too many labels for a single <code>*.a-i.sh</code> wildcard certificate to cover. The dashed form collapses the IP into one label, so <code>1-2-3-4.a-i.sh</code> is matched by an ordinary wildcard certificate and HTTPS works normally. Let's Encrypt will not issue a certificate for a bare IP address, but it will for a hostname — which is what this gives you.</p>
+  <p>A dotted name such as <code>1.2.3.4.a-i.st</code> has too many labels for a single <code>*.a-i.st</code> wildcard certificate to cover. The dashed form collapses the IP into one label, so <code>1-2-3-4.a-i.st</code> is matched by an ordinary wildcard certificate and HTTPS works normally. Let's Encrypt will not issue a certificate for a bare IP address, but it will for a hostname — which is what this gives you.</p>
 
   <h2>For agents and automated tools</h2>
 
   <p>The hostname is a pure function of the IP: no lookup, no state, no registration step. An agent that has just been handed a public IP can construct its own address without asking anyone. A short machine-readable version of this page is at <a href="/llms.txt">/llms.txt</a>.</p>
 
-  <p>Two cautions. Do not put secrets in a hostname — every resolver along the path can log the names it sees. And if <code>a-i.sh</code> fails to resolve for you, retry the identical name under <code>a-i.st</code> before assuming the IP is down.</p>
+  <p>Two cautions. Do not put secrets in a hostname — every resolver along the path can log the names it sees. And if <code>a-i.st</code> fails to resolve for you, retry the identical name under <code>a-i.sh</code> before assuming the IP is down.</p>
 
   <h2>Run your own</h2>
 

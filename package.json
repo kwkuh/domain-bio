@@ -1,7 +1,7 @@
 {
   "name": "open-domain",
   "version": "0.1.0",
-  "description": "Open-Domain — authoritative wildcard-IP DNS server (ala nip.io/sslip.io) buat a-i.sh + a-i.st, zero dependency.",
+  "description": "Open-Domain — authoritative wildcard-IP DNS server (ala nip.io/sslip.io) buat a-i.st + a-i.sh, zero dependency.",
   "type": "module",
   "bin": { "open-domain": "src/server.js" },
   "scripts": {

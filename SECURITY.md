@@ -1,6 +1,6 @@
 # Security Policy
 
-Open-Domain is the authoritative DNS server behind `a-i.sh` and `a-i.st`, a stateless
+Open-Domain is the authoritative DNS server behind `a-i.st` and `a-i.sh`, a stateless
 wildcard-IP resolver in the spirit of [nip.io](https://nip.io) /
 [sslip.io](https://sslip.io). It stores no data: every answer is computed
 directly from the query name. This document explains how to report
@@ -67,10 +67,10 @@ following before using it:
   intermediaries far outside this project's control. Treat every hostname you
   resolve as public information.
 - **Do not encode PII.** Do not embed personal data in query names for the same
-  reason. The only values that belong in an `a-i.sh` hostname are the IP
+  reason. The only values that belong in an `a-i.st` hostname are the IP
   address you want returned (plus an optional non-sensitive label prefix).
 - **Private/internal IPs are allowed but not private.** You can resolve names
-  like `10.0.0.1.a-i.sh` or `192-168-1-1.a-i.sh`, which is useful for local
+  like `10.0.0.1.a-i.st` or `192-168-1-1.a-i.st`, which is useful for local
   development and TLS. The IP itself is not reachable from the public internet,
   but the fact that you queried it is still visible to the resolvers in the
   path. The mapping is public; the destination is not proxied.

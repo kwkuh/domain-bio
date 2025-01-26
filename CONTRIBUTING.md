@@ -49,9 +49,9 @@ npm run dev
 Query it with `dig`, pointing at whichever port you chose:
 
 ```sh
-dig +short -p 5353 @127.0.0.1 1.2.3.4.a-i.sh        # -> 1.2.3.4
-dig +short -p 5353 @127.0.0.1 192-168-1-1.a-i.sh    # -> 192.168.1.1
-dig +short -p 5353 @127.0.0.1 2001-db8--1.a-i.sh AAAA
+dig +short -p 5353 @127.0.0.1 1.2.3.4.a-i.st        # -> 1.2.3.4
+dig +short -p 5353 @127.0.0.1 192-168-1-1.a-i.st    # -> 192.168.1.1
+dig +short -p 5353 @127.0.0.1 2001-db8--1.a-i.st AAAA
 ```
 
 All runtime config is via environment variables (`ZONE`, `PORT`, `BIND`,
@@ -65,7 +65,7 @@ does one part of the request lifecycle:
 
 | File | Responsibility |
 |---|---|
-| `src/parse.js`   | Parse a hostname into an IP. Handles the dotted, dashed, hex, and IPv6 formats plus free prefixes (`app.1.2.3.4.a-i.sh`). This is the heart of the project. |
+| `src/parse.js`   | Parse a hostname into an IP. Handles the dotted, dashed, hex, and IPv6 formats plus free prefixes (`app.1.2.3.4.a-i.st`). This is the heart of the project. |
 | `src/wire.js`    | Encode/decode DNS wire format — read a query packet, write a response packet. |
 | `src/resolve.js` | Decide what to answer for a given query name + type (A / AAAA / SOA / NS / NXDOMAIN / REFUSED). Glues `parse` to the zone rules. |
 | `src/server.js`  | UDP + TCP listeners on port 53, env config, logging, entrypoint (`bin`). |
@@ -131,7 +131,7 @@ Some genuinely useful ways to start:
   dotted/dashed input, or IPv6 zone handling — as long as it stays unambiguous.
 - **Docs.** Improve the README or these guidelines, add worked `dig` examples,
   or document a real deployment (systemd, Oracle Cloud, firewall rules).
-- **Integrations.** Write a short recipe showing `a-i.sh` used as the wildcard
+- **Integrations.** Write a short recipe showing `a-i.st` used as the wildcard
   DNS in a real tool (reverse proxy, local dev / preview env with wildcard TLS,
   an ephemeral agent sandbox). These are the most valuable contributions —
   they help other people adopt the project.
