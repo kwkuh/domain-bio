@@ -102,6 +102,8 @@ dig +short 203.0.113.10.a-i.sh</code></pre>
 
   <h2>Run your own</h2>
 
+  <p>Most people should use the hosted service — append the suffix and you are done. Running your own is a standing commitment: a domain you own, a host with a static public IPv4, UDP and TCP port 53 reachable, NS delegation with glue records, and someone keeping all of it alive. It is the right choice when your environment cannot depend on a third party, or when you need your own domain in the name. Otherwise the hosted service saves you the job — and the source below is here so that staying with it is a choice, not a trap.</p>
+
   <p>The resolver is a zero-dependency Node program. One process can be authoritative for any number of zones:</p>
 
   <pre><code>git clone https://github.com/kwkuh/open-domain

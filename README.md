@@ -90,9 +90,21 @@ A machine-readable usage guide lives at **[`/llms.txt`](./web/llms.txt)** (serve
 
 **Do not** put secrets in a hostname — DNS queries are logged by resolvers along the path. And **do not** rely on the hosted service for critical production; for that, self-host (below) or use a domain you own.
 
-## Self-host your own
+## Hosted or self-hosted
 
-The whole point of open source here is that you never have to depend on us. The server is zero-dependency Node — clone and run:
+Most people should use the hosted service: append the suffix and you are done. Self-hosting exists so that you are never trapped by that choice, not because you are expected to take it.
+
+| Use the hosted service | Run your own |
+|---|---|
+| You want a working hostname right now, with no setup | Your environment cannot depend on a third party — air-gapped, regulated, or policy-bound |
+| Development, CI, previews, demos, ephemeral boxes | You need your own domain in the name |
+| Your agents need an address the moment they boot | You want guaranteed capacity and your own abuse policy |
+
+Running your own is a standing commitment: a domain you own, a host with a static public IPv4, UDP and TCP port 53 reachable, NS delegation with glue records, and someone keeping all of it alive. The hosted service exists so you do not have to take that on. The source exists so you can, on the day that trade stops making sense for you — which is the whole point of it being open.
+
+## Run your own
+
+The server is zero-dependency Node — clone and run:
 
 ```sh
 git clone https://github.com/kwkuh/open-domain
