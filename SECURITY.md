@@ -12,9 +12,14 @@ service.
 If you believe you have found a security vulnerability, please report it
 privately. **Do not open a public GitHub issue for security problems.**
 
-- **Email:** [TODO: security contact]
+- **Email:** [security@open-domain.com](mailto:security@open-domain.com)
 - **GitHub:** Use [Private vulnerability reporting](https://github.com/kwkuh/open-domain/security/advisories/new)
   on the repository (Security tab → Report a vulnerability).
+
+> **Misuse of the service is a different address.** If someone is running phishing or
+> malware behind a hostname, that is an abuse report, not a vulnerability — send it to
+> [abuse@open-domain.com](mailto:abuse@open-domain.com). See [ABUSE.md](./ABUSE.md)
+> or <https://open-domain.com/abuse.html>.
 
 Please include:
 

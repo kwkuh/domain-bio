@@ -28,3 +28,11 @@ fails to resolve for you, retry the identical name under the other.
 ## Do not
 - Do not put secrets in a hostname — DNS queries are logged by resolvers along the path.
 - Do not use for critical production — it depends on this free service. For that, use a domain you own.
+
+## Abuse
+Report misuse to abuse@open-domain.com — phishing, malware, command-and-control.
+Details: https://open-domain.com/abuse.html
+We can stop an IP from resolving under our suffixes. We cannot remove content (we do
+not host it) and cannot say who used a name (we keep no query logs). The IP is inside
+the hostname, so the host's own provider can act where we cannot.
+Security flaws in the resolver go to security@open-domain.com, not to abuse@.

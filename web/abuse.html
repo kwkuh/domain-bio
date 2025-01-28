@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Abuse — Open-Domain</title>
+<meta name="description" content="How to report abuse of a-i.st and a-i.sh, what Open-Domain can act on, and what a DNS operator cannot do." />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<meta name="robots" content="index,follow" />
+<style>
+  :root{
+    --bg:#fff; --fg:#1a1a1a; --muted:#5c5c5c; --line:#e0e0e0;
+    --link:#0b5fbe; --code-bg:#f6f6f4;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#15171a; --fg:#e6e6e6; --muted:#9aa0a6; --line:#2c3036;
+      --link:#7fb4f5; --code-bg:#1d2024;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  main{max-width:46rem; margin:0 auto; padding:2.5rem 1.25rem 4rem}
+  h1{font-size:1.6rem; font-weight:600; margin:0 0 .25rem; letter-spacing:-.01em}
+  h2{font-size:1.15rem; font-weight:600; margin:2.5rem 0 .6rem; letter-spacing:-.01em}
+  .tagline{color:var(--muted); margin:0 0 2rem}
+  p{margin:0 0 1rem}
+  a{color:var(--link)}
+  a:hover{text-decoration:none}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;background:var(--code-bg); padding:.12em .35em; border-radius:3px}
+  ul{margin:0 0 1rem; padding-left:1.25rem}
+  li{margin:.35rem 0}
+  .box{border:1px solid var(--line); border-radius:4px; padding:1rem 1.15rem; margin:0 0 1rem}
+  .box p:last-child{margin:0}
+  hr{border:0; border-top:1px solid var(--line); margin:2.5rem 0 1.25rem}
+  footer{color:var(--muted); font-size:.9rem}
+  footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+
+  <h1>Abuse</h1>
+  <p class="tagline">Reporting misuse of a-i.st and a-i.sh.</p>
+
+  <div class="box">
+    <p><strong>Report to <a href="mailto:abuse@open-domain.com">abuse@open-domain.com</a>.</strong> Include the full hostname. We aim to acknowledge within 24 hours and to act within 72.</p>
+  </div>
+
+  <p>Open-Domain answers DNS queries and nothing else. Given a hostname with an IP address inside it, it returns that IP address. It does not host websites, store files, send mail, proxy traffic, or operate anyone's servers. That shapes what a report to us can and cannot achieve, so it is worth being direct about both.</p>
+
+  <h2>What we can do</h2>
+
+  <p>We can stop an IP address, or a range of them, from resolving under our suffixes. After that, any name pointing at it returns <code>NXDOMAIN</code> instead of an answer.</p>
+
+  <h2>What we cannot do</h2>
+
+  <ul>
+    <li><strong>Remove content.</strong> We never had it. Whatever you are looking at lives on the IP address in the hostname, and it will keep serving that content whether or not we answer for the name.</li>
+    <li><strong>Tell you who used a name.</strong> We do not log queries. There is no record of who asked for what, by design, and none can be produced after the fact.</li>
+    <li><strong>Reach the same host elsewhere.</strong> Blocking a name here does not affect the same IP under any other wildcard DNS service, under a domain the operator controls, or by its raw address.</li>
+  </ul>
+
+  <h2>Read the hostname first</h2>
+
+  <p>The IP address is inside the name. <code>login-example.203-0-113-10.a-i.st</code> is <code>203.0.113.10</code>; dots and dashes are interchangeable. Whoever provides connectivity to that address can take the content down, which is something we cannot do.</p>
+
+  <p>Reporting it to them is usually faster and more final than reporting it to us. Reporting it to both is reasonable.</p>
+
+  <h2>What we act on</h2>
+
+  <ul>
+    <li>Phishing and credential harvesting</li>
+    <li>Malware distribution and command-and-control</li>
+    <li>Material that is unlawful where it is hosted or where this service operates</li>
+  </ul>
+
+  <p>We do not arbitrate disputes over lawful content, and we are not the right venue for trademark or copyright complaints about a site — those belong with the host or the registrar of the site's own domain.</p>
+
+  <h2>What a report should contain</h2>
+
+  <ul>
+    <li>The full hostname, exactly as it appeared</li>
+    <li>What it was doing, in one or two sentences</li>
+    <li>A screenshot or archived copy, if you have one</li>
+    <li>When you saw it</li>
+  </ul>
+
+  <p>A hostname alone is enough to start. Everything else only helps us act faster.</p>
+
+  <h2>Blocking is blunt</h2>
+
+  <p>A block applies to an IP address, not to a page. If the address is shared hosting, blocking it removes the name for every legitimate service on that address too. We prefer the narrowest action that stops the harm, and we would rather hear about a specific host than a wide range.</p>
+
+  <p>If a block has caught you unfairly, write to <a href="mailto:abuse@open-domain.com">abuse@open-domain.com</a> and say which address and what runs on it.</p>
+
+  <h2>Security vulnerabilities</h2>
+
+  <p>A flaw in the resolver itself is not an abuse report. Send those to <a href="mailto:security@open-domain.com">security@open-domain.com</a> or use GitHub's <a href="https://github.com/kwkuh/open-domain/security/advisories/new">private advisory form</a>, and please give us a chance to fix it before publishing.</p>
+
+  <h2>Who runs this</h2>
+
+  <p>Open-Domain is community-run infrastructure offered as a public good, with no company behind it and no SLA. Reports are read by a person, not a queue. The source is <a href="https://github.com/kwkuh/open-domain">public</a>, so you can see exactly what the service does before deciding what to report.</p>
+
+  <hr />
+  <footer>
+    <a href="/">Open-Domain</a> ·
+    <a href="https://github.com/kwkuh/open-domain">Source on GitHub</a> ·
+    <a href="/llms.txt">llms.txt</a> ·
+    <a href="mailto:abuse@open-domain.com">abuse@open-domain.com</a>
+  </footer>
+
+</main>
+</body>
+</html>

@@ -119,6 +119,10 @@ dig +short -p 15353 @127.0.0.1 1.2.3.4.example.dev</code></pre>
 
   <p>This is community-run infrastructure offered as a public good, with no SLA. It is meant for development, previews, demos, CI, and giving ephemeral machines an address. It is not meant to sit in the critical path of a production system that depends on a free third party — for that, run your own from the source above, on a domain you control. That the code is MIT-licensed and trivially self-hostable is the point: there is nothing to be locked into.</p>
 
+  <h2>Abuse</h2>
+
+  <p>A free wildcard DNS service gets misused, and we would rather hear about it. Report a hostname to <a href="mailto:abuse@open-domain.com">abuse@open-domain.com</a> and we will act on phishing, malware, and command-and-control. What we can do is stop an address from resolving under our suffixes; what we cannot do is remove content we never hosted, or tell you who used a name, because we keep no query logs. The <a href="/abuse.html">abuse page</a> explains both sides plainly, including how to reach the host directly — which is usually faster than reaching us.</p>
+
   <h2>Sponsor</h2>
 
   <p>Open-Domain is free and intends to stay free. Running authoritative nameservers costs something; keeping the service stateless keeps that cost small, and <a href="https://github.com/sponsors/kwkuh">sponsors</a> cover the rest.</p>
@@ -127,6 +131,7 @@ dig +short -p 15353 @127.0.0.1 1.2.3.4.example.dev</code></pre>
   <footer>
     <a href="https://github.com/kwkuh/open-domain">Source on GitHub</a> ·
     <a href="/llms.txt">llms.txt</a> ·
+    <a href="/abuse.html">Abuse</a> ·
     MIT licensed ·
     In the tradition of <a href="https://nip.io">nip.io</a> and <a href="https://sslip.io">sslip.io</a>
   </footer>

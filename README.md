@@ -145,6 +145,14 @@ Open-Domain is free and intends to stay free. If it saves you time — or if you
 - **[ROADMAP.md](./ROADMAP.md)** — where this is headed (redundant nameservers, deploy guides, integrations).
 - **[SECURITY.md](./SECURITY.md)** — how to report a vulnerability. DNS is an attack surface; responsible disclosure is appreciated.
 
+## Abuse
+
+A free wildcard DNS service gets misused. Report a hostname to **[abuse@open-domain.com](mailto:abuse@open-domain.com)** and we will act on phishing, malware, and command-and-control. We aim to acknowledge within 24 hours and to act within 72.
+
+Worth knowing before you write: we can stop an address from resolving under our suffixes, but we cannot remove content we never hosted, and we cannot say who used a name because we keep no query logs. The IP is inside the hostname — `login-example.203-0-113-10.a-i.st` is `203.0.113.10` — so the host's own provider can act where we cannot, usually faster.
+
+Full policy in **[ABUSE.md](./ABUSE.md)** or at <https://open-domain.com/abuse.html>. Vulnerabilities in the resolver itself go to [security@open-domain.com](mailto:security@open-domain.com) instead — see [SECURITY.md](./SECURITY.md).
+
 ## A note on reliability
 
 This is community-run infrastructure offered as a public good, with **no SLA**. It is great for development, previews, demos, CI, and giving ephemeral agents an address. It is **not** meant for critical production systems that depend on a free third party — for those, self-host from this repo or use a domain you own. Being open source and trivially self-hostable is the whole point: you are never locked in.
