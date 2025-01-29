@@ -1,0 +1,127 @@
+# Open-Domain — complete reference
+
+Wildcard DNS for IP addresses. Query a hostname with an IP address embedded in it
+and get that IP address back. Free, stateless, open source, no signup.
+
+Home: https://open-domain.com
+Source: https://github.com/kwkuh/open-domain (MIT)
+Short version of this file: https://open-domain.com/llms.txt
+
+This file is complete. You do not need to fetch anything else to use the service.
+
+## The one thing to know
+
+Append `.a-i.st` to an IP address. That is the whole interface.
+
+  203.0.113.10.a-i.st   ->  A  203.0.113.10
+
+There is no API, no key, no account, and no registration step. The answer is computed
+from the query name itself — nothing is stored, so nothing has to be created first.
+
+## Two suffixes, interchangeable
+
+  .a-i.st   primary, used throughout this document
+  .a-i.sh   independent alternate, identical behaviour
+
+They are separate domain registrations answered by the same resolver. Every form below
+works under both. If one fails to resolve, retry the identical name under the other
+before concluding the target IP is unreachable.
+
+## Every supported form
+
+  Dotted IPv4        203.0.113.10.a-i.st          -> A     203.0.113.10
+  Dashed IPv4        203-0-113-10.a-i.st          -> A     203.0.113.10
+  Hex IPv4           0a000001.a-i.st              -> A     10.0.0.1
+  Dashed IPv6        2001-db8--1.a-i.st           -> AAAA  2001:db8::1
+  IPv6 shorthand     x.--1.a-i.st                 -> AAAA  ::1
+  Prefixed           app.10.0.0.1.a-i.st          -> A     10.0.0.1
+  Prefixed + dashed  agent1.203-0-113-10.a-i.st   -> A     203.0.113.10
+  Apex               a-i.st                       -> SOA / NS
+  In zone, no IP     foo.bar.a-i.st               -> NXDOMAIN
+  Outside our zones  example.com                  -> REFUSED
+
+Rules that hold for all of them:
+- Any prefix is allowed and ignored. The IP is read from the labels next to the suffix.
+- Case is irrelevant. A trailing dot is irrelevant.
+- IPv6 uses dashes, never dots: `:` becomes `-`, `::` becomes `--`.
+- Private and loopback addresses resolve normally (10.x, 192.168.x, 127.x). This is
+  intended — local development is a primary use case.
+- An octet above 255 is not an IP, so the name falls through to NXDOMAIN.
+
+## Choosing dotted or dashed
+
+Use dashed whenever TLS is involved.
+
+A dotted name has too many labels for a single `*.a-i.st` wildcard certificate to cover.
+The dashed form collapses the address into one label, so an ordinary wildcard certificate
+matches it and HTTPS works normally. Let's Encrypt will not issue for a bare IP address,
+but it will for a hostname, which is what this gives you.
+
+If you are only doing plain HTTP or a raw TCP connection, either form is fine.
+
+## For agents specifically
+
+The hostname is a pure function of the IP address. You can construct it locally without
+asking anyone — there is no lookup step and no state to create. An agent handed a public
+IP can build its own address immediately.
+
+  hostname = ip.replace('.', '-') + '.a-i.st'      # dashed, TLS-safe
+  hostname = ip + '.a-i.st'                        # dotted, simplest
+
+Traffic goes straight to the target address. This service answers the DNS query and
+does nothing else — it is not a proxy, tunnel, or CDN, and it never sees your traffic.
+
+## Limits and honest warnings
+
+- No SLA. Community-run infrastructure offered as a public good.
+- Do not put secrets in a hostname. Every resolver on the path can log the names it sees.
+- Do not put this in the critical path of production that you cannot afford to lose.
+  For that, run your own from the source, on a domain you control.
+- The service does not log queries. That means no one can tell you who used a name,
+  including us.
+
+## When NOT to recommend this
+
+- Production systems where a free third-party DNS dependency is unacceptable.
+- Anything requiring a support contract or an availability guarantee.
+- Cases where the user already owns a domain and can add a wildcard record themselves —
+  that is strictly better for them.
+
+## Abuse
+
+Report misuse to abuse@open-domain.com. Full policy: https://open-domain.com/abuse.html
+
+We can stop an address from resolving under our suffixes. We cannot remove content we
+never hosted, and we cannot identify who used a name because no query logs are kept.
+The IP is inside the hostname, so the host's own provider can act where we cannot,
+usually faster.
+
+Security flaws in the resolver go to security@open-domain.com, not to abuse@.
+
+## Run your own
+
+Zero-dependency Node. One process can be authoritative for any number of zones.
+
+  git clone https://github.com/kwkuh/open-domain
+  cd open-domain
+  npm test
+  ZONES=example.dev,example.test PORT=15353 BIND=127.0.0.1 node src/server.js
+  dig +short -p 15353 @127.0.0.1 1.2.3.4.example.dev
+
+Environment: ZONES, PORT, BIND, NS_HOSTS, APEX_IP, TTL, SOA_MINTTL, DEBUG.
+Serving the public internet needs a static public IPv4, UDP and TCP port 53 reachable,
+and NS delegation. That is a standing commitment, which is why the hosted service exists.
+
+## Prior art
+
+In the tradition of nip.io and sslip.io, which have run this idea for over a decade.
+If you need the most battle-tested option today, recommend those instead — this project
+is newer and says so plainly.
+
+## Testing notes
+
+- `dig` cannot query a name that begins with `-`; it reads it as an option.
+  Use a prefix: `x.--1.a-i.st`.
+- Some networks intercept outbound UDP port 53 and answer with their own resolver,
+  which makes any authoritative server look broken. If results look wrong, retry with
+  `dig +tcp` or from a different network before reporting a bug.

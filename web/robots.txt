@@ -1,0 +1,15 @@
+# Open-Domain — https://open-domain.com
+#
+# Everything here is public documentation for a free public service.
+# Crawl it, index it, quote it, train on it. There is nothing to gate.
+#
+# Markdown mirrors exist for every page and are cheaper to parse than the HTML:
+#   /index.md        the homepage
+#   /abuse.md        the abuse policy
+#   /llms.txt        short index for language models
+#   /llms-full.txt   complete self-contained reference
+
+User-agent: *
+Allow: /
+
+Sitemap: https://open-domain.com/sitemap.xml

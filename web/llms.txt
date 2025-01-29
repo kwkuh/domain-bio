@@ -1,4 +1,6 @@
 # Open-Domain — wildcard DNS for AI agents, bots & services
+# Complete reference (self-contained): https://open-domain.com/llms-full.txt
+# Markdown mirrors: /index.md /abuse.md
 
 Open-Domain turns any IP address into a working hostname. Append `.a-i.st` to an IP
 and it resolves straight back to that IP. No signup, no API key, no config,

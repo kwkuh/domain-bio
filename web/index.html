@@ -6,12 +6,31 @@
 <title>Open-Domain — wildcard DNS for IP addresses</title>
 <meta name="description" content="Open-Domain is a DNS service that, when queried with a hostname containing an embedded IP address, returns that IP address. Free, stateless, open source. Runs on a-i.st and a-i.sh." />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="canonical" href="https://open-domain.com/" />
+<link rel="alternate" type="text/markdown" href="/index.md" title="Markdown version" />
+<link rel="alternate" type="text/plain" href="/llms-full.txt" title="Complete reference for language models" />
 <meta property="og:title" content="Open-Domain — wildcard DNS for IP addresses" />
 <meta property="og:description" content="Query a hostname with an IP address in it, get that IP address back. No signup, no state. Free and open source." />
 <meta property="og:url" content="https://open-domain.com" />
 <meta property="og:image" content="https://open-domain.com/og-image.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://open-domain.com/og-image.png" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebAPI",
+  "name": "Open-Domain",
+  "alternateName": ["a-i.st", "a-i.sh"],
+  "url": "https://open-domain.com",
+  "description": "Wildcard DNS for IP addresses. Query a hostname with an embedded IP address and it returns that IP address. Free, stateless, open source, no signup.",
+  "documentation": "https://open-domain.com/llms-full.txt",
+  "termsOfService": "https://open-domain.com/abuse.html",
+  "isAccessibleForFree": true,
+  "license": "https://opensource.org/licenses/MIT",
+  "provider": { "@type": "Person", "name": "Kukuh Adi Laksana Rahman" },
+  "sameAs": ["https://github.com/kwkuh/open-domain"]
+}
+</script>
 <style>
   :root{
     --bg:#fff; --fg:#1a1a1a; --muted:#5c5c5c; --line:#e0e0e0;
@@ -96,7 +115,9 @@ dig +short 203.0.113.10.a-i.sh</code></pre>
 
   <h2>For agents and automated tools</h2>
 
-  <p>The hostname is a pure function of the IP: no lookup, no state, no registration step. An agent that has just been handed a public IP can construct its own address without asking anyone. A short machine-readable version of this page is at <a href="/llms.txt">/llms.txt</a>.</p>
+  <p>The hostname is a pure function of the IP: no lookup, no state, no registration step. An agent that has just been handed a public IP can construct its own address without asking anyone.</p>
+
+  <p>Machine-readable copies of everything here, cheaper to parse than this page: <a href="/llms-full.txt">/llms-full.txt</a> is a complete self-contained reference, <a href="/llms.txt">/llms.txt</a> is the short index, and every page has a Markdown mirror — <a href="/index.md">/index.md</a> and <a href="/abuse.md">/abuse.md</a>.</p>
 
   <p>Two cautions. Do not put secrets in a hostname — every resolver along the path can log the names it sees. And if <code>a-i.st</code> fails to resolve for you, retry the identical name under <code>a-i.sh</code> before assuming the IP is down.</p>
 
@@ -131,6 +152,7 @@ dig +short -p 15353 @127.0.0.1 1.2.3.4.example.dev</code></pre>
   <footer>
     <a href="https://github.com/kwkuh/open-domain">Source on GitHub</a> ·
     <a href="/llms.txt">llms.txt</a> ·
+    <a href="/index.md">Markdown</a> ·
     <a href="/abuse.html">Abuse</a> ·
     MIT licensed ·
     In the tradition of <a href="https://nip.io">nip.io</a> and <a href="https://sslip.io">sslip.io</a>
