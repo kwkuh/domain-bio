@@ -67,6 +67,8 @@
   td.note{color:var(--muted)}
   ul{margin:0 0 1rem; padding-left:1.25rem}
   li{margin:.25rem 0}
+  .notice{border:1px solid var(--line); border-left:3px solid var(--fg); border-radius:4px; padding:1rem 1.15rem; margin:0 0 1.75rem}
+  .notice p:last-child{margin:0}
   hr{border:0; border-top:1px solid var(--line); margin:2.5rem 0 1.25rem}
   footer{color:var(--muted); font-size:.9rem}
   footer a{color:var(--muted)}
@@ -78,11 +80,18 @@
   <h1>Open-Domain</h1>
   <p class="tagline">Wildcard DNS for IP addresses. Free, stateless, open source.</p>
 
+  <div class="notice">
+    <p><strong>Not serving yet.</strong> The suffixes are registered and the resolver runs, but the zones are not delegated to it, so <code>203.0.113.10.a-i.st</code> does <em>not</em> resolve for you today — you will get <code>NXDOMAIN</code>. Everything below describes how it will behave, not how it behaves right now.</p>
+    <p>Use <a href="https://nip.io">nip.io</a> or <a href="https://sslip.io">sslip.io</a> until this notice is gone. They have run this for over a decade.</p>
+  </div>
+
   <p>Open-Domain is a DNS service that, when queried with a hostname that has an IP address embedded in it, returns that IP address. Append <code>.a-i.st</code> to an IP and you have a working hostname — no signup, no API key, no dashboard, and nothing to wait for.</p>
 
   <p>Every answer is computed from the query name itself. There is no database and no stored record: <code>203.0.113.10.a-i.st</code> resolves to <code>203.0.113.10</code> because the name says so.</p>
 
-  <p>The service runs on two domains, <strong>a-i.st</strong> and <strong>a-i.sh</strong>, which are interchangeable — the same name works under either. They are separate registrations answered by the same resolver, so a problem at one registry or registrar does not take the whole thing down.</p>
+  <p>The service is designed around two domains, <strong>a-i.st</strong> and <strong>a-i.sh</strong>, which are interchangeable — the same name works under either. They are separate registrations, so a problem at one registry or registrar does not reach the other.</p>
+
+  <p>That protects against a registry problem and nothing else. Both suffixes are answered by <em>one</em> resolver on <em>one</em> machine today, so they fail together. Independent nameservers in separate locations are the next piece of work, and until they exist this is a single point of failure — which is the honest reason for the notice at the top.</p>
 
   <h2>Examples</h2>
 
@@ -119,7 +128,7 @@ dig +short 203.0.113.10.a-i.sh</code></pre>
 
   <p>Machine-readable copies of everything here, cheaper to parse than this page: <a href="/llms-full.txt">/llms-full.txt</a> is a complete self-contained reference, <a href="/llms.txt">/llms.txt</a> is the short index, and every page has a Markdown mirror — <a href="/index.md">/index.md</a> and <a href="/abuse.md">/abuse.md</a>.</p>
 
-  <p>Two cautions. Do not put secrets in a hostname — every resolver along the path can log the names it sees. And if <code>a-i.st</code> fails to resolve for you, retry the identical name under <code>a-i.sh</code> before assuming the IP is down.</p>
+  <p>One caution that matters: do not put secrets in a hostname — every resolver along the path can log the names it sees. Trying the other suffix is worth a retry, but do not treat it as failover: one resolver answers both today, so when one is down the other is down with it.</p>
 
   <h2>Run your own</h2>
 

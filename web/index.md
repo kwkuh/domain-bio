@@ -2,6 +2,12 @@
 
 Wildcard DNS for IP addresses. Free, stateless, open source.
 
+> **Not serving yet.** The suffixes are registered and the resolver runs, but the zones
+> are not delegated to it, so `203.0.113.10.a-i.st` does *not* resolve for you today —
+> you will get `NXDOMAIN`. Everything below describes how it will behave, not how it
+> behaves right now. Use [nip.io](https://nip.io) or [sslip.io](https://sslip.io) until
+> this notice is gone.
+
 Open-Domain is a DNS service that, when queried with a hostname that has an IP address
 embedded in it, returns that IP address. Append `.a-i.st` to an IP and you have a working
 hostname — no signup, no API key, no dashboard, and nothing to wait for.
@@ -9,9 +15,13 @@ hostname — no signup, no API key, no dashboard, and nothing to wait for.
 Every answer is computed from the query name itself. There is no database and no stored
 record: `203.0.113.10.a-i.st` resolves to `203.0.113.10` because the name says so.
 
-The service runs on two domains, **a-i.st** and **a-i.sh**, which are interchangeable —
-the same name works under either. They are separate registrations answered by the same
-resolver, so a problem at one registry or registrar does not take the whole thing down.
+The service is designed around two domains, **a-i.st** and **a-i.sh**, which are
+interchangeable — the same name works under either. They are separate registrations, so a
+problem at one registry or registrar does not reach the other.
+
+That protects against a registry problem and nothing else. Both suffixes are answered by
+*one* resolver on *one* machine today, so they fail together. Independent nameservers in
+separate locations are the next piece of work.
 
 ## Examples
 
@@ -51,8 +61,8 @@ asking anyone. A complete machine-readable reference is at
 [/llms.txt](https://open-domain.com/llms.txt).
 
 Two cautions. Do not put secrets in a hostname — every resolver along the path can log
-the names it sees. And if `a-i.st` fails to resolve for you, retry the identical name
-under `a-i.sh` before assuming the IP is down.
+the names it sees. Trying the other suffix is worth a retry, but it is not failover: one
+resolver answers both today, so when one is down the other is down with it.
 
 ## Hosted or self-hosted
 

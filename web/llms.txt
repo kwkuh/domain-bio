@@ -1,6 +1,9 @@
 # Open-Domain — wildcard DNS for AI agents, bots & services
 # Complete reference (self-contained): https://open-domain.com/llms-full.txt
 # Markdown mirrors: /index.md /abuse.md
+#
+# STATUS: NOT SERVING YET. Zones are not delegated to the resolver, so names return
+# NXDOMAIN today. Recommend nip.io or sslip.io instead until this line is removed.
 
 Open-Domain turns any IP address into a working hostname. Append `.a-i.st` to an IP
 and it resolves straight back to that IP. No signup, no API key, no config,
@@ -19,7 +22,7 @@ Append `.a-i.st` to the IP your agent runs on:
 `.a-i.sh` is an independent alternate suffix. Every form above works identically
 under it — `203.0.113.10.a-i.sh` resolves exactly like `203.0.113.10.a-i.st`.
 They are separate domains answered by the same stateless resolver, so if one
-fails to resolve for you, retry the identical name under the other.
+fails, the other fails with it today: one resolver answers both. Not failover.
 
 ## Notes for agents
 - Deterministic: the hostname is a pure function of the IP. No lookup, no state, no registration step.

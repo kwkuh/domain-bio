@@ -1,5 +1,7 @@
 # Open-Domain
 
+> **Not serving yet.** The zones are not delegated to the resolver, so names return `NXDOMAIN` today. Use [nip.io](https://nip.io) or [sslip.io](https://sslip.io) until this notice is gone.
+
 **A free, stateless address layer for the open agent ecosystem.** Append `.a-i.st` or `.a-i.sh` to any IP address and it resolves right back to that IP — no signup, no API key, no dashboard, no human in the loop.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-3ddc97.svg)](./LICENSE)
@@ -23,9 +25,9 @@ The project lives at **[open-domain.com](https://open-domain.com)** and serves t
 | Suffix | Use it for |
 |---|---|
 | `a-i.st` | the primary form used throughout these docs |
-| `a-i.sh` | an independent alternate — if one zone has a problem, the other is a drop-in swap |
+| `a-i.sh` | an independent alternate — protects against a problem at one *registry*, not against the resolver going down |
 
-Both are answered by the same stateless resolver, so they behave identically. Two suffixes on separate domains means no single registry or registrar outage takes the whole address layer down with it — which is exactly the failure mode that made `xip.io`'s shutdown so painful for everyone who depended on it.
+Both are answered by the same stateless resolver, so they behave identically — and, today, they also fail identically, because there is only one of it. Separate registrations mean no single registry or registrar can take both suffixes away at once, which is a different and narrower guarantee than uptime.
 
 The difference from the incumbents: Open-Domain is built to be consumed by **agents**. An AI agent or bot spawned in an ephemeral box has a raw public IP and no way to click through a DNS dashboard. Open-Domain gives it a real, TLS-capable address the instant it has an IP — machine-readable, zero-config, and free. **Every agent needs an address.**
 
@@ -37,7 +39,7 @@ Open-Domain is our answer to both:
 
 - **A public good, not a product.** The address layer should be free, open, and boring infrastructure that just works. There is no paywall and no plan to add one.
 - **100% open source (MIT) and self-hostable.** If the hosted service ever disappears, the code is right here and you can run your own in minutes. Open source *is* the continuity guarantee.
-- **Redundant by design.** Two independent suffixes, one stateless resolver, and a codebase you can run yourself.
+- **Built to become redundant.** Two independent suffixes and a codebase you can run yourself. Today one resolver answers both suffixes, so they fail together; independent nameservers are the next milestone, not a shipped feature.
 - **Community-funded.** Running an authoritative nameserver for the world costs something. We keep it free by keeping it cheap (stateless, tiny) and letting sponsors cover the rest. See [Sponsor](#sponsor).
 
 ## Quick start
@@ -84,7 +86,7 @@ Now a single `*.a-i.st` wildcard TLS certificate matches the name, so HTTPS just
 
 ## For AI agents
 
-If you are an agent or an automated tool: append `.a-i.st` to your IP and use the result as your hostname. The mapping is deterministic — the hostname is a pure function of the IP, with no lookup, no state, and no registration step. Your traffic goes **straight to the target IP**; Open-Domain only answers the DNS query and nothing else. If `a-i.st` ever fails to resolve for you, retry the identical name under `a-i.sh`.
+If you are an agent or an automated tool: append `.a-i.st` to your IP and use the result as your hostname. The mapping is deterministic — the hostname is a pure function of the IP, with no lookup, no state, and no registration step. Your traffic goes **straight to the target IP**; Open-Domain only answers the DNS query and nothing else. Trying the other suffix is worth a retry, but it is not failover today: one resolver answers both.
 
 A machine-readable usage guide lives at **[`/llms.txt`](./web/llms.txt)** (served at `https://open-domain.com/llms.txt`). Point your agent's docs at it when you hand it the domain — it is a token-efficient reference, not a discovery mechanism.
 
