@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light dark" />
 <title>Open-Domain — wildcard DNS for IP addresses</title>
 <meta name="description" content="Open-Domain is a DNS service that, when queried with a hostname containing an embedded IP address, returns that IP address. Free, stateless, open source. Runs on a-i.st and a-i.sh." />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -72,10 +73,26 @@
   hr{border:0; border-top:1px solid var(--line); margin:2.5rem 0 1.25rem}
   footer{color:var(--muted); font-size:.9rem}
   footer a{color:var(--muted)}
+  /* — target sentuh & fokus keyboard — */
+  a:focus-visible, summary:focus-visible{outline:2px solid var(--link); outline-offset:3px; border-radius:2px}
+  .skip{position:absolute; left:-9999px; top:0; background:var(--bg); color:var(--fg);
+        padding:.6rem .9rem; border:1px solid var(--line); border-radius:4px; z-index:10}
+  .skip:focus{left:.75rem; top:.75rem}
+  footer a{display:inline-block; padding:.35rem 0}          /* tinggi sentuh naik dari 17px */
+  h2 a.anchor{color:var(--muted); text-decoration:none; opacity:0; margin-left:.4rem; font-weight:400}
+  h2:hover a.anchor, h2 a.anchor:focus-visible{opacity:1}
+  .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden;
+                   clip-path:inset(50%); white-space:nowrap}
+  @media (max-width:30rem){
+    main{padding:1.75rem 1rem 3rem}
+    footer a{padding:.5rem 0}                                /* jempol butuh ruang lebih */
+    pre{font-size:.82em}                                     /* perintah panjang muat tanpa scroll jauh */
+  }
 </style>
 </head>
 <body>
-<main>
+<a class="skip" href="#isi">Skip to content</a>
+<main id="isi">
 
   <h1>Open-Domain</h1>
   <p class="tagline">Wildcard DNS for IP addresses. Free, stateless, open source.</p>
@@ -93,12 +110,13 @@
 
   <p>That protects against a registry problem and nothing else. Both suffixes are answered by <em>one</em> resolver on <em>one</em> machine today, so they fail together. Independent nameservers in separate locations are the next piece of work, and until they exist this is a single point of failure — which is the honest reason for the notice at the top.</p>
 
-  <h2>Examples</h2>
+  <h2 id="examples">Examples <a class="anchor" href="#examples" aria-label="Link to this section">#</a></h2>
 
   <div class="scroll">
   <table>
+    <caption class="visually-hidden">Example hostnames and the IP addresses they resolve to</caption>
     <thead>
-      <tr><th>Hostname</th><th>Resolves to</th><th>Notes</th></tr>
+      <tr><th scope="col">Hostname</th><th scope="col">Resolves to</th><th scope="col">Notes</th></tr>
     </thead>
     <tbody>
       <tr><td>203.0.113.10.a-i.st</td><td>203.0.113.10</td><td class="note">dot separators (IPv4)</td></tr>
@@ -118,11 +136,11 @@
   <pre><code>dig +short 203.0.113.10.a-i.st
 dig +short 203.0.113.10.a-i.sh</code></pre>
 
-  <h2>HTTPS</h2>
+  <h2 id="https">HTTPS <a class="anchor" href="#https" aria-label="Link to this section">#</a></h2>
 
   <p>A dotted name such as <code>1.2.3.4.a-i.st</code> has too many labels for a single <code>*.a-i.st</code> wildcard certificate to cover. The dashed form collapses the IP into one label, so <code>1-2-3-4.a-i.st</code> is matched by an ordinary wildcard certificate and HTTPS works normally. Let's Encrypt will not issue a certificate for a bare IP address, but it will for a hostname — which is what this gives you.</p>
 
-  <h2>For agents and automated tools</h2>
+  <h2 id="for-agents-and-automated-tools">For agents and automated tools <a class="anchor" href="#for-agents-and-automated-tools" aria-label="Link to this section">#</a></h2>
 
   <p>The hostname is a pure function of the IP: no lookup, no state, no registration step. An agent that has just been handed a public IP can construct its own address without asking anyone.</p>
 
@@ -130,7 +148,7 @@ dig +short 203.0.113.10.a-i.sh</code></pre>
 
   <p>One caution that matters: do not put secrets in a hostname — every resolver along the path can log the names it sees. Trying the other suffix is worth a retry, but do not treat it as failover: one resolver answers both today, so when one is down the other is down with it.</p>
 
-  <h2>Run your own</h2>
+  <h2 id="run-your-own">Run your own <a class="anchor" href="#run-your-own" aria-label="Link to this section">#</a></h2>
 
   <p>Most people should use the hosted service — append the suffix and you are done. Running your own is a standing commitment: a domain you own, a host with a static public IPv4, UDP and TCP port 53 reachable, NS delegation with glue records, and someone keeping all of it alive. It is the right choice when your environment cannot depend on a third party, or when you need your own domain in the name. Otherwise the hosted service saves you the job — and the source below is here so that staying with it is a choice, not a trap.</p>
 
@@ -140,20 +158,23 @@ dig +short 203.0.113.10.a-i.sh</code></pre>
 cd open-domain
 npm test
 
-ZONES=example.dev,example.test PORT=15353 BIND=127.0.0.1 node src/server.js
+ZONES=example.dev,example.test \
+  PORT=15353 BIND=127.0.0.1 \
+  node src/server.js
+
 dig +short -p 15353 @127.0.0.1 1.2.3.4.example.dev</code></pre>
 
   <p>Each zone gets its own <code>SOA</code> and apex, and the longest matching zone wins. To serve the public internet you need a host with a static IPv4 address and UDP and TCP port 53 reachable, then delegate NS and glue records to it. Configuration is all environment variables: <code>ZONES</code>, <code>PORT</code>, <code>BIND</code>, <code>NS_HOSTS</code>, <code>APEX_IP</code>, <code>TTL</code>, <code>DEBUG</code>.</p>
 
-  <h2>Reliability</h2>
+  <h2 id="reliability">Reliability <a class="anchor" href="#reliability" aria-label="Link to this section">#</a></h2>
 
   <p>This is community-run infrastructure offered as a public good, with no SLA. It is meant for development, previews, demos, CI, and giving ephemeral machines an address. It is not meant to sit in the critical path of a production system that depends on a free third party — for that, run your own from the source above, on a domain you control. That the code is MIT-licensed and trivially self-hostable is the point: there is nothing to be locked into.</p>
 
-  <h2>Abuse</h2>
+  <h2 id="abuse">Abuse <a class="anchor" href="#abuse" aria-label="Link to this section">#</a></h2>
 
   <p>A free wildcard DNS service gets misused, and we would rather hear about it. Report a hostname to <a href="mailto:abuse@open-domain.com">abuse@open-domain.com</a> and we will act on phishing, malware, and command-and-control. What we can do is stop an address from resolving under our suffixes; what we cannot do is remove content we never hosted, or tell you who used a name, because we keep no query logs. The <a href="/abuse.html">abuse page</a> explains both sides plainly, including how to reach the host directly — which is usually faster than reaching us.</p>
 
-  <h2>Sponsor</h2>
+  <h2 id="sponsor">Sponsor <a class="anchor" href="#sponsor" aria-label="Link to this section">#</a></h2>
 
   <p>Open-Domain is free and intends to stay free. Running authoritative nameservers costs something; keeping the service stateless keeps that cost small, and <a href="https://github.com/sponsors/kwkuh">sponsors</a> cover the rest.</p>
 
