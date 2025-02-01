@@ -5,6 +5,7 @@ import dgram from 'node:dgram';
 import net from 'node:net';
 import { parseQuery } from './wire.js';
 import { resolve } from './resolve.js';
+import { bukaDaftar } from './blocklist.js';
 
 // ---- Config dari env ----
 // ZONES = daftar zone yang kita layani, dipisah koma. Satu proses bisa otoritatif
@@ -17,6 +18,11 @@ const ZONES = (process.env.ZONES || process.env.ZONE || 'a-i.sh,a-i.st')
 const PORT = Number(process.env.PORT || 53); // lokal: pakai 5353 (port <1024 butuh root)
 const BIND = process.env.BIND || '0.0.0.0';
 const DEBUG = process.env.DEBUG === '1';
+const BLOCKLIST = process.env.BLOCKLIST || null;   // path berkas aturan
+const SELF_IP = process.env.SELF_IP || process.env.BIND || null; // buat A record ns1/ns2 in-zone
+const SINKHOLE_IP = process.env.SINKHOLE_IP || null; // kalau diisi, blokir -> alamat ini, bukan NXDOMAIN
+
+const daftarBlokir = bukaDaftar({ berkas: BLOCKLIST, log: (m) => console.log(m) });
 
 const cfg = {
   zones: ZONES,
@@ -28,6 +34,9 @@ const cfg = {
   minttl: Number(process.env.SOA_MINTTL || 60),
   serial: Math.floor(Date.now() / 1000), // serial naik tiap restart
   apexIp: process.env.APEX_IP || null, // opsional: A record buat apex (landing page)
+  selfIp: SELF_IP && SELF_IP !== '0.0.0.0' ? SELF_IP : null,
+  sinkholeIp: SINKHOLE_IP,
+  blocklist: daftarBlokir,
 };
 
 const TYPE_NAME = { 1: 'A', 2: 'NS', 6: 'SOA', 16: 'TXT', 28: 'AAAA', 255: 'ANY' };
@@ -48,7 +57,7 @@ udp.on('message', (msg, rinfo) => {
   }
 });
 udp.on('error', (err) => { console.error('udp fatal:', err.message); process.exit(1); });
-udp.bind(PORT, BIND, () => console.log(`UDP  :${PORT} zones=${ZONES.join(',')} ns=${cfg.ns.join(',')}`));
+udp.bind(PORT, BIND, () => console.log(`UDP  :${PORT} zones=${ZONES.join(',')} ns=${cfg.ns.join(',')} blocklist=${BLOCKLIST ? daftarBlokir.jumlah + ' aturan' : 'mati'}`));
 
 // ---- TCP (fallback: paket diawali 2 byte panjang) ----
 const tcp = net.createServer((sock) => {

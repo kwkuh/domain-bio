@@ -19,6 +19,16 @@ import net from 'node:net';
 const isOctet = (s) => /^\d{1,3}$/.test(s) && Number(s) <= 255;
 
 /**
+ * Bakukan IPv4 jadi satu bentuk. "01.02.03.04" dan "001.002.003.004" menunjuk alamat
+ * yang sama dengan "1.2.3.4", jadi keduanya HARUS keluar sebagai "1.2.3.4".
+ *
+ * ⚠️ Ini bukan kerapian belaka. Blocklist memutuskan berdasarkan nilai `ip` di sini;
+ * kalau nol di depan dibiarkan lolos, "1.2.3.4" yang diblokir bisa ditembus cukup
+ * dengan mengetik "01.02.03.04" — alamat tujuannya sama persis.
+ */
+const bakukanV4 = (oktet) => oktet.map((o) => String(Number(o))).join('.');
+
+/**
  * Cari zone mana yang mencakup sebuah nama. Match terpanjang menang, jadi zone
  * yang saling menaungi (mis. "a-i.sh" dan "dev.a-i.sh") tetap deterministik.
  * @param {string} rawName
@@ -63,7 +73,7 @@ export function parseName(rawName, zones) {
   // 1) IPv4 dashed: "1-2-3-4"
   const dash4 = last.match(/^(\d{1,3})-(\d{1,3})-(\d{1,3})-(\d{1,3})$/);
   if (dash4 && dash4.slice(1).every((o) => Number(o) <= 255)) {
-    return { kind: 'A', ip: dash4.slice(1).join('.'), zone };
+    return { kind: 'A', ip: bakukanV4(dash4.slice(1)), zone };
   }
 
   // 2) IPv6 dashed: "-" -> ":", "--" -> "::"
@@ -82,7 +92,7 @@ export function parseName(rawName, zones) {
   // 4) IPv4 dotted: 4 label numerik yang nempel ke zone
   if (labels.length >= 4) {
     const last4 = labels.slice(-4);
-    if (last4.every(isOctet)) return { kind: 'A', ip: last4.join('.'), zone };
+    if (last4.every(isOctet)) return { kind: 'A', ip: bakukanV4(last4), zone };
   }
 
   return { kind: 'nxdomain', zone }; // dalam zone tapi bukan bentuk IP

@@ -1,0 +1,21 @@
+# Blocklist Open-Domain — satu aturan per baris, "#" komentar.
+#
+#   ip     203.0.113.10       blokir satu alamat
+#   cidr   203.0.113.0/24     blokir satu blok
+#   allow  203.0.113.5        pengecualian, selalu menang atas blokir
+#
+# Keputusan diambil atas ALAMAT HASIL, bukan atas nama. Jadi memblokir 203.0.113.10
+# otomatis menutup 203-0-113-10, cb00710a (heksa), apa-pun.203.0.113.10, dan
+# 0203.0.113.010 sekaligus — tidak ada bentuk penulisan yang bisa menyelinap.
+#
+# Setelah mengubah berkas ini:  systemctl kill -s HUP open-domain
+# (atau tunggu paling lama 15 detik, perubahan mtime terbaca sendiri)
+#
+# Aturan asli dicatat di riwayat git — itu bukti berstempel waktu bahwa laporan
+# penyalahgunaan ditindak, dan tidak bisa dibuat-buat belakangan.
+
+# Alamat dokumentasi RFC 5737 — dipakai contoh di situs, tidak boleh benar-benar
+# diblokir supaya contoh di dokumentasi tetap bisa dicoba orang.
+allow 203.0.113.10
+
+# (belum ada laporan penyalahgunaan yang ditindak)

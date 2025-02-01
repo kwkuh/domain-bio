@@ -2,7 +2,7 @@
 // Cukup buat authoritative server sederhana: parse pertanyaan, susun jawaban.
 
 // ---- Tipe record ----
-export const TYPE = { A: 1, NS: 2, SOA: 6, TXT: 16, AAAA: 28, ANY: 255 };
+export const TYPE = { A: 1, NS: 2, SOA: 6, HINFO: 13, TXT: 16, AAAA: 28, ANY: 255 };
 export const CLASS_IN = 1;
 
 // ---- Flag header ----
@@ -55,6 +55,16 @@ export function soaRdata(zone, cfg) {
 }
 
 /** Parse query: ambil id, flags, nama pertanyaan pertama, qtype, plus byte pertanyaan mentah. */
+/**
+ * HINFO rdata: dua character-string. Dipakai buat menjawab ANY sesuai RFC 8482 —
+ * balasan sekecil mungkin supaya query ANY nggak bisa dipakai memperbesar serangan.
+ */
+export function hinfoRdata(cpu = 'RFC8482', os = '') {
+  const s1 = Buffer.from(cpu, 'ascii');
+  const s2 = Buffer.from(os, 'ascii');
+  return Buffer.concat([Buffer.from([s1.length]), s1, Buffer.from([s2.length]), s2]);
+}
+
 export function parseQuery(buf) {
   if (buf.length < 12) throw new Error('paket kependekan');
   const id = buf.readUInt16BE(0);

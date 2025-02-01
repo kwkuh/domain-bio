@@ -1,14 +1,15 @@
 // resolve.js — logika: dari query (nama + tipe) hasilkan jawaban DNS.
 // Dipisah dari transport (UDP/TCP) biar gampang di-test.
 
-import { parseName, ipv4ToBytes, ipv6ToBytes } from './parse.js';
+import { parseName, matchZone, ipv4ToBytes, ipv6ToBytes } from './parse.js';
 import {
-  TYPE, RCODE, encodeName, answerRecord, namedRecord, soaRdata, buildResponse,
+  TYPE, RCODE, encodeName, answerRecord, namedRecord, soaRdata, hinfoRdata, buildResponse,
 } from './wire.js';
 
 /**
  * @param {{id:number,flags:number,name:string,qtype:number,questionSection:Buffer}} q
- * @param {object} cfg  { zones:[...], ns:[...], ttl, refresh, retry, expire, minttl, serial, apexIp? }
+ * @param {object} cfg  { zones:[...], ns:[...], ttl, refresh, retry, expire, minttl, serial,
+ *                        apexIp?, selfIp?, blocklist?, sinkholeIp? }
  *                      `zone` (tunggal) masih diterima demi kompatibilitas.
  * @returns {Buffer}
  */
@@ -22,6 +23,40 @@ export function resolve(q, cfg) {
   const answers = [];
   const authority = [];
 
+  // Nameserver yang namanya ADA DI DALAM zone sendiri (mis. ns1.a-i.sh melayani a-i.sh)
+  // wajib punya A record sendiri, kalau tidak delegasinya buntu: resolver butuh alamat
+  // nameserver untuk bertanya, tapi alamat itu cuma bisa ditanyakan ke nameserver itu.
+  // Registry menutup lingkaran ini lewat glue, dan kita harus menjawab yang cocok.
+  if (cfg.selfIp && Array.isArray(cfg.ns)) {
+    const nama = String(q.name).toLowerCase().replace(/\.$/, '');
+    const cocok = cfg.ns.some((h) => String(h).toLowerCase().replace(/\.$/, '') === nama);
+    if (cocok && matchZone(nama, zones)) {
+      if (t === TYPE.A || t === TYPE.ANY) answers.push(answerRecord(TYPE.A, cfg.ttl, ipv4ToBytes(cfg.selfIp)));
+      if (answers.length === 0) authority.push(soa());
+      return buildResponse(q, { answers, authority });
+    }
+  }
+
+  // ANY dijawab seminimal mungkin (semangat RFC 8482). Menjawab ANY dengan seluruh
+  // isi apex memberi penyerang paket balasan besar dari query kecil — bandwidth kita
+  // yang dipakai menyerang orang lain. Diukur sebelum tambalan ini: 6,75x.
+  if (t === TYPE.ANY) {
+    answers.push(answerRecord(TYPE.HINFO, cfg.minttl, hinfoRdata('RFC8482')));
+    return buildResponse(q, { answers });
+  }
+
+  // Blokir diputuskan atas ALAMAT HASIL, bukan atas nama. parse.js sudah membakukan
+  // semua bentuk penulisan, jadi tidak ada bentuk alternatif yang bisa menyelinap.
+  if (cfg.blocklist && (parsed.kind === 'A' || parsed.kind === 'AAAA')) {
+    if (cfg.blocklist.diblokir(parsed.ip, parsed.kind === 'AAAA')) {
+      if (cfg.sinkholeIp && parsed.kind === 'A') {
+        // Arahkan ke halaman penjelasan: korban tahu kenapa, pemilik situs tahu harus apa.
+        return buildResponse(q, { answers: [answerRecord(TYPE.A, cfg.ttl, ipv4ToBytes(cfg.sinkholeIp))] });
+      }
+      return buildResponse(q, { rcode: RCODE.NXDOMAIN, authority: [soa()] });
+    }
+  }
+
   switch (parsed.kind) {
     case 'refused':
       return buildResponse(q, { rcode: RCODE.REFUSED });
@@ -32,17 +67,17 @@ export function resolve(q, cfg) {
       return buildResponse(q, { rcode: RCODE.NXDOMAIN, authority });
 
     case 'apex':
-      if (t === TYPE.SOA || t === TYPE.ANY) answers.push(answerRecord(TYPE.SOA, cfg.minttl, soaRdata(zone, cfg)));
-      if (t === TYPE.NS || t === TYPE.ANY) for (const ns of cfg.ns) answers.push(answerRecord(TYPE.NS, cfg.ttl, encodeName(ns)));
-      if ((t === TYPE.A || t === TYPE.ANY) && cfg.apexIp) answers.push(answerRecord(TYPE.A, cfg.ttl, ipv4ToBytes(cfg.apexIp)));
+      if (t === TYPE.SOA) answers.push(answerRecord(TYPE.SOA, cfg.minttl, soaRdata(zone, cfg)));
+      if (t === TYPE.NS) for (const ns of cfg.ns) answers.push(answerRecord(TYPE.NS, cfg.ttl, encodeName(ns)));
+      if (t === TYPE.A && cfg.apexIp) answers.push(answerRecord(TYPE.A, cfg.ttl, ipv4ToBytes(cfg.apexIp)));
       break;
 
     case 'A':
-      if (t === TYPE.A || t === TYPE.ANY) answers.push(answerRecord(TYPE.A, cfg.ttl, ipv4ToBytes(parsed.ip)));
+      if (t === TYPE.A) answers.push(answerRecord(TYPE.A, cfg.ttl, ipv4ToBytes(parsed.ip)));
       break;
 
     case 'AAAA':
-      if (t === TYPE.AAAA || t === TYPE.ANY) answers.push(answerRecord(TYPE.AAAA, cfg.ttl, ipv6ToBytes(parsed.ip)));
+      if (t === TYPE.AAAA) answers.push(answerRecord(TYPE.AAAA, cfg.ttl, ipv6ToBytes(parsed.ip)));
       break;
   }
 
