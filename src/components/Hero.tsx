@@ -86,38 +86,36 @@ export const Hero = () => {
         </div>
       </div>
 
-      {/* Floating Info Button with Popup */}
-      {showPopup && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center">
-          <Popover>
-            <PopoverTrigger asChild>
+      {/* Fixed floating popup button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              variant="default" 
+              className="rounded-full shadow-lg p-3 bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 animate-pulse"
+              size="icon"
+            >
+              <Info className="h-6 w-6 text-white" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-4 bg-background/90 backdrop-blur-lg border border-border shadow-lg rounded-lg">
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="text-lg font-mono font-bold">Hello there! 👋</h3>
               <Button 
-                variant="default" 
-                className="rounded-full shadow-lg p-3 bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 animate-pulse"
-                size="icon"
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6" 
+                onClick={() => setShowPopup(false)}
               >
-                <Info className="h-6 w-6 text-white" />
+                <X className="h-4 w-4" />
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-4 bg-background/90 backdrop-blur-lg border border-border shadow-lg rounded-lg">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-mono font-bold">Hello there! 👋</h3>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6" 
-                  onClick={() => setShowPopup(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-sm leading-relaxed">
-                This is probably just one of the many "kukuh" domains popping up on search engines — but hey, the real party's at <a href="https://kukuh.link" target="_blank" rel="noopener noreferrer" className="font-bold text-purple-500 hover:underline">kukuh.link</a> 🎉
-              </p>
-            </PopoverContent>
-          </Popover>
-        </div>
-      )}
+            </div>
+            <p className="text-sm leading-relaxed">
+              This is probably just one of the many "kukuh" domains popping up on search engines — but hey, the real party's at <a href="https://kukuh.link" target="_blank" rel="noopener noreferrer" className="font-bold text-purple-500 hover:underline">kukuh.link</a> 🎉
+            </p>
+          </PopoverContent>
+        </Popover>
+      </div>
     </>
   );
 };
