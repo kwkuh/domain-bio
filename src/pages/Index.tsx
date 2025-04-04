@@ -1,3 +1,4 @@
+
 import { Hero } from "@/components/Hero";
 import { About } from "@/components/About";
 import { Experience } from "@/components/Experience";
@@ -8,24 +9,24 @@ import { OSWindow } from "@/components/OSWindow";
 import { Clock } from "@/components/Clock";
 
 const domains = [
+  "maskukuh.id",
+  "kukuh.link",
   "kukuh.co.id",
   "maskukuh.com",
-  "maskukuh.id",
   "kukuh.biz.id",
   "kukuh.web.id",
   "kukuh.xyz",
   "kukuh.org",
   "kukuh.net",
   "kukuh.my",
-  "kukuh.id",
-  "kukuh.link"
+  "kukuh.id"
 ];
 
 const DomainStamps = () => {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
       {domains.map((domain, index) => {
-        const isMainDomain = domain === "kukuh.link";
+        const isMainDomain = domain === "maskukuh.id";
         const isLeftSide = index < Math.ceil(domains.length / 2);
         const position = isLeftSide ? 
           { left: '5%', right: 'auto' } : 
