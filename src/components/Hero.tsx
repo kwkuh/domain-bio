@@ -1,15 +1,16 @@
-
 import { HandIcon, MoonIcon, SunIcon, Phone, Glasses, Info, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { useEffect, useState } from "react";
 import { Clock } from "./Clock";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useToast } from "@/hooks/use-toast";
 
 export const Hero = () => {
   const { theme, toggleTheme } = useTheme();
   const [isSticky, setIsSticky] = useState(false);
-  const [showPopup, setShowPopup] = useState(true);
+  const [showBanner, setShowBanner] = useState(true);
+  const { toast } = useToast();
 
   const handleWhatsAppClick = () => {
     window.open('https://wa.me/6282260001011', '_blank');
@@ -24,16 +25,72 @@ export const Hero = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Display the toast notification when component mounts
+  useEffect(() => {
+    // Small delay to ensure it shows after page loads
+    const timer = setTimeout(() => {
+      toast({
+        title: "Hello there! 👋",
+        description: (
+          <p>
+            This is probably just one of the many "kukuh" domains popping up on search engines — but hey, the real party's at{" "}
+            <a 
+              href="https://kukuh.link" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="font-bold text-purple-500 hover:underline"
+            >
+              kukuh.link
+            </a>{" "}
+            🎉
+          </p>
+        ),
+        duration: 10000, // 10 seconds
+      });
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   return (
     <>
+      {/* Automatic banner at the top of the page */}
+      {showBanner && (
+        <div className="fixed top-0 left-0 w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 px-4 z-50 flex items-center justify-between">
+          <div className="flex items-center space-x-2 mx-auto">
+            <Info className="h-5 w-5" />
+            <span className="text-sm font-medium">
+              This is probably just one of the many "kukuh" domains — the real party's at{" "}
+              <a 
+                href="https://kukuh.link" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="font-bold underline hover:text-yellow-200 transition-colors"
+              >
+                kukuh.link
+              </a>{" "}
+              🎉
+            </span>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-6 w-6 text-white hover:bg-white/20" 
+            onClick={() => setShowBanner(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       {isSticky && (
-        <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg z-50 py-2 px-4 border-b border-border transition-all duration-300">
+        <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg z-40 py-2 px-4 border-b border-border transition-all duration-300">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-xl font-bold text-primary">Kukuh Laksana</h2>
           </div>
         </div>
       )}
-      <div className="flex flex-col md:flex-row items-center justify-between py-8 gap-6">
+      <div className={`flex flex-col md:flex-row items-center justify-between py-8 gap-6 ${showBanner ? 'mt-12' : ''}`}>
         <div className="flex-1 space-y-4 text-left animate-fade-in order-2 md:order-1">
           <div className="inline-flex items-center gap-3">
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 bg-clip-text text-transparent animate-pulse">
@@ -84,37 +141,6 @@ export const Hero = () => {
           <div className="absolute inset-0 rounded-full border-4 border-green-500 opacity-0 group-hover:opacity-30 transition-opacity duration-300 animate-pulse"></div>
           <Clock />
         </div>
-      </div>
-
-      {/* Fixed floating popup button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button 
-              variant="default" 
-              className="rounded-full shadow-lg p-3 bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 animate-pulse"
-              size="icon"
-            >
-              <Info className="h-6 w-6 text-white" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 p-4 bg-background/90 backdrop-blur-lg border border-border shadow-lg rounded-lg">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="text-lg font-mono font-bold">Hello there! 👋</h3>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6" 
-                onClick={() => setShowPopup(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-sm leading-relaxed">
-              This is probably just one of the many "kukuh" domains popping up on search engines — but hey, the real party's at <a href="https://kukuh.link" target="_blank" rel="noopener noreferrer" className="font-bold text-purple-500 hover:underline">kukuh.link</a> 🎉
-            </p>
-          </PopoverContent>
-        </Popover>
       </div>
     </>
   );
