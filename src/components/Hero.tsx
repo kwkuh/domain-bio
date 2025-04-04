@@ -27,7 +27,7 @@ export const Hero = () => {
       {isSticky && (
         <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg z-50 py-2 px-4 border-b border-border transition-all duration-300">
           <div className="max-w-2xl mx-auto">
-            <h2 className="text-xl font-bold text-primary">MasKukuh.id</h2>
+            <h2 className="text-xl font-bold text-primary">Kukuh Laksana</h2>
           </div>
         </div>
       )}
@@ -45,6 +45,7 @@ export const Hero = () => {
             </h2>
             <div className="flex items-center gap-4 text-sm text-muted-foreground font-mono">
               <span>hi@maskukuh.id</span>
+              <span className="text-xs opacity-70">MasKukuh.id</span>
               <Button 
                 variant="ghost" 
                 size="sm" 

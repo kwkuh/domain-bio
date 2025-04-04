@@ -5,7 +5,7 @@ export const Contact = () => {
   return (
     <footer className="py-16">
       <div className="space-y-8 flex flex-col items-center text-center">
-        <h2 className="text-2xl font-bold font-mono text-primary">Get in Touch</h2>
+        <h2 className="text-2xl font-bold font-mono text-primary">Get in Touch with Kukuh</h2>
         <div className="flex justify-center gap-6">
           <a href="https://maskukuh.id" className="text-muted-foreground hover:text-primary transition-colors">
             <Home className="w-6 h-6" />
@@ -18,7 +18,7 @@ export const Contact = () => {
           </a>
         </div>
         <div className="pt-8 text-sm text-muted-foreground">
-          <p>© 2025 MasKukuh.id. All rights reserved.</p>
+          <p>© 2025 Kukuh Laksana | MasKukuh.id. All rights reserved.</p>
         </div>
       </div>
     </footer>
