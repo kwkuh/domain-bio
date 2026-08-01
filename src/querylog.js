@@ -22,17 +22,31 @@
 // oleh logrotate tanpa perlu memberi tahu proses ini.
 
 import fs from 'node:fs';
+import { perpanjangV6 } from './parse.js';
 
-/** Potong alamat ke blok yang cukup buat pola, tidak cukup buat menguntit. */
+/**
+ * Potong alamat ke blok yang cukup buat pola, tidak cukup buat menguntit.
+ *
+ * 🚨 IPv6 WAJIB dipanjangkan dulu, tidak boleh dipotong dari string mentahnya.
+ * Ejaannya tidak tunggal: "2a01:4f8:0:1::1" dan "2a01:4f8::1" bisa berada di /48
+ * yang sama, tapi memotong tiga bagian pertama dari string apa adanya menghasilkan
+ * "2a01:4f8:0::/48" dan "2a01:4f8:::/48" — dua label berbeda untuk satu jaringan,
+ * plus ":::" yang bahkan bukan alamat sah.
+ *
+ * Itu menghancurkan satu-satunya gunanya: memisahkan "satu sumber membanjiri" dari
+ * "banyak orang memakai". Satu penyerang cukup mengubah cara menulis alamatnya
+ * untuk tampil sebagai beberapa jaringan berbeda.
+ */
 export function samarkan(ip, v6 = false) {
   if (!ip) return '?';
   if (v6) {
-    const bagian = String(ip).split(':');
-    return bagian.slice(0, 3).join(':') + '::/48';
+    if (!String(ip).includes(':')) return '?';
+    const g = perpanjangV6(ip);
+    return `${g[0]}:${g[1]}:${g[2]}::/48`;
   }
   const o = String(ip).split('.');
-  if (o.length !== 4) return '?';
-  return `${o[0]}.${o[1]}.${o[2]}.0/24`;
+  if (o.length !== 4 || o.some((x) => !/^\d{1,3}$/.test(x) || Number(x) > 255)) return '?';
+  return `${Number(o[0])}.${Number(o[1])}.${Number(o[2])}.0/24`;
 }
 
 /**

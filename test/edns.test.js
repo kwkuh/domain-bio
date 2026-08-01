@@ -118,7 +118,9 @@ test('ANY ber-EDNS0 tetap minimal (anti amplifikasi tidak boleh bocor lewat OPT)
 
 test('alamat klien disamarkan ke blok, bukan disimpan utuh', () => {
   assert.equal(samarkan('203.0.113.77'), '203.0.113.0/24');
-  assert.equal(samarkan('2a01:4f8:c015:8800::1', true), '2a01:4f8:c015::/48');
+  // Dipanjangkan dulu, jadi bentuknya selalu empat-heksa penuh — lihat
+  // test/paket-rusak.test.js untuk alasannya.
+  assert.equal(samarkan('2a01:4f8:c015:8800::1', true), '2a01:04f8:c015::/48');
 });
 
 test('dua alamat dalam satu blok jadi catatan yang sama — itu memang tujuannya', () => {

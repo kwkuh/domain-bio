@@ -80,18 +80,23 @@ export function hinfoRdata(cpu = 'RFC8482', os = '') {
 function cariOpt(buf, off, arcount) {
   for (let i = 0; i < arcount; i++) {
     if (off >= buf.length) return null;
-    // Lewati NAME.
+    // Lewati NAME. Batasnya diperiksa di setiap langkah dengan alasan yang sama
+    // seperti di parseQuery: paket yang habis di tengah nama tidak boleh membuat
+    // penelusuran ini berjalan liar.
     if (buf[off] === 0) {
       off += 1;
     } else {
+      let langkah = 0;
       while (off < buf.length) {
+        if (++langkah > 128) return null; // nama sah tidak sepanjang ini
         const len = buf[off];
         if (len === 0) { off += 1; break; }
         if ((len & 0xc0) === 0xc0) { off += 2; break; }
+        if (len > 63) return null;
         off += 1 + len;
       }
     }
-    if (off + 10 > buf.length) return null;
+    if (!Number.isFinite(off) || off + 10 > buf.length) return null;
     const type = buf.readUInt16BE(off);
     const kelas = buf.readUInt16BE(off + 2);
     const ttl = buf.readUInt32BE(off + 4);
@@ -133,15 +138,38 @@ export function parseQuery(buf) {
   const arcount = buf.readUInt16BE(10);
   if (qdcount < 1) throw new Error('tanpa pertanyaan');
 
+  // 🚨 Setiap baca WAJIB diperiksa batasnya dulu.
+  //
+  // Versi sebelumnya tidak, dan itu bisa mematikan server dari jarak jauh dengan
+  // 12 byte. Paket yang bilang "ada 1 pertanyaan" lalu habis di situ membuat
+  // buf[off] jadi undefined; `undefined & 0xc0` bernilai 0 sehingga bukan pointer,
+  // `off += 1 + undefined` jadi NaN, dan `buf[NaN]` undefined lagi — perulangannya
+  // tidak pernah keluar sambil terus mendorong string kosong ke dalam array.
+  //
+  // Terukur: 12 byte masuk -> 3 detik CPU dan 1,4 GB memori sebelum akhirnya
+  // melempar. Node satu utas, jadi 0,3 paket per detik sudah cukup mematikan
+  // layanan, dan alamat pengirim UDP bisa dipalsukan sehingga pembatas laju
+  // per-blok tidak menolong.
   let off = 12;
   const labels = [];
+  let panjangNama = 0;
   while (true) {
+    if (off >= buf.length) throw new Error('nama kepotong');
     const len = buf[off];
     if (len === 0) { off += 1; break; }
-    if ((len & 0xc0) === 0xc0) { off += 2; break; } // pointer (harusnya nggak ada di pertanyaan)
+    if ((len & 0xc0) === 0xc0) { // pointer kompresi — tidak sah di pertanyaan
+      if (off + 2 > buf.length) throw new Error('pointer kepotong');
+      off += 2;
+      break;
+    }
+    if (len > 63) throw new Error('label lebih dari 63 oktet'); // RFC 1035 §2.3.4
+    panjangNama += len + 1;
+    if (panjangNama > 255) throw new Error('nama lebih dari 255 oktet'); // RFC 1035 §2.3.4
+    if (off + 1 + len > buf.length) throw new Error('label lewat ujung paket');
     labels.push(buf.toString('ascii', off + 1, off + 1 + len));
     off += 1 + len;
   }
+  if (off + 4 > buf.length) throw new Error('pertanyaan tanpa qtype/qclass');
   const qtype = buf.readUInt16BE(off);
   off += 4; // lewati qtype + qclass
   const questionSection = buf.subarray(12, off);

@@ -103,6 +103,25 @@ export function ipv4ToBytes(ip) {
   return Buffer.from(ip.split('.').map((n) => parseInt(n, 10) & 255));
 }
 
+/**
+ * IPv6 -> 8 grup empat-heksa tanpa "::" ("2a01:4f8::1" -> ["2a01","04f8",...,"0001"]).
+ *
+ * Dipakai di mana pun sebuah alamat harus dibandingkan atau dikelompokkan. Ejaan
+ * IPv6 tidak tunggal: "2a01:4f8:0:1::1" dan "2a01:4f8::1" adalah dua tulisan yang
+ * bisa berada di /48 yang sama, dan memotong string mentahnya menghasilkan kunci
+ * yang berbeda untuk jaringan yang sama — persis kegagalan yang bikin pengelompokan
+ * kehilangan gunanya.
+ */
+export function perpanjangV6(ip) {
+  const [head, tail] = String(ip).split('::');
+  const h = head ? head.split(':') : [];
+  const t = tail !== undefined ? (tail ? tail.split(':') : []) : null;
+  const groups = t === null ? h : [...h, ...Array(Math.max(0, 8 - h.length - t.length)).fill('0'), ...t];
+  const out = [];
+  for (let i = 0; i < 8; i++) out.push((parseInt(groups[i] || '0', 16) & 0xffff).toString(16).padStart(4, '0'));
+  return out;
+}
+
 /** IPv6 string (boleh pakai "::") -> 16 byte Buffer */
 export function ipv6ToBytes(ip) {
   const [head, tail] = ip.split('::');
