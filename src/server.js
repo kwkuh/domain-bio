@@ -96,7 +96,15 @@ const cfg = {
   blocklist: daftarBlokir,
 };
 
-const TYPE_NAME = { 1: 'A', 2: 'NS', 6: 'SOA', 16: 'TXT', 28: 'AAAA', 255: 'ANY' };
+// Tipe yang benar-benar muncul di produksi, bukan cuma yang kita layani. CAA
+// datang dari Let's Encrypt sebelum menerbitkan sertifikat, HTTPS/SVCB dari
+// peramban modern, sisanya dari pemindai. Kalau tidak dinamai, semuanya muncul
+// sebagai angka mentah di statistik dan tidak ada yang tahu artinya.
+const TYPE_NAME = {
+  1: 'A', 2: 'NS', 5: 'CNAME', 6: 'SOA', 12: 'PTR', 15: 'MX', 16: 'TXT',
+  28: 'AAAA', 33: 'SRV', 43: 'DS', 48: 'DNSKEY', 65: 'HTTPS', 99: 'SPF',
+  255: 'ANY', 257: 'CAA',
+};
 
 function handle(msg, from, v6 = false, transport = 'udp') {
   const q = parseQuery(msg); // lempar kalau paket rusak
