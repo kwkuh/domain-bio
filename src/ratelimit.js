@@ -1,127 +1,117 @@
-// ratelimit.js — Response Rate Limiting (RRL) buat DNS otoritatif.
+// ratelimit.js — Response Rate Limiting (RRL) for an authoritative DNS server.
 //
-// Kenapa ada, dan kenapa BUKAN "biar server nggak kewalahan":
+// What this is for, and what it is NOT for:
 //
-// Server ini menjawab query UDP tanpa jabat tangan, jadi alamat pengirimnya bisa
-// dipalsukan. Penyerang mengirim query dengan alamat sumber = alamat KORBAN, dan
-// balasan kita mendarat di korban. Kita jadi senjata orang lain, dan yang terlihat
-// di log korban adalah IP kita. Amplifikasi ANY sudah ditekan ke 1,88x lewat
-// RFC 8482, tapi 1,88x dikalikan ribuan paket tetap serangan — dan kali ini
-// bandwidth kita yang membiayainya.
+// It is not "stop the server getting overwhelmed". This server answers UDP with no
+// handshake, so the source address can be forged. An attacker sends queries with the
+// VICTIM's address as the source, and our replies land on the victim. We become
+// someone else's weapon, and the address in the victim's logs is ours. RFC 8482 already
+// pushed ANY amplification down to 1.88x, but 1.88x times thousands of packets is still
+// an attack — one our bandwidth pays for.
 //
-// Karena itu batasnya dihitung per BLOK ALAMAT, bukan per alamat tunggal:
-// serangan pemalsuan mengacak alamat sumber, jadi pembatas per-IP tidak pernah
-// melihat pengulangan. Blok /24 (v4) dan /56 (v6) mengikuti praktik RRL BIND.
+// So the limit is counted per ADDRESS BLOCK, not per address: a spoofing attack
+// randomises the source, so a per-IP limiter never sees a repeat and never fires.
+// /24 (v4) and /56 (v6) follow BIND's RRL practice.
 //
-// 🚨 SLIP — bagian yang membedakan RRL dari "buang saja".
-// Membuang balasan secara diam-diam ikut membunuh pengguna sah yang kebetulan
-// satu blok dengan penyerang (mis. satu kantor, satu resolver besar). Jadi setiap
-// balasan ke-N yang melewati batas TIDAK dibuang, melainkan dijawab TERPOTONG
-// (TC=1, nol jawaban). Klien sah membaca TC=1 lalu mengulang lewat TCP — dan TCP
-// tidak bisa dipalsukan, jadi mereka tetap terlayani. Penyerang yang memalsukan
-// alamat tidak pernah menerima balasan itu, jadi tidak bisa menindaklanjutinya.
+// 🚨 SLIP — the part that separates RRL from "just drop it".
+// Dropping silently also kills legitimate users who happen to share a block with an
+// attacker (one office, one large resolver). So every Nth reply over the limit is not
+// dropped but answered TRUNCATED (TC=1, no answers). A well-behaved client reads TC=1
+// and retries over TCP — and TCP cannot be spoofed, so they still get served. An
+// attacker forging their source never receives that packet and cannot follow up.
 //
-// Batas cuma berlaku di UDP. TCP sudah membuktikan alamatnya lewat jabat tangan.
+// Only applies to UDP. TCP has already proved its address through the handshake.
 
-/** Ambil awalan alamat sebagai kunci ember. */
-export function kunciPrefix(ip, v6 = false, bitsV4 = 24, bitsV6 = 56) {
+import { expandV6 } from './parse.js';
+
+/** Reduce an address to the block key it belongs to. */
+export function prefixKey(ip, v6 = false, bitsV4 = 24, bitsV6 = 56) {
   if (!v6) {
     const o = ip.split('.');
-    if (o.length !== 4) return ip; // bentuk aneh: pakai apa adanya, jangan dilewatkan
+    if (o.length !== 4) return ip; // odd shape: use as-is rather than letting it through
     const n = ((Number(o[0]) << 24) | (Number(o[1]) << 16) | (Number(o[2]) << 8) | Number(o[3])) >>> 0;
     const mask = bitsV4 === 0 ? 0 : (~0 << (32 - bitsV4)) >>> 0;
     return String((n & mask) >>> 0);
   }
-  // IPv6: ambil `bitsV6` bit pertama. Nibble = 4 bit, jadi cukup potong bentuk penuh.
-  const penuh = perpanjangV6(ip);
-  const nibble = Math.ceil(bitsV6 / 4);
-  return 'v6:' + penuh.slice(0, nibble);
-}
-
-/** "2a01:4f8::1" -> "2a0104f80000...0001" (32 nibble, tanpa titik dua) */
-function perpanjangV6(ip) {
-  const [head, tail] = String(ip).split('::');
-  const h = head ? head.split(':') : [];
-  const t = tail !== undefined ? (tail ? tail.split(':') : []) : null;
-  const groups = t === null ? h : [...h, ...Array(Math.max(0, 8 - h.length - t.length)).fill('0'), ...t];
-  let s = '';
-  for (let i = 0; i < 8; i++) s += (parseInt(groups[i] || '0', 16) & 0xffff).toString(16).padStart(4, '0');
-  return s;
+  // IPv6: take the first `bitsV6` bits. A nibble is 4 bits, so slicing the expanded
+  // form is enough — and it must be the EXPANDED form, since "::" makes the raw
+  // string an unreliable thing to slice.
+  const nibbles = Math.ceil(bitsV6 / 4);
+  return 'v6:' + expandV6(ip).join('').slice(0, nibbles);
 }
 
 /**
- * @param {object} opsi
- * @param {number} opsi.perDetik   balasan per detik per blok alamat (0 = pembatas mati)
- * @param {number} opsi.ledakan    jatah menganggur yang boleh ditumpuk (token bucket)
- * @param {number} opsi.slip       tiap balasan ke-N yang melewati batas dijawab TC=1; 0 = tidak pernah
- * @param {number} opsi.maksEntri  batas keras jumlah ember — pembatas tidak boleh jadi kebocoran memori
- * @param {number} opsi.ttlEntriMs ember yang diam selama ini dibuang
+ * @param {object} opts
+ * @param {number} opts.perSecond   replies per second per address block (0 disables the limiter)
+ * @param {number} opts.burst       idle allowance that may accumulate (token bucket)
+ * @param {number} opts.slip        every Nth reply over the limit is answered TC=1; 0 means never
+ * @param {number} opts.maxEntries  hard cap on bucket count — the limiter must not become a leak
+ * @param {number} opts.entryTtlMs  buckets idle for this long are discarded
  */
-export function bikinPembatas({
-  perDetik = 0,
-  ledakan = null,
+export function makeLimiter({
+  perSecond = 0,
+  burst = null,
   slip = 5,
   bitsV4 = 24,
   bitsV6 = 56,
-  maksEntri = 50000,
-  ttlEntriMs = 60000,
-  sekarang = () => Date.now(),
+  maxEntries = 50000,
+  entryTtlMs = 60000,
+  now = () => Date.now(),
 } = {}) {
-  const kapasitas = ledakan ?? Math.max(perDetik * 2, perDetik);
-  const ember = new Map();
-  let dibuang = 0;
-  let dipotong = 0;
-  let diusir = 0;
+  const capacity = burst ?? Math.max(perSecond * 2, perSecond);
+  const buckets = new Map();
+  let dropped = 0;
+  let truncated = 0;
+  let evicted = 0;
 
   /**
-   * 🚨 Ember-nya sendiri bisa jadi serangan. Alamat sumber palsu itu acak, jadi
-   * tiap paket bisa melahirkan satu entri baru. Tanpa batas keras, pembatas laju
-   * berubah jadi kebocoran memori yang dipicu dari luar — obatnya lebih parah
-   * daripada penyakitnya.
+   * 🚨 The bucket map is itself an attack surface. Forged source addresses are random,
+   * so every packet can create a new entry. Without a hard cap, a rate limiter turns
+   * into an externally triggered memory leak — a cure worse than the disease.
    */
-  function sapu(t) {
-    for (const [k, e] of ember) if (t - e.terakhir > ttlEntriMs) ember.delete(k);
-    if (ember.size < maksEntri) return;
-    // Masih penuh: usir yang paling lama tidak tersentuh. Map di JS menjaga urutan
-    // penyisipan, dan entri yang aktif terus tetap di posisi lamanya — jadi ini
-    // bukan LRU murni, tapi cukup: yang diusir pasti entri yang sudah lama dibuat.
-    const buang = Math.max(1, Math.floor(ember.size * 0.2));
+  function sweep(t) {
+    for (const [k, e] of buckets) if (t - e.lastSeen > entryTtlMs) buckets.delete(k);
+    if (buckets.size < maxEntries) return;
+    // Still full: evict the least recently created. JS Maps preserve insertion order,
+    // and entries that stay busy keep their original position — so this is not a true
+    // LRU, but it is enough: whatever gets evicted is certainly an old entry.
+    const toDrop = Math.max(1, Math.floor(buckets.size * 0.2));
     let n = 0;
-    for (const k of ember.keys()) { ember.delete(k); if (++n >= buang) break; }
-    diusir += n;
+    for (const k of buckets.keys()) { buckets.delete(k); if (++n >= toDrop) break; }
+    evicted += n;
   }
 
   return {
     /**
-     * @returns {'lolos'|'buang'|'potong'}
-     *   lolos  = jawab seperti biasa
-     *   buang  = jangan balas apa pun (jangan kirim paket — itu inti anti-refleksi)
-     *   potong = balas TC=1 tanpa jawaban, supaya klien sah pindah ke TCP
+     * @returns {'pass'|'drop'|'truncate'}
+     *   pass     = answer normally
+     *   drop     = send nothing at all (this is the whole point of anti-reflection)
+     *   truncate = reply TC=1 with no answers, so legitimate clients move to TCP
      */
-    putuskan(ip, v6 = false) {
-      if (perDetik <= 0) return 'lolos'; // pembatas mati
-      const t = sekarang();
-      const k = kunciPrefix(ip, v6, bitsV4, bitsV6);
-      let e = ember.get(k);
+    decide(ip, v6 = false) {
+      if (perSecond <= 0) return 'pass'; // limiter disabled
+      const t = now();
+      const k = prefixKey(ip, v6, bitsV4, bitsV6);
+      let e = buckets.get(k);
       if (!e) {
-        if (ember.size >= maksEntri) sapu(t);
-        e = { token: kapasitas, terakhir: t, lewat: 0 };
-        ember.set(k, e);
+        if (buckets.size >= maxEntries) sweep(t);
+        e = { tokens: capacity, lastSeen: t, over: 0 };
+        buckets.set(k, e);
       }
-      // Isi ulang sesuai waktu yang berlalu.
-      const isi = ((t - e.terakhir) / 1000) * perDetik;
-      if (isi > 0) e.token = Math.min(kapasitas, e.token + isi);
-      e.terakhir = t;
+      // Refill in proportion to elapsed time.
+      const refill = ((t - e.lastSeen) / 1000) * perSecond;
+      if (refill > 0) e.tokens = Math.min(capacity, e.tokens + refill);
+      e.lastSeen = t;
 
-      if (e.token >= 1) { e.token -= 1; e.lewat = 0; return 'lolos'; }
+      if (e.tokens >= 1) { e.tokens -= 1; e.over = 0; return 'pass'; }
 
-      e.lewat += 1;
-      if (slip > 0 && e.lewat % slip === 0) { dipotong += 1; return 'potong'; }
-      dibuang += 1;
-      return 'buang';
+      e.over += 1;
+      if (slip > 0 && e.over % slip === 0) { truncated += 1; return 'truncate'; }
+      dropped += 1;
+      return 'drop';
     },
-    sapuSekarang: () => sapu(sekarang()),
-    get statistik() { return { entri: ember.size, dibuang, dipotong, diusir }; },
-    get aktif() { return perDetik > 0; },
+    sweepNow: () => sweep(now()),
+    get stats() { return { entries: buckets.size, dropped, truncated, evicted }; },
+    get active() { return perSecond > 0; },
   };
 }

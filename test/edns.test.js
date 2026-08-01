@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { TYPE, RCODE, parseQuery, buildResponse, buildTruncated, PAYLOAD_KAMI } from '../src/wire.js';
+import { TYPE, RCODE, parseQuery, buildResponse, buildTruncated, OUR_PAYLOAD } from '../src/wire.js';
 import { resolve } from '../src/resolve.js';
-import { samarkan } from '../src/querylog.js';
+import { anonymise } from '../src/querylog.js';
 
 const cfgDasar = {
   zones: ['a-i.st', 'a-i.sh'], ns: ['ns1.a-i.sh', 'ns2.a-i.st'], ttl: 3600,
@@ -22,7 +22,7 @@ function bikinQuery(nama, qtype = TYPE.A, opt = null) {
     o.writeUInt16BE(TYPE.OPT, 1);
     o.writeUInt16BE(opt.payload ?? 4096, 3);
     o.writeUInt8(0, 5);
-    o.writeUInt8(opt.versi ?? 0, 6);
+    o.writeUInt8(opt.version ?? 0, 6);
     o.writeUInt16BE(opt.do ? 0x8000 : 0, 7);
     o.writeUInt16BE(0, 9);
     bagian.push(o);
@@ -42,9 +42,9 @@ test('query tanpa OPT: edns tidak terdeteksi', () => {
 
 test('query dengan OPT: payload dan versi terbaca', () => {
   const q = parseQuery(bikinQuery('1.2.3.4.a-i.st', TYPE.A, { payload: 4096 }));
-  assert.equal(q.edns.ada, true);
+  assert.equal(q.edns.present, true);
   assert.equal(q.edns.payload, 4096);
-  assert.equal(q.edns.versi, 0);
+  assert.equal(q.edns.version, 0);
 });
 
 test('payload yang diiklankan terlalu kecil dinaikkan ke lantai 512', () => {
@@ -77,13 +77,13 @@ test('OPT balasan mengiklankan 1232 (DNS Flag Day 2020, muat di MTU IPv6 minimum
   const opt = r.subarray(r.length - 11);
   assert.equal(opt.readUInt8(0), 0, 'NAME OPT wajib akar');
   assert.equal(opt.readUInt16BE(1), TYPE.OPT);
-  assert.equal(opt.readUInt16BE(3), PAYLOAD_KAMI);
-  assert.equal(PAYLOAD_KAMI, 1232);
+  assert.equal(opt.readUInt16BE(3), OUR_PAYLOAD);
+  assert.equal(OUR_PAYLOAD, 1232);
   assert.equal(opt.readUInt16BE(9), 0, 'RDLENGTH 0 — kita tidak mengirim opsi apa pun');
 });
 
 test('versi EDNS yang tidak dikenal -> BADVERS, bukan didiamkan', () => {
-  const r = resolve(parseQuery(bikinQuery('1.2.3.4.a-i.st', TYPE.A, { versi: 1 })), cfgDasar);
+  const r = resolve(parseQuery(bikinQuery('1.2.3.4.a-i.st', TYPE.A, { version: 1 })), cfgDasar);
   assert.equal(arcount(r), 1, 'tetap balas, kalau didiamkan klien mengira paketnya hilang lalu mengulang terus');
   assert.equal(ancount(r), 0, 'BADVERS tidak boleh membawa jawaban');
   const opt = r.subarray(r.length - 11);
@@ -117,18 +117,18 @@ test('ANY ber-EDNS0 tetap minimal (anti amplifikasi tidak boleh bocor lewat OPT)
 // ---- penyamaran alamat di catatan query ----
 
 test('alamat klien disamarkan ke blok, bukan disimpan utuh', () => {
-  assert.equal(samarkan('203.0.113.77'), '203.0.113.0/24');
+  assert.equal(anonymise('203.0.113.77'), '203.0.113.0/24');
   // Dipanjangkan dulu, jadi bentuknya selalu empat-heksa penuh — lihat
   // test/paket-rusak.test.js untuk alasannya.
-  assert.equal(samarkan('2a01:4f8:c015:8800::1', true), '2a01:04f8:c015::/48');
+  assert.equal(anonymise('2a01:4f8:c015:8800::1', true), '2a01:04f8:c015::/48');
 });
 
 test('dua alamat dalam satu blok jadi catatan yang sama — itu memang tujuannya', () => {
-  assert.equal(samarkan('198.51.100.1'), samarkan('198.51.100.254'));
-  assert.notEqual(samarkan('198.51.100.1'), samarkan('198.51.101.1'));
+  assert.equal(anonymise('198.51.100.1'), anonymise('198.51.100.254'));
+  assert.notEqual(anonymise('198.51.100.1'), anonymise('198.51.101.1'));
 });
 
 test('masukan aneh tidak melahirkan catatan yang menyesatkan', () => {
-  assert.equal(samarkan(''), '?');
-  assert.equal(samarkan('bukan-alamat'), '?');
+  assert.equal(anonymise(''), '?');
+  assert.equal(anonymise('bukan-alamat'), '?');
 });

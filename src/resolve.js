@@ -1,5 +1,5 @@
-// resolve.js — logika: dari query (nama + tipe) hasilkan jawaban DNS.
-// Dipisah dari transport (UDP/TCP) biar gampang di-test.
+// resolve.js — the logic: turn a query (name + type) into a DNS answer.
+// Kept separate from transport (UDP/TCP) so it can be tested directly.
 
 import { parseName, matchZone, ipv4ToBytes, ipv6ToBytes } from './parse.js';
 import {
@@ -10,51 +10,52 @@ import {
  * @param {{id:number,flags:number,name:string,qtype:number,questionSection:Buffer}} q
  * @param {object} cfg  { zones:[...], ns:[...], ttl, refresh, retry, expire, minttl, serial,
  *                        apexIp?, selfIp?, blocklist?, sinkholeIp? }
- *                      `zone` (tunggal) masih diterima demi kompatibilitas.
+ *                      A single `zone` is still accepted for backward compatibility.
  * @returns {Buffer}
  */
 export function resolve(q, cfg) {
   const zones = cfg.zones || cfg.zone;
   const parsed = parseName(q.name, zones);
-  // SOA/NS harus nyebut zone yang kena match, bukan zone pertama di daftar.
+  // SOA/NS must name the zone that actually matched, not the first one in the list.
   const zone = parsed.zone || (Array.isArray(zones) ? zones[0] : zones);
   const soa = () => namedRecord(zone, TYPE.SOA, cfg.minttl, soaRdata(zone, cfg));
   const t = q.qtype;
   const answers = [];
   const authority = [];
 
-  // Nameserver yang namanya ADA DI DALAM zone sendiri (mis. ns1.a-i.sh melayani a-i.sh)
-  // wajib punya A record sendiri, kalau tidak delegasinya buntu: resolver butuh alamat
-  // nameserver untuk bertanya, tapi alamat itu cuma bisa ditanyakan ke nameserver itu.
-  // Registry menutup lingkaran ini lewat glue, dan kita harus menjawab yang cocok.
+  // A nameserver whose name lives INSIDE its own zone (ns1.a-i.sh serving a-i.sh)
+  // must have an address record of its own, or the delegation deadlocks: a resolver
+  // needs the nameserver's address in order to ask it anything, but that address can
+  // only be asked of that same nameserver. The registry breaks the circle with a glue
+  // record, and we have to answer consistently with it.
   if ((cfg.selfIp || cfg.selfIp6) && Array.isArray(cfg.ns)) {
-    const nama = String(q.name).toLowerCase().replace(/\.$/, '');
-    const cocok = cfg.ns.some((h) => String(h).toLowerCase().replace(/\.$/, '') === nama);
-    if (cocok && matchZone(nama, zones)) {
+    const name = String(q.name).toLowerCase().replace(/\.$/, '');
+    const isOurNs = cfg.ns.some((h) => String(h).toLowerCase().replace(/\.$/, '') === name);
+    if (isOurNs && matchZone(name, zones)) {
       if (t === TYPE.A && cfg.selfIp) answers.push(answerRecord(TYPE.A, cfg.ttl, ipv4ToBytes(cfg.selfIp)));
-      // AAAA nameserver bukan pemanis: resolver IPv6-only nggak punya jalan lain
-      // sampai ke sini, dan RFC 8109 bikin resolver milih nameserver yang punya
-      // dua-duanya. Tanpa ini, klien IPv6-only lihat zone-nya seolah mati.
+      // The AAAA is not decoration: an IPv6-only resolver has no other way to reach
+      // us, and RFC 8109 makes resolvers prefer nameservers that have both families.
+      // Without it, IPv6-only clients see the zone as dead.
       if (t === TYPE.AAAA && cfg.selfIp6) answers.push(answerRecord(TYPE.AAAA, cfg.ttl, ipv6ToBytes(cfg.selfIp6)));
-      if (answers.length === 0) authority.push(soa()); // NODATA, bukan NXDOMAIN
+      if (answers.length === 0) authority.push(soa()); // NODATA, not NXDOMAIN
       return buildResponse(q, { answers, authority });
     }
   }
 
-  // ANY dijawab seminimal mungkin (semangat RFC 8482). Menjawab ANY dengan seluruh
-  // isi apex memberi penyerang paket balasan besar dari query kecil — bandwidth kita
-  // yang dipakai menyerang orang lain. Diukur sebelum tambalan ini: 6,75x.
+  // ANY is answered as small as possible (the spirit of RFC 8482). Answering ANY with
+  // the whole apex hands an attacker a large reply for a small query — our bandwidth,
+  // spent attacking someone else. Measured before this fix: 6.75x amplification.
   if (t === TYPE.ANY) {
     answers.push(answerRecord(TYPE.HINFO, cfg.minttl, hinfoRdata('RFC8482')));
     return buildResponse(q, { answers });
   }
 
-  // Blokir diputuskan atas ALAMAT HASIL, bukan atas nama. parse.js sudah membakukan
-  // semua bentuk penulisan, jadi tidak ada bentuk alternatif yang bisa menyelinap.
+  // Blocking is decided on the RESULTING ADDRESS, never on the name. parse.js has
+  // already canonicalised every spelling, so no alternate form can slip past.
   if (cfg.blocklist && (parsed.kind === 'A' || parsed.kind === 'AAAA')) {
-    if (cfg.blocklist.diblokir(parsed.ip, parsed.kind === 'AAAA')) {
+    if (cfg.blocklist.isBlocked(parsed.ip, parsed.kind === 'AAAA')) {
       if (cfg.sinkholeIp && parsed.kind === 'A') {
-        // Arahkan ke halaman penjelasan: korban tahu kenapa, pemilik situs tahu harus apa.
+        // Point at an explanation page: the victim learns why, the site owner learns what to do.
         return buildResponse(q, { answers: [answerRecord(TYPE.A, cfg.ttl, ipv4ToBytes(cfg.sinkholeIp))] });
       }
       return buildResponse(q, { rcode: RCODE.NXDOMAIN, authority: [soa()] });
@@ -66,7 +67,8 @@ export function resolve(q, cfg) {
       return buildResponse(q, { rcode: RCODE.REFUSED });
 
     case 'nxdomain':
-      // Dalam zone tapi bukan IP -> NXDOMAIN + SOA di authority (buat negative caching).
+      // Inside the zone but not an IP -> NXDOMAIN + SOA in authority, so resolvers
+      // can cache the negative answer instead of asking again for every miss.
       authority.push(soa());
       return buildResponse(q, { rcode: RCODE.NXDOMAIN, authority });
 
@@ -85,7 +87,7 @@ export function resolve(q, cfg) {
       break;
   }
 
-  // Nama valid tapi tipe nggak ada isinya (mis. AAAA di nama IPv4) -> NODATA: NOERROR + SOA authority.
+  // Valid name, but nothing of that type (AAAA on an IPv4 name) -> NODATA: NOERROR + SOA.
   if (answers.length === 0) authority.push(soa());
   return buildResponse(q, { answers, authority });
 }

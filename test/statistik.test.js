@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ringkas } from '../monitor/statistik.js';
 
-const baris = (o) => JSON.stringify({ t: '2026-08-01T11:00:00Z', c: '8.8.8.0/24', q: 'A', r: 0, h: 'lolos', x: 'udp', ...o });
+const baris = (o) => JSON.stringify({ t: '2026-08-01T11:00:00Z', c: '8.8.8.0/24', q: 'A', r: 0, h: 'pass', x: 'udp', ...o });
 
 // ---- penggolongan: bagian yang menentukan angka boleh dipercaya atau tidak ----
 
@@ -33,7 +33,7 @@ test('🚨 pencarian ns1/ns2 TIDAK boleh dihitung sebagai pemakaian', () => {
   assert.equal(r.tujuanUnik, 1, 'alamat tujuan cuma dihitung dari golongan layanan');
 });
 
-test('pemindai dan salah ketik masuk derau, bukan pemakaian', () => {
+test('pemindai dan errors ketik masuk derau, bukan pemakaian', () => {
   const r = ringkas([
     baris({ n: 'login.a-i.st' }),
     baris({ n: 'fileshare.a-i.sh' }),

@@ -1,47 +1,45 @@
-// querylog.js — catatan query seperlunya buat menindaklanjuti laporan penyalahgunaan.
+// querylog.js — the minimum record needed to act on an abuse report.
 //
-// 🚨 Yang dicatat ditentukan oleh PERTANYAAN YANG PERLU DIJAWAB, bukan oleh apa
-// yang kebetulan tersedia.
+// 🚨 What gets logged is decided by THE QUESTION THAT HAS TO BE ANSWERED, not by
+// whatever happens to be available.
 //
-// Laporan penyalahgunaan berbunyi: "bank.203.0.113.10.a-i.st dipakai buat phishing".
-// Yang perlu kita buktikan: nama itu memang kami jawab, sejak kapan, dan seberapa
-// sering. Semua itu ada di NAMA YANG DITANYA. Tidak satu pun butuh tahu SIAPA yang
-// bertanya.
+// An abuse report reads: "bank.203.0.113.10.a-i.st was used for phishing." What we
+// need to establish is that we served that name, since when, and how often. All of
+// that lives in THE NAME. None of it requires knowing WHO asked.
 //
-// Karena itu alamat klien dipotong ke /24 (v4) dan /48 (v6) secara bawaan. Itu
-// cukup buat memisahkan "satu sumber membanjiri" dari "banyak orang memakai", dan
-// tidak cukup buat mengikuti seseorang. Server ini di Jerman: menurut GDPR alamat
-// IP utuh adalah data pribadi, dan menyimpan yang tidak kita butuhkan cuma
-// menambah kewajiban tanpa menambah kemampuan.
+// So the client address is truncated to a /24 (v4) and /48 (v6) by default. That is
+// enough to tell "one source flooding" from "many people using", and not enough to
+// follow anyone around. This server sits in Germany: under GDPR a full IP address is
+// personal data, and keeping what we do not need adds obligation without adding
+// capability.
 //
-// QUERYLOG_PENUH=1 mematikan pemotongan itu. Sengaja dibikin sebagai saklar
-// terpisah yang harus dinyalakan sadar-sadar, bukan efek samping dari menyalakan
-// log — dan sengaja tidak dipakai di produksi.
+// QUERYLOG_FULL=1 turns that truncation off. It is deliberately a separate switch that
+// has to be thrown on purpose, not a side effect of enabling logging — and it is
+// deliberately not used in production.
 //
-// Berkasnya ditulis apa adanya baris per baris (JSON Lines) supaya bisa dipotong
-// oleh logrotate tanpa perlu memberi tahu proses ini.
+// Lines are written as plain JSON Lines so logrotate can truncate the file without
+// having to tell this process anything.
 
 import fs from 'node:fs';
-import { perpanjangV6 } from './parse.js';
+import { expandV6 } from './parse.js';
 
 /**
- * Potong alamat ke blok yang cukup buat pola, tidak cukup buat menguntit.
+ * Reduce an address to a block: enough for patterns, not enough for tracking.
  *
- * 🚨 IPv6 WAJIB dipanjangkan dulu, tidak boleh dipotong dari string mentahnya.
- * Ejaannya tidak tunggal: "2a01:4f8:0:1::1" dan "2a01:4f8::1" bisa berada di /48
- * yang sama, tapi memotong tiga bagian pertama dari string apa adanya menghasilkan
- * "2a01:4f8:0::/48" dan "2a01:4f8:::/48" — dua label berbeda untuk satu jaringan,
- * plus ":::" yang bahkan bukan alamat sah.
+ * 🚨 IPv6 MUST be expanded first, never sliced from its raw string. The spelling is
+ * not unique: "2a01:4f8:0:1::1" and "2a01:4f8::1" can be the same /48, yet slicing the
+ * first three parts of the raw text yields "2a01:4f8:0::/48" and "2a01:4f8:::/48" —
+ * two labels for one network, plus a ":::" that is not even a valid address.
  *
- * Itu menghancurkan satu-satunya gunanya: memisahkan "satu sumber membanjiri" dari
- * "banyak orang memakai". Satu penyerang cukup mengubah cara menulis alamatnya
- * untuk tampil sebagai beberapa jaringan berbeda.
+ * That destroys the single thing this is for: separating "one source flooding" from
+ * "many people using". An attacker would only have to change how they spell their
+ * address to appear as several different networks.
  */
-export function samarkan(ip, v6 = false) {
+export function anonymise(ip, v6 = false) {
   if (!ip) return '?';
   if (v6) {
     if (!String(ip).includes(':')) return '?';
-    const g = perpanjangV6(ip);
+    const g = expandV6(ip);
     return `${g[0]}:${g[1]}:${g[2]}::/48`;
   }
   const o = String(ip).split('.');
@@ -50,44 +48,43 @@ export function samarkan(ip, v6 = false) {
 }
 
 /**
- * @param {object} opsi
- * @param {string|null} opsi.berkas  path berkas log; null/kosong = log mati
- * @param {boolean} opsi.penuh       true = simpan alamat klien utuh (jangan di produksi)
+ * @param {object} opts
+ * @param {string|null} opts.file  path to the log file; null/empty disables logging
+ * @param {boolean} opts.full      true keeps full client addresses (do not use in production)
  */
-export function bukaCatatan({ berkas = null, penuh = false, log = () => {} } = {}) {
-  if (!berkas) {
-    return { aktif: false, catat() {}, tutup() {} };
+export function openLog({ file = null, full = false, log = () => {} } = {}) {
+  if (!file) {
+    return { active: false, record() {}, close() {} };
   }
 
-  let aliran;
+  let stream;
   try {
-    aliran = fs.createWriteStream(berkas, { flags: 'a' });
+    stream = fs.createWriteStream(file, { flags: 'a' });
   } catch (err) {
-    // Log yang gagal dibuka TIDAK boleh menjatuhkan layanan DNS. Menjawab query
-    // itu tugas utamanya; mencatat cuma pendukung.
-    log(`querylog GAGAL dibuka (${err.message}) — layanan lanjut tanpa catatan`);
-    return { aktif: false, catat() {}, tutup() {} };
+    // A log that cannot be opened must NOT take the DNS service down with it.
+    // Answering queries is the job; recording them is support.
+    log(`querylog failed to open (${err.message}) — continuing without a log`);
+    return { active: false, record() {}, close() {} };
   }
-  aliran.on('error', (err) => log(`querylog error tulis: ${err.message}`));
-  log(`querylog aktif: ${berkas}${penuh ? ' (ALAMAT PENUH — jangan dipakai di produksi)' : ' (alamat disamarkan)'}`);
+  stream.on('error', (err) => log(`querylog write error: ${err.message}`));
+  log(`querylog active: ${file}${full ? ' (FULL ADDRESSES — not for production)' : ' (addresses truncated)'}`);
 
   return {
-    aktif: true,
+    active: true,
     /**
-     * @param {object} e { ip, v6, nama, qtype, rcode, hasil, transport }
+     * @param {object} e { ip, v6, name, qtype, rcode, outcome, transport }
      */
-    catat(e) {
-      const baris = JSON.stringify({
+    record(e) {
+      stream.write(JSON.stringify({
         t: new Date().toISOString(),
-        c: penuh ? e.ip : samarkan(e.ip, e.v6),
-        n: e.nama,
+        c: full ? e.ip : anonymise(e.ip, e.v6),
+        n: e.name,
         q: e.qtype,
         r: e.rcode,
-        h: e.hasil,          // 'lolos' | 'potong' | 'buang' | 'blokir'
-        x: e.transport,      // 'udp' | 'tcp'
-      });
-      aliran.write(baris + '\n');
+        h: e.outcome,      // 'pass' | 'truncate' | 'drop' | 'blocked'
+        x: e.transport,    // 'udp' | 'tcp'
+      }) + '\n');
     },
-    tutup() { try { aliran.end(); } catch { /* sudah tertutup */ } },
+    close() { try { stream.end(); } catch { /* already closed */ } },
   };
 }

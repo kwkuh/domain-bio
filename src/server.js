@@ -1,87 +1,88 @@
-// server.js — authoritative DNS server buat layanan wildcard-IP (ala nip.io/sslip.io).
-// Dengerin UDP/53 (utama) + TCP/53 (fallback). Semua jawaban dihitung dari nama query.
+// server.js — authoritative DNS server for a wildcard-IP service (like nip.io/sslip.io).
+// Listens on UDP/53 (primary) and TCP/53 (fallback). Every answer is computed from the
+// query name.
 
 import dgram from 'node:dgram';
 import net from 'node:net';
 import { parseQuery, buildTruncated } from './wire.js';
 import { resolve } from './resolve.js';
-import { bukaDaftar } from './blocklist.js';
-import { bikinPembatas } from './ratelimit.js';
-import { bukaCatatan } from './querylog.js';
+import { openList } from './blocklist.js';
+import { makeLimiter } from './ratelimit.js';
+import { openLog } from './querylog.js';
 
-// ---- Config dari env ----
-// ZONES = daftar zone yang kita layani, dipisah koma. Satu proses bisa otoritatif
-// buat beberapa suffix sekaligus (Open-Domain jalan di a-i.sh DAN a-i.st).
-// ZONE (tunggal) masih dibaca demi kompatibilitas ke belakang.
+// ---- Configuration from the environment ----
+// ZONES is a comma-separated list of the zones we serve. One process can be
+// authoritative for several suffixes at once (Open-Domain runs a-i.sh AND a-i.st).
+// A single ZONE is still read for backward compatibility.
 const ZONES = (process.env.ZONES || process.env.ZONE || 'a-i.sh,a-i.st')
   .split(',')
   .map((s) => s.trim().toLowerCase().replace(/^\.|\.$/g, ''))
   .filter(Boolean);
-const PORT = Number(process.env.PORT || 53); // lokal: pakai 5353 (port <1024 butuh root)
+const PORT = Number(process.env.PORT || 53); // locally use 5353 (ports below 1024 need root)
 const BIND = process.env.BIND || '0.0.0.0';
-// Alamat IPv6 buat didengerin. Kosongkan (BIND6="") kalau mesinnya nggak punya IPv6.
+// IPv6 address to listen on. Set BIND6="" if the machine has no IPv6.
 const BIND6 = process.env.BIND6 === undefined ? '::' : process.env.BIND6;
 const DEBUG = process.env.DEBUG === '1';
-const BLOCKLIST = process.env.BLOCKLIST || null;   // path berkas aturan
-const SELF_IP = process.env.SELF_IP || process.env.BIND || null; // buat A record ns1/ns2 in-zone
-const SELF_IP6 = process.env.SELF_IP6 || null;                   // buat AAAA record ns1/ns2 in-zone
-const SINKHOLE_IP = process.env.SINKHOLE_IP || null; // kalau diisi, blokir -> alamat ini, bukan NXDOMAIN
+const BLOCKLIST = process.env.BLOCKLIST || null;                 // path to the rules file
+const SELF_IP = process.env.SELF_IP || process.env.BIND || null; // A record for in-zone ns1/ns2
+const SELF_IP6 = process.env.SELF_IP6 || null;                   // AAAA record for in-zone ns1/ns2
+const SINKHOLE_IP = process.env.SINKHOLE_IP || null;             // if set, blocks point here instead of NXDOMAIN
 
-// Buffer terima soket. Default kernel (208 KB) cuma menampung ~250 paket DNS
-// setelah overhead skbuff — satu klien tunggal bisa melampauinya tanpa niat jahat.
-// Terukur di produksi sebelum tambalan ini: dari 5.000 query yang dikirim beruntun,
-// kernel MEMBUANG 4.443 (`receive buffer errors`) sebelum Node sempat melihatnya.
-// Prosesnya sendiri sehat — 557 masuk, 557 dijawab. Yang penuh bukan CPU, tapi antrean.
+// Socket receive buffer. The kernel default (208 KB) holds roughly 250 DNS packets once
+// skbuff overhead is counted — a single well-meaning client can exceed it. Measured in
+// production before this was fixed: of 5,000 queries sent back to back, the kernel
+// DROPPED 4,443 (`receive buffer errors`) before Node ever saw them. The process itself
+// was perfectly healthy — 557 in, 557 answered. What filled up was the queue, not the CPU.
 const RCVBUF = Number(process.env.RCVBUF || 4 * 1024 * 1024);
 
-// Rate limiting (RRL). Angka per BLOK alamat, bukan per alamat tunggal — lihat
-// ratelimit.js. Bawaan 100/dtk sengaja longgar: resolver besar seperti Google
-// dan Cloudflare berbagi satu /24, jadi batas ketat menghukum pengguna sah lebih
-// dulu daripada penyerang. RRL_PERDETIK=0 mematikan pembatas.
-const RRL_PERDETIK = Number(process.env.RRL_PERDETIK ?? 100);
-const RRL_LEDAKAN = process.env.RRL_LEDAKAN ? Number(process.env.RRL_LEDAKAN) : null;
+// Rate limiting (RRL). Counted per address BLOCK, not per address — see ratelimit.js.
+// The default of 100/s is deliberately generous: large resolvers such as Google and
+// Cloudflare share a /24, so a tight limit punishes legitimate users before it touches
+// an attacker. RRL_PER_SECOND=0 disables the limiter.
+const RRL_PER_SECOND = Number(process.env.RRL_PER_SECOND ?? process.env.RRL_PERDETIK ?? 100);
+const RRL_BURST = process.env.RRL_BURST ? Number(process.env.RRL_BURST) : null;
 const RRL_SLIP = Number(process.env.RRL_SLIP ?? 5);
 
 /**
- * Serial SOA. Dulu `Date.now()/1000`, dan itu diam-diam salah: serialnya melompat
- * TIAP RESTART, dan dua nameserver TIDAK AKAN PERNAH punya angka yang sama. Begitu
- * ns2 menyala, pemeriksaan "serial seragam" merah permanen, dan alat pihak ketiga
- * (Zonemaster, dnsviz) melaporkannya sebagai zone yang tidak konsisten.
+ * The SOA serial. This used to be `Date.now()/1000`, which was quietly wrong: the serial
+ * jumped ON EVERY RESTART, and two nameservers would NEVER agree on a number. The moment
+ * ns2 comes up, a "serials match" check goes permanently red, and third-party tools
+ * (Zonemaster, dnsviz) report the zone as inconsistent.
  *
- * Bentuk berbasis tanggal YYYYMMDDnn mengikuti RFC 1912 §2.2: sama di semua mesin,
- * naik secara wajar, dan tidak berubah gara-gara proses dinyalakan ulang.
- * SOA_SERIAL boleh menimpanya kalau nanti ada proses rilis yang menetapkannya.
+ * The date-based YYYYMMDDnn form follows RFC 1912 §2.2: identical on every machine,
+ * increases sensibly, and does not change just because a process was restarted.
+ * SOA_SERIAL can override it if a release process ever wants to set it explicitly.
  */
-function serialHariIni() {
+function serialForToday() {
   const d = new Date();
   const y = d.getUTCFullYear();
   const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-  const t = String(d.getUTCDate()).padStart(2, '0');
-  return Number(`${y}${m}${t}01`);
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return Number(`${y}${m}${day}01`);
 }
-const SERIAL = Number(process.env.SOA_SERIAL) || serialHariIni();
+const SERIAL = Number(process.env.SOA_SERIAL) || serialForToday();
 
-// Catatan query. Mati kalau QUERYLOG tidak diisi.
-const catatan = bukaCatatan({
-  berkas: process.env.QUERYLOG || null,
-  penuh: process.env.QUERYLOG_PENUH === '1',
+// Query log. Disabled unless QUERYLOG is set.
+const queryLog = openLog({
+  file: process.env.QUERYLOG || null,
+  full: process.env.QUERYLOG_FULL === '1' || process.env.QUERYLOG_PENUH === '1',
   log: (m) => console.log(m),
 });
 
-const pembatas = bikinPembatas({
-  perDetik: RRL_PERDETIK,
-  ledakan: RRL_LEDAKAN,
+const limiter = makeLimiter({
+  perSecond: RRL_PER_SECOND,
+  burst: RRL_BURST,
   slip: RRL_SLIP,
 });
 
-const daftarBlokir = bukaDaftar({ berkas: BLOCKLIST, log: (m) => console.log(m) });
+const blocklist = openList({ file: BLOCKLIST, log: (m) => console.log(m) });
 
 const cfg = {
   zones: ZONES,
-  // Default sengaja pakai nama IN-ZONE: tiap zone menyimpan satu nameserver di dalam
-  // dirinya sendiri (dipecahkan lewat glue di registry) dan satu di zone yang lain.
-  // Nama di luar kedua zone (mis. ns1.open-domain.com) bikin delegasi bergantung pada
-  // domain ketiga — kalau domain itu bermasalah, dua-duanya ikut mati.
+  // The default deliberately uses IN-ZONE names: each zone keeps one nameserver inside
+  // itself (resolved through a glue record at the registry) and one in the other zone.
+  // A name outside both zones would make the delegation depend on a third domain — and
+  // if that domain has a problem, both zones go down with it.
   ns: (process.env.NS_HOSTS || 'ns1.a-i.sh,ns2.a-i.st').split(',').map((s) => s.trim()),
   ttl: Number(process.env.TTL || 300),
   refresh: Number(process.env.SOA_REFRESH || 3600),
@@ -89,17 +90,17 @@ const cfg = {
   expire: Number(process.env.SOA_EXPIRE || 604800),
   minttl: Number(process.env.SOA_MINTTL || 60),
   serial: SERIAL,
-  apexIp: process.env.APEX_IP || null, // opsional: A record buat apex (landing page)
+  apexIp: process.env.APEX_IP || null, // optional: an A record for the apex (landing page)
   selfIp: SELF_IP && SELF_IP !== '0.0.0.0' ? SELF_IP : null,
   selfIp6: SELF_IP6 && SELF_IP6 !== '::' ? SELF_IP6 : null,
   sinkholeIp: SINKHOLE_IP,
-  blocklist: daftarBlokir,
+  blocklist,
 };
 
-// Tipe yang benar-benar muncul di produksi, bukan cuma yang kita layani. CAA
-// datang dari Let's Encrypt sebelum menerbitkan sertifikat, HTTPS/SVCB dari
-// peramban modern, sisanya dari pemindai. Kalau tidak dinamai, semuanya muncul
-// sebagai angka mentah di statistik dan tidak ada yang tahu artinya.
+// Types that actually show up in production, not just the ones we serve. CAA comes from
+// Let's Encrypt before it issues a certificate, HTTPS/SVCB from modern browsers, the
+// rest from scanners. Without names, they all appear as raw numbers in the statistics
+// and nobody can tell what they mean.
 const TYPE_NAME = {
   1: 'A', 2: 'NS', 5: 'CNAME', 6: 'SOA', 12: 'PTR', 15: 'MX', 16: 'TXT',
   28: 'AAAA', 33: 'SRV', 43: 'DS', 48: 'DNSKEY', 65: 'HTTPS', 99: 'SPF',
@@ -107,86 +108,85 @@ const TYPE_NAME = {
 };
 
 function handle(msg, from, v6 = false, transport = 'udp') {
-  const q = parseQuery(msg); // lempar kalau paket rusak
+  const q = parseQuery(msg); // throws on a malformed packet
   if (DEBUG) console.log(`${from} ${q.name} ${TYPE_NAME[q.qtype] || q.qtype}`);
   const res = resolve(q, cfg);
-  if (catatan.aktif) {
-    catatan.catat({
-      ip: from, v6, nama: q.name, qtype: TYPE_NAME[q.qtype] || q.qtype,
-      rcode: res.readUInt16BE(2) & 0x0f, hasil: 'lolos', transport,
+  if (queryLog.active) {
+    queryLog.record({
+      ip: from, v6, name: q.name, qtype: TYPE_NAME[q.qtype] || q.qtype,
+      rcode: res.readUInt16BE(2) & 0x0f, outcome: 'pass', transport,
     });
   }
   return res;
 }
 
 // ---- UDP ----
-// Dua soket terpisah, bukan satu soket v6 dual-stack. Alasannya operasional:
-// dualstack bikin alamat klien IPv4 muncul sebagai "::ffff:1.2.3.4", dan jatuhnya
-// beda per-OS (Linux ikut net.ipv6.bindv6only). Dua soket = perilaku yang sama
-// di mana pun, dan matinya IPv6 nggak ikut menjatuhkan IPv4.
-function pasangUdp(keluarga, alamat) {
-  const sock = dgram.createSocket({ type: keluarga, ipv6Only: keluarga === 'udp6' });
-  const v6 = keluarga === 'udp6';
+// Two separate sockets rather than one dual-stack v6 socket. The reason is operational:
+// dual-stack makes IPv4 client addresses arrive as "::ffff:1.2.3.4", and the exact
+// behaviour differs per OS (on Linux it depends on net.ipv6.bindv6only). Two sockets
+// behave identically everywhere, and losing IPv6 does not take IPv4 down with it.
+function listenUdp(family, address) {
+  const sock = dgram.createSocket({ type: family, ipv6Only: family === 'udp6' });
+  const v6 = family === 'udp6';
   sock.on('message', (msg, rinfo) => {
     try {
-      // Pembatas dipanggil SEBELUM resolve: query yang lewat batas tidak boleh
-      // memakan CPU, dan yang 'buang' tidak boleh menghasilkan paket sama sekali —
-      // paket itulah yang akan mendarat di korban kalau alamatnya dipalsukan.
-      const putusan = pembatas.putuskan(rinfo.address, v6);
-      if (putusan !== 'lolos') {
-        // Query yang dibatasi tetap dicatat kalau catatan menyala. Justru ini yang
-        // paling berguna waktu ada insiden: pola "siapa yang membanjiri" cuma
-        // kelihatan dari query yang DITOLAK, dan itu persis yang hilang kalau
-        // pembatas dipasang sebelum pencatat.
-        if (catatan.aktif) {
+      // The limiter runs BEFORE resolve: a query over the limit must not consume CPU,
+      // and a 'drop' must not produce a packet at all — that packet is precisely what
+      // would land on a victim if the source address were forged.
+      const verdict = limiter.decide(rinfo.address, v6);
+      if (verdict !== 'pass') {
+        // Limited queries are still logged when logging is on. This is the most useful
+        // thing to have during an incident: the "who is flooding us" pattern is only
+        // visible in the queries that were REFUSED, and that is exactly what would be
+        // lost if the limiter ran before the recorder.
+        if (queryLog.active) {
           try {
             const q = parseQuery(msg);
-            catatan.catat({ ip: rinfo.address, v6, nama: q.name, qtype: q.qtype, rcode: null, hasil: putusan, transport: 'udp' });
-          } catch { /* paket rusak: tidak ada yang bisa dicatat */ }
+            queryLog.record({ ip: rinfo.address, v6, name: q.name, qtype: q.qtype, rcode: null, outcome: verdict, transport: 'udp' });
+          } catch { /* malformed packet: nothing to record */ }
         }
-        if (putusan === 'buang') return;
+        if (verdict === 'drop') return;
         sock.send(buildTruncated(parseQuery(msg)), rinfo.port, rinfo.address);
         return;
       }
       sock.send(handle(msg, rinfo.address, v6, 'udp'), rinfo.port, rinfo.address);
     } catch (err) {
-      if (DEBUG) console.error(`${keluarga}:`, err.message);
+      if (DEBUG) console.error(`${family}:`, err.message);
     }
   });
   sock.on('error', (err) => {
-    // IPv4 wajib hidup. IPv6 opsional: mesin tanpa IPv6 nggak boleh gagal start
-    // gara-gara ini — layanan v4-nya masih berguna sepenuhnya.
-    if (keluarga === 'udp4') { console.error('udp4 fatal:', err.message); process.exit(1); }
-    console.error(`udp6 mati (${err.message}) — lanjut IPv4 saja`);
+    // IPv4 is mandatory. IPv6 is optional: a machine without IPv6 must not fail to start
+    // because of it — its v4 service is still completely useful.
+    if (family === 'udp4') { console.error('udp4 fatal:', err.message); process.exit(1); }
+    console.error(`udp6 unavailable (${err.message}) — continuing with IPv4 only`);
   });
-  sock.bind(PORT, alamat, () => {
-    // Minta buffer besar, lalu BACA BALIK yang benar-benar didapat. Kernel
-    // memotong diam-diam di net.core.rmem_max, dan permintaan yang dipotong
-    // terlihat persis seperti permintaan yang dikabulkan. Yang dicatat di log
-    // harus angka yang nyata, bukan angka yang diminta.
-    let nyata = null;
+  sock.bind(PORT, address, () => {
+    // Ask for a large buffer, then READ BACK what was actually granted. The kernel caps
+    // silently at net.core.rmem_max, and a capped request looks exactly like a granted
+    // one. What goes in the log has to be the real number, not the requested number.
+    let actual = null;
     try {
       sock.setRecvBufferSize(RCVBUF);
-      nyata = sock.getRecvBufferSize();
+      actual = sock.getRecvBufferSize();
     } catch (err) {
-      console.error(`${keluarga}: gagal set buffer terima (${err.message}) — jalan dengan default kernel`);
+      console.error(`${family}: could not set receive buffer (${err.message}) — using the kernel default`);
     }
-    const kurang = nyata !== null && nyata < RCVBUF;
+    const capped = actual !== null && actual < RCVBUF;
     console.log(
-      `UDP  ${alamat}:${PORT} zones=${ZONES.join(',')} ns=${cfg.ns.join(',')} ` +
-      `blocklist=${BLOCKLIST ? daftarBlokir.jumlah + ' aturan' : 'mati'} ` +
-      `rcvbuf=${nyata === null ? '?' : Math.round(nyata / 1024) + 'KB'}` +
-      (kurang ? ` (diminta ${Math.round(RCVBUF / 1024)}KB, dipotong net.core.rmem_max)` : '') +
-      ` rrl=${pembatas.aktif ? `${RRL_PERDETIK}/dtk per blok, slip ${RRL_SLIP}` : 'mati'}`
+      `UDP  ${address}:${PORT} zones=${ZONES.join(',')} ns=${cfg.ns.join(',')} ` +
+      `blocklist=${BLOCKLIST ? blocklist.count + ' rules' : 'off'} ` +
+      `rcvbuf=${actual === null ? '?' : Math.round(actual / 1024) + 'KB'}` +
+      (capped ? ` (asked for ${Math.round(RCVBUF / 1024)}KB, capped by net.core.rmem_max)` : '') +
+      ` rrl=${limiter.active ? `${RRL_PER_SECOND}/s per block, slip ${RRL_SLIP}` : 'off'}`
     );
   });
   return sock;
 }
-pasangUdp('udp4', BIND);
-if (BIND6) pasangUdp('udp6', BIND6);
+listenUdp('udp4', BIND);
+if (BIND6) listenUdp('udp6', BIND6);
 
-// ---- TCP (fallback: paket diawali 2 byte panjang) ----
-function bikinTcp() {
+// ---- TCP (fallback: each message is prefixed with a 2-byte length) ----
+function makeTcpServer() {
   return net.createServer((sock) => {
     let buf = Buffer.alloc(0);
     sock.on('data', (chunk) => {
@@ -213,17 +213,17 @@ function bikinTcp() {
   });
 }
 
-function pasangTcp(alamat, wajib) {
-  const srv = bikinTcp();
+function listenTcp(address, required) {
+  const srv = makeTcpServer();
   srv.on('error', (err) => {
-    if (wajib) { console.error('tcp fatal:', err.message); process.exit(1); }
-    console.error(`tcp6 mati (${err.message}) — lanjut IPv4 saja`);
+    if (required) { console.error('tcp fatal:', err.message); process.exit(1); }
+    console.error(`tcp6 unavailable (${err.message}) — continuing with IPv4 only`);
   });
-  srv.listen({ port: PORT, host: alamat, ipv6Only: !wajib }, () => console.log(`TCP  ${alamat}:${PORT}`));
+  srv.listen({ port: PORT, host: address, ipv6Only: !required }, () => console.log(`TCP  ${address}:${PORT}`));
   return srv;
 }
-pasangTcp(BIND, true);
-if (BIND6) pasangTcp(BIND6, false);
+listenTcp(BIND, true);
+if (BIND6) listenTcp(BIND6, false);
 
 process.on('SIGINT', () => process.exit(0));
 process.on('SIGTERM', () => process.exit(0));

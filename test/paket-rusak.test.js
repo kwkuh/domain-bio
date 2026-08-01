@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseQuery } from '../src/wire.js';
-import { samarkan } from '../src/querylog.js';
-import { kunciPrefix } from '../src/ratelimit.js';
+import { anonymise } from '../src/querylog.js';
+import { prefixKey } from '../src/ratelimit.js';
 
 const HEADER = (qd = 1, ar = 0) => Buffer.from([0, 1, 0x01, 0x00, 0, qd, 0, 0, 0, 0, 0, ar]);
 
@@ -24,25 +24,25 @@ test('🚨 paket 12 byte tidak boleh menyita CPU dan memori', () => {
   // Terukur sebelum ditambal: 3 detik CPU dan 1,4 GB memori dari 12 byte.
   // Node satu utas, jadi 0,3 paket/detik sudah cukup mematikan layanan.
   cepat('paket 12 byte', () => parseQuery(HEADER()));
-  assert.throws(() => parseQuery(HEADER()), /kepotong/);
+  assert.throws(() => parseQuery(HEADER()), /truncated/);
 });
 
 test('nama yang habis di tengah ditolak seketika', () => {
   const buf = Buffer.concat([HEADER(), Buffer.from([5, 97, 98])]); // janji 5 oktet, cuma ada 2
   cepat('nama kepotong', () => parseQuery(buf));
-  assert.throws(() => parseQuery(buf), /lewat ujung paket/);
+  assert.throws(() => parseQuery(buf), /runs past end/);
 });
 
 test('label lebih dari 63 oktet ditolak (RFC 1035 §2.3.4)', () => {
   const buf = Buffer.concat([HEADER(), Buffer.from([64]), Buffer.alloc(64, 97), Buffer.from([0, 0, 1, 0, 1])]);
-  assert.throws(() => parseQuery(buf), /63 oktet/);
+  assert.throws(() => parseQuery(buf), /63 octets/);
 });
 
 test('nama lebih dari 255 oktet ditolak, tidak dibiarkan tumbuh', () => {
   const banyak = Array(300).fill(Buffer.from([1, 97]));
   const buf = Buffer.concat([HEADER(), ...banyak, Buffer.from([0, 0, 1, 0, 1])]);
   cepat('nama 300 label', () => parseQuery(buf));
-  assert.throws(() => parseQuery(buf), /255 oktet/);
+  assert.throws(() => parseQuery(buf), /255 octets/);
 });
 
 test('pertanyaan tanpa qtype/qclass ditolak, bukan baca lewat ujung', () => {
@@ -85,18 +85,18 @@ test('🚨 IPv6 dengan ejaan berbeda tapi /48 sama -> satu label', () => {
     ['2001:db8:0:0::5', '2001:db8::5'],
     ['2606:4700:0:1::a', '2606:4700::a'],
   ]) {
-    assert.equal(samarkan(a, true), samarkan(b, true), `${a} dan ${b} harus jadi satu label`);
+    assert.equal(anonymise(a, true), anonymise(b, true), `${a} dan ${b} harus jadi satu label`);
   }
 });
 
 test('label penyamaran tidak pernah mengandung ":::"', () => {
   for (const ip of ['2a01:4f8::1', '::1', '2001:db8::', 'fe80::1']) {
-    assert.ok(!samarkan(ip, true).includes(':::'), `${ip} -> ${samarkan(ip, true)}`);
+    assert.ok(!anonymise(ip, true).includes(':::'), `${ip} -> ${anonymise(ip, true)}`);
   }
 });
 
 test('/48 yang benar-benar berbeda tetap terpisah', () => {
-  assert.notEqual(samarkan('2a01:4f8:1::1', true), samarkan('2a01:4f8:2::1', true));
+  assert.notEqual(anonymise('2a01:4f8:1::1', true), anonymise('2a01:4f8:2::1', true));
 });
 
 test('penyamaran sepakat dengan pengelompokan rate limiter', () => {
@@ -104,16 +104,16 @@ test('penyamaran sepakat dengan pengelompokan rate limiter', () => {
   // berbeda pendapat — kalau berbeda, log dan pembatas menunjuk jaringan berbeda
   // untuk paket yang sama.
   for (const [a, b] of [['2a01:4f8:0:1::1', '2a01:4f8::1'], ['2001:db8::5', '2001:db8:0:0::5']]) {
-    const samaDiLog = samarkan(a, true) === samarkan(b, true);
-    const samaDiBatas = kunciPrefix(a, true) === kunciPrefix(b, true);
+    const samaDiLog = anonymise(a, true) === anonymise(b, true);
+    const samaDiBatas = prefixKey(a, true) === prefixKey(b, true);
     assert.equal(samaDiLog, samaDiBatas, `${a} vs ${b}: log bilang ${samaDiLog}, pembatas bilang ${samaDiBatas}`);
   }
 });
 
 test('IPv4 dibakukan, dan masukan ngawur tidak melahirkan label palsu', () => {
-  assert.equal(samarkan('203.0.113.77'), '203.0.113.0/24');
-  assert.equal(samarkan('010.001.113.77'), '10.1.113.0/24', 'nol di depan dibakukan');
+  assert.equal(anonymise('203.0.113.77'), '203.0.113.0/24');
+  assert.equal(anonymise('010.001.113.77'), '10.1.113.0/24', 'nol di depan dibakukan');
   for (const buruk of ['', 'bukan-alamat', '1.2.3', '1.2.3.999', '1.2.3.4.5']) {
-    assert.equal(samarkan(buruk), '?', `"${buruk}" harus jadi "?"`);
+    assert.equal(anonymise(buruk), '?', `"${buruk}" harus jadi "?"`);
   }
 });

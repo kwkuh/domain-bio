@@ -1,32 +1,32 @@
-// blocklist.js — daftar alamat yang tidak boleh dijawab.
+// blocklist.js — addresses that must not be answered.
 //
-// Kenapa ada: layanan wildcard-IP gratis PASTI dipakai untuk phishing. Tanpa cara
-// mengeksekusi laporan penyalahgunaan, janji "act within 72 hours" di ABUSE.md cuma
-// kalimat, dan registrar bisa menangguhkan domainnya — itu risiko ketersediaan,
-// bukan sekadar reputasi.
+// Why this exists: a free wildcard-IP service WILL be used for phishing. Without a way
+// to act on an abuse report, the "act within 72 hours" line in ABUSE.md is only a
+// sentence, and a registrar can suspend the domain over it — that is an availability
+// risk, not merely a reputational one.
 //
-// Prinsip yang bikin ini tidak bisa ditembus:
-//   Keputusan diambil atas ALAMAT HASIL, bukan atas string nama.
-// parse.js sudah membakukan semua bentuk penulisan ke satu alamat, jadi
-// 1.2.3.4 / 01.02.03.04 / 1-2-3-4 / 0a000001 / apa-aja.1.2.3.4 — semuanya
-// tiba di sini sebagai "1.2.3.4". Tidak ada jalan memutar lewat cara mengetik.
+// The principle that makes this impossible to walk around:
+//   Decisions are made on the RESULTING ADDRESS, never on the name string.
+// parse.js has already canonicalised every spelling, so 1.2.3.4 / 01.02.03.04 /
+// 1-2-3-4 / 0a000001 / anything.1.2.3.4 all arrive here as "1.2.3.4". There is no
+// detour available through creative typing.
 //
-// Bentuk berkas (satu aturan per baris, "#" komentar):
-//   ip     203.0.113.10          blokir satu alamat
-//   cidr   203.0.113.0/24        blokir satu blok
-//   allow  203.0.113.5           pengecualian — SELALU menang atas blokir
+// File format (one rule per line, "#" starts a comment):
+//   ip     203.0.113.10          block one address
+//   cidr   203.0.113.0/24        block one block
+//   allow  203.0.113.5           exception — ALWAYS wins over a block
 //
-// Muat ulang tanpa restart: kirim SIGHUP, atau biarkan pemeriksaan mtime berkala.
-// Kalau berkas rusak atau hilang saat dimuat ulang, daftar LAMA dipertahankan —
-// gagal-muat tidak boleh diam-diam membuka semua yang tadinya terblokir.
+// Reload without a restart: send SIGHUP, or let the periodic mtime check notice.
+// If the file is broken or missing at reload time, the PREVIOUS rules are kept —
+// a failed load must never quietly unblock everything that was blocked.
 
 import fs from 'node:fs';
 import net from 'node:net';
 
-/** IPv4 "1.2.3.4" -> bilangan 32-bit */
+/** IPv4 "1.2.3.4" -> 32-bit number */
 const v4ToInt = (ip) => ip.split('.').reduce((n, o) => (n * 256) + (Number(o) & 255), 0);
 
-/** IPv6 -> BigInt 128-bit (menerima bentuk "::") */
+/** IPv6 -> 128-bit BigInt (accepts the "::" form) */
 function v6ToBig(ip) {
   const [head, tail] = ip.split('::');
   const h = head ? head.split(':') : [];
@@ -37,114 +37,114 @@ function v6ToBig(ip) {
   return n;
 }
 
-/** Ubah satu baris jadi penguji. Balikan null kalau barisnya tidak dikenali. */
-function bikinPenguji(jenis, nilai) {
-  if (jenis === 'ip') {
-    if (net.isIPv4(nilai)) { const a = v4ToInt(nilai); return (ip, v6) => !v6 && v4ToInt(ip) === a; }
-    if (net.isIPv6(nilai)) { const a = v6ToBig(nilai); return (ip, v6) => v6 && v6ToBig(ip) === a; }
+/** Turn one line into a matcher. Returns null if the line is not understood. */
+function makeMatcher(kind, value) {
+  if (kind === 'ip') {
+    if (net.isIPv4(value)) { const a = v4ToInt(value); return (ip, v6) => !v6 && v4ToInt(ip) === a; }
+    if (net.isIPv6(value)) { const a = v6ToBig(value); return (ip, v6) => v6 && v6ToBig(ip) === a; }
     return null;
   }
-  if (jenis === 'cidr') {
-    const [alamat, bitsRaw] = nilai.split('/');
+  if (kind === 'cidr') {
+    const [addr, bitsRaw] = value.split('/');
     const bits = Number(bitsRaw);
     if (!Number.isInteger(bits)) return null;
-    if (net.isIPv4(alamat) && bits >= 0 && bits <= 32) {
+    if (net.isIPv4(addr) && bits >= 0 && bits <= 32) {
       const mask = bits === 0 ? 0 : (~0 << (32 - bits)) >>> 0;
-      const jaringan = (v4ToInt(alamat) & mask) >>> 0;
-      return (ip, v6) => !v6 && ((v4ToInt(ip) & mask) >>> 0) === jaringan;
+      const network = (v4ToInt(addr) & mask) >>> 0;
+      return (ip, v6) => !v6 && ((v4ToInt(ip) & mask) >>> 0) === network;
     }
-    if (net.isIPv6(alamat) && bits >= 0 && bits <= 128) {
+    if (net.isIPv6(addr) && bits >= 0 && bits <= 128) {
       const mask = bits === 0 ? 0n : (~0n << BigInt(128 - bits)) & ((1n << 128n) - 1n);
-      const jaringan = v6ToBig(alamat) & mask;
-      return (ip, v6) => v6 && (v6ToBig(ip) & mask) === jaringan;
+      const network = v6ToBig(addr) & mask;
+      return (ip, v6) => v6 && (v6ToBig(ip) & mask) === network;
     }
     return null;
   }
   return null;
 }
 
-/** Baca teks aturan jadi snapshot yang tidak berubah lagi setelah jadi. */
-export function bacaAturan(teks) {
-  const blokir = [];
-  const izin = [];
-  const salah = [];
-  const baris = String(teks).split(/\r?\n/);
+/** Read rule text into a snapshot that never changes once built. */
+export function parseRules(text) {
+  const blocks = [];
+  const allows = [];
+  const errors = [];
+  const lines = String(text).split(/\r?\n/);
 
-  baris.forEach((b, i) => {
-    const bersih = b.replace(/#.*$/, '').trim();
-    if (!bersih) return;
-    const bagian = bersih.split(/\s+/);
-    const kata = bagian[0].toLowerCase();
-    const nilai = bagian[1];
-    if (!nilai) { salah.push(`baris ${i + 1}: "${bersih}" tanpa nilai`); return; }
+  lines.forEach((raw, i) => {
+    const line = raw.replace(/#.*$/, '').trim();
+    if (!line) return;
+    const parts = line.split(/\s+/);
+    const word = parts[0].toLowerCase();
+    const value = parts[1];
+    if (!value) { errors.push(`line ${i + 1}: "${line}" has no value`); return; }
 
-    if (kata === 'allow') {
-      const p = bikinPenguji(nilai.includes('/') ? 'cidr' : 'ip', nilai);
-      if (p) izin.push(p); else salah.push(`baris ${i + 1}: allow "${nilai}" tidak dikenali`);
+    if (word === 'allow') {
+      const m = makeMatcher(value.includes('/') ? 'cidr' : 'ip', value);
+      if (m) allows.push(m); else errors.push(`line ${i + 1}: allow "${value}" not understood`);
       return;
     }
-    if (kata === 'ip' || kata === 'cidr') {
-      const p = bikinPenguji(kata, nilai);
-      if (p) blokir.push(p); else salah.push(`baris ${i + 1}: ${kata} "${nilai}" tidak dikenali`);
+    if (word === 'ip' || word === 'cidr') {
+      const m = makeMatcher(word, value);
+      if (m) blocks.push(m); else errors.push(`line ${i + 1}: ${word} "${value}" not understood`);
       return;
     }
-    salah.push(`baris ${i + 1}: jenis aturan "${kata}" tidak dikenal`);
+    errors.push(`line ${i + 1}: unknown rule type "${word}"`);
   });
 
   return {
-    jumlah: blokir.length,
-    jumlahIzin: izin.length,
-    salah,
-    /** @returns {boolean} true kalau alamat ini harus ditolak */
-    diblokir(ip, v6 = false) {
-      for (const p of izin) if (p(ip, v6)) return false; // pengecualian menang duluan
-      for (const p of blokir) if (p(ip, v6)) return true;
+    count: blocks.length,
+    allowCount: allows.length,
+    errors,
+    /** @returns {boolean} true if this address must be refused */
+    isBlocked(ip, v6 = false) {
+      for (const m of allows) if (m(ip, v6)) return false; // exceptions win first
+      for (const m of blocks) if (m(ip, v6)) return true;
       return false;
     },
   };
 }
 
-const KOSONG = bacaAturan('');
+const EMPTY = parseRules('');
 
 /**
- * Daftar yang bisa dimuat ulang saat berjalan.
- * Snapshot ditukar sekaligus (atomik dari sisi pembaca) — tidak ada momen
- * di mana daftarnya setengah terisi.
+ * A list that can be reloaded while running.
+ * The snapshot is swapped whole (atomic from a reader's point of view) — there is
+ * never a moment where the list is half-populated.
  */
-export function bukaDaftar({ berkas, intervalCekMs = 15000, log = () => {} } = {}) {
-  let sekarang = KOSONG;
-  let mtimeTerakhir = 0;
+export function openList({ file, checkIntervalMs = 15000, log = () => {} } = {}) {
+  let current = EMPTY;
+  let lastMtime = 0;
   let timer = null;
 
-  function muat(alasan) {
-    if (!berkas) return;
+  function load(reason) {
+    if (!file) return;
     try {
-      const st = fs.statSync(berkas);
-      if (st.mtimeMs === mtimeTerakhir) return;
-      const baru = bacaAturan(fs.readFileSync(berkas, 'utf8'));
-      mtimeTerakhir = st.mtimeMs;
-      sekarang = baru;
-      log(`blocklist dimuat (${alasan}): ${baru.jumlah} blokir, ${baru.jumlahIzin} izin` +
-          (baru.salah.length ? `, ${baru.salah.length} baris diabaikan` : ''));
-      for (const s of baru.salah) log(`  blocklist ${s}`);
+      const st = fs.statSync(file);
+      if (st.mtimeMs === lastMtime) return;
+      const next = parseRules(fs.readFileSync(file, 'utf8'));
+      lastMtime = st.mtimeMs;
+      current = next;
+      log(`blocklist loaded (${reason}): ${next.count} blocks, ${next.allowCount} allows` +
+          (next.errors.length ? `, ${next.errors.length} lines ignored` : ''));
+      for (const e of next.errors) log(`  blocklist ${e}`);
     } catch (err) {
-      // Sengaja TIDAK mengosongkan daftar: berkas hilang/rusak lebih mungkin
-      // salah ketik daripada perintah membuka blokir.
-      log(`blocklist GAGAL dimuat (${alasan}): ${err.message} — daftar lama dipertahankan (${sekarang.jumlah} aturan)`);
+      // Deliberately NOT emptying the list: a missing or broken file is far more
+      // likely to be a typo than an instruction to unblock everything.
+      log(`blocklist FAILED to load (${reason}): ${err.message} — keeping previous rules (${current.count})`);
     }
   }
 
-  muat('awal');
-  if (berkas && intervalCekMs > 0) {
-    timer = setInterval(() => muat('berkas berubah'), intervalCekMs);
+  load('startup');
+  if (file && checkIntervalMs > 0) {
+    timer = setInterval(() => load('file changed'), checkIntervalMs);
     timer.unref?.();
   }
-  process.on('SIGHUP', () => { mtimeTerakhir = 0; muat('SIGHUP'); });
+  process.on('SIGHUP', () => { lastMtime = 0; load('SIGHUP'); });
 
   return {
-    diblokir: (ip, v6) => sekarang.diblokir(ip, v6),
-    get jumlah() { return sekarang.jumlah; },
-    muatUlang: () => { mtimeTerakhir = 0; muat('manual'); },
-    tutup: () => timer && clearInterval(timer),
+    isBlocked: (ip, v6) => current.isBlocked(ip, v6),
+    get count() { return current.count; },
+    reload: () => { lastMtime = 0; load('manual'); },
+    close: () => timer && clearInterval(timer),
   };
 }

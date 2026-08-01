@@ -1,33 +1,34 @@
-// wire.js — encoder/decoder format paket DNS (RFC 1035) seperlunya.
-// Cukup buat authoritative server sederhana: parse pertanyaan, susun jawaban.
+// wire.js — just enough of the DNS packet format (RFC 1035) to do the job.
+// Enough for a simple authoritative server: parse the question, build the answer.
 
-// ---- Tipe record ----
+// ---- Record types ----
 export const TYPE = { A: 1, NS: 2, SOA: 6, HINFO: 13, TXT: 16, AAAA: 28, OPT: 41, ANY: 255 };
 export const CLASS_IN = 1;
 
-// ---- Flag header ----
-const QR = 0x8000; // ini response
+// ---- Header flags ----
+const QR = 0x8000; // this is a response
 const AA = 0x0400; // authoritative answer
-const RD = 0x0100; // recursion desired (di-copy dari query)
+const RD = 0x0100; // recursion desired (copied from the query)
+const TC = 0x0200; // truncated — "this did not fit, retry over TCP"
 export const RCODE = { OK: 0, FORMERR: 1, NXDOMAIN: 3, REFUSED: 5 };
 
-/** Encode nama domain jadi label-label (mis. "ns1.a-i.sh" -> \x03ns1\x04a-i\x02sh\x00). */
+/** Encode a domain name into labels ("ns1.a-i.sh" -> \x03ns1\x04a-i\x02sh\x00). */
 export function encodeName(name) {
   const parts = name ? name.split('.') : [];
   const bufs = [];
   for (const p of parts) {
     const b = Buffer.from(p, 'ascii');
-    if (b.length > 63) throw new Error('label kepanjangan');
+    if (b.length > 63) throw new Error('label too long');
     bufs.push(Buffer.from([b.length]), b);
   }
   bufs.push(Buffer.from([0]));
   return Buffer.concat(bufs);
 }
 
-// Pointer kompresi ke offset 12 (awal QNAME di pertanyaan) — hemat byte, standar.
+// Compression pointer to offset 12 (where QNAME starts) — standard, saves bytes.
 const NAME_PTR = Buffer.from([0xc0, 0x0c]);
 
-/** Susun satu resource record. nameBuf = NAME_PTR atau hasil encodeName(). */
+/** Build one resource record. nameBuf is NAME_PTR or the result of encodeName(). */
 function record(nameBuf, type, ttl, rdata) {
   const mid = Buffer.alloc(8);
   mid.writeUInt16BE(type, 0);
@@ -41,7 +42,7 @@ function record(nameBuf, type, ttl, rdata) {
 export const answerRecord = (type, ttl, rdata) => record(NAME_PTR, type, ttl, rdata);
 export const namedRecord = (name, type, ttl, rdata) => record(encodeName(name), type, ttl, rdata);
 
-/** RDATA buat SOA. */
+/** RDATA for SOA. */
 export function soaRdata(zone, cfg) {
   const mname = encodeName(cfg.ns[0]);
   const rname = encodeName(`hostmaster.${zone}`);
@@ -54,10 +55,9 @@ export function soaRdata(zone, cfg) {
   return Buffer.concat([mname, rname, nums]);
 }
 
-/** Parse query: ambil id, flags, nama pertanyaan pertama, qtype, plus byte pertanyaan mentah. */
 /**
- * HINFO rdata: dua character-string. Dipakai buat menjawab ANY sesuai RFC 8482 —
- * balasan sekecil mungkin supaya query ANY nggak bisa dipakai memperbesar serangan.
+ * HINFO rdata: two character-strings. Used to answer ANY per RFC 8482 — the smallest
+ * possible reply, so an ANY query cannot be used to amplify an attack.
  */
 export function hinfoRdata(cpu = 'RFC8482', os = '') {
   const s1 = Buffer.from(cpu, 'ascii');
@@ -66,29 +66,28 @@ export function hinfoRdata(cpu = 'RFC8482', os = '') {
 }
 
 /**
- * Cari OPT pseudo-record (EDNS0, RFC 6891) di bagian additional.
+ * Find the OPT pseudo-record (EDNS0, RFC 6891) in the additional section.
  *
- * OPT bukan record biasa: NAME-nya wajib akar (satu byte 0x00), CLASS dipakai
- * ulang sebagai ukuran payload UDP yang sanggup diterima klien, dan byte pertama
- * TTL adalah extended-rcode. Kita cuma butuh dua hal: ukuran payload, dan versi.
+ * OPT is not an ordinary record: its NAME must be the root (a single 0x00), its CLASS
+ * is reused as the UDP payload size the client can accept, and the first TTL byte is
+ * the extended rcode. We only need two things from it: payload size and version.
  *
- * Ditelusuri dengan melompati record satu per satu, bukan menebak posisi —
- * paket sah boleh menaruh apa pun sebelum OPT.
+ * Records are walked one at a time rather than guessing an offset — a valid packet is
+ * allowed to put anything before the OPT.
  *
- * @returns {{ada:boolean, payload:number, versi:number, do:boolean}|null}
+ * @returns {{present:boolean, payload:number, version:number, do:boolean}|null}
  */
-function cariOpt(buf, off, arcount) {
+function findOpt(buf, off, arcount) {
   for (let i = 0; i < arcount; i++) {
     if (off >= buf.length) return null;
-    // Lewati NAME. Batasnya diperiksa di setiap langkah dengan alasan yang sama
-    // seperti di parseQuery: paket yang habis di tengah nama tidak boleh membuat
-    // penelusuran ini berjalan liar.
+    // Skip the NAME. Bounds are checked at every step for the same reason as in
+    // parseQuery: a packet that ends mid-name must not send this walk out of control.
     if (buf[off] === 0) {
       off += 1;
     } else {
-      let langkah = 0;
+      let steps = 0;
       while (off < buf.length) {
-        if (++langkah > 128) return null; // nama sah tidak sepanjang ini
+        if (++steps > 128) return null; // no valid name is this long
         const len = buf[off];
         if (len === 0) { off += 1; break; }
         if ((len & 0xc0) === 0xc0) { off += 2; break; }
@@ -98,17 +97,17 @@ function cariOpt(buf, off, arcount) {
     }
     if (!Number.isFinite(off) || off + 10 > buf.length) return null;
     const type = buf.readUInt16BE(off);
-    const kelas = buf.readUInt16BE(off + 2);
+    const klass = buf.readUInt16BE(off + 2);
     const ttl = buf.readUInt32BE(off + 4);
     const rdlen = buf.readUInt16BE(off + 8);
     if (type === TYPE.OPT) {
       return {
-        ada: true,
-        // Lantai 512: klien yang mengiklankan lebih kecil dari paket DNS minimum
-        // biasanya salah konfigurasi, dan menuruti angkanya bikin semua jawaban
-        // terpotong tanpa alasan.
-        payload: Math.max(512, kelas),
-        versi: (ttl >> 16) & 0xff,
+        present: true,
+        // Floor of 512: a client advertising less than the minimum DNS packet size is
+        // almost always misconfigured, and honouring the number would truncate every
+        // answer for no reason.
+        payload: Math.max(512, klass),
+        version: (ttl >> 16) & 0xff,
         do: ((ttl >> 15) & 1) === 1,
       };
     }
@@ -117,85 +116,84 @@ function cariOpt(buf, off, arcount) {
   return null;
 }
 
-/** Susun OPT untuk balasan. Kita tidak mendukung opsi apa pun, jadi RDATA kosong. */
-export function optRecord(payload = 1232, extRcode = 0, versi = 0) {
+/** Build the OPT record for a reply. We support no options, so RDATA is empty. */
+export function optRecord(payload = 1232, extRcode = 0, version = 0) {
   const b = Buffer.alloc(11);
-  b.writeUInt8(0, 0);                                   // NAME = akar
+  b.writeUInt8(0, 0);                 // NAME = root
   b.writeUInt16BE(TYPE.OPT, 1);
-  b.writeUInt16BE(payload, 3);                          // CLASS dipakai ulang: ukuran payload kita
-  b.writeUInt8(extRcode, 5);                            // extended rcode
-  b.writeUInt8(versi, 6);                               // EDNS versi
-  b.writeUInt16BE(0, 7);                                // flags — DO tidak diset: kita belum DNSSEC
-  b.writeUInt16BE(0, 9);                                // RDLENGTH = 0
+  b.writeUInt16BE(payload, 3);        // CLASS reused: our payload size
+  b.writeUInt8(extRcode, 5);          // extended rcode
+  b.writeUInt8(version, 6);           // EDNS version
+  b.writeUInt16BE(0, 7);              // flags — DO stays off: no DNSSEC yet
+  b.writeUInt16BE(0, 9);              // RDLENGTH = 0
   return b;
 }
 
+/** Parse a query: id, flags, the first question name, qtype, and the raw question bytes. */
 export function parseQuery(buf) {
-  if (buf.length < 12) throw new Error('paket kependekan');
+  if (buf.length < 12) throw new Error('packet too short');
   const id = buf.readUInt16BE(0);
   const flags = buf.readUInt16BE(2);
   const qdcount = buf.readUInt16BE(4);
   const arcount = buf.readUInt16BE(10);
-  if (qdcount < 1) throw new Error('tanpa pertanyaan');
+  if (qdcount < 1) throw new Error('no question');
 
-  // 🚨 Setiap baca WAJIB diperiksa batasnya dulu.
+  // 🚨 Every read MUST check its bounds first.
   //
-  // Versi sebelumnya tidak, dan itu bisa mematikan server dari jarak jauh dengan
-  // 12 byte. Paket yang bilang "ada 1 pertanyaan" lalu habis di situ membuat
-  // buf[off] jadi undefined; `undefined & 0xc0` bernilai 0 sehingga bukan pointer,
-  // `off += 1 + undefined` jadi NaN, dan `buf[NaN]` undefined lagi — perulangannya
-  // tidak pernah keluar sambil terus mendorong string kosong ke dalam array.
+  // An earlier version did not, and that made it possible to kill the server remotely
+  // with 12 bytes. A packet claiming "one question" that then ends leaves buf[off]
+  // undefined; `undefined & 0xc0` is 0 so it is not treated as a pointer,
+  // `off += 1 + undefined` becomes NaN, and buf[NaN] is undefined again — the loop
+  // never exits while pushing empty strings into an array forever.
   //
-  // Terukur: 12 byte masuk -> 3 detik CPU dan 1,4 GB memori sebelum akhirnya
-  // melempar. Node satu utas, jadi 0,3 paket per detik sudah cukup mematikan
-  // layanan, dan alamat pengirim UDP bisa dipalsukan sehingga pembatas laju
-  // per-blok tidak menolong.
+  // Measured: 12 bytes in -> 3 seconds of CPU and 1.4 GB of memory before it finally
+  // threw. Node is single-threaded, so 0.3 packets per second was enough to take the
+  // service down, and a UDP source address can be forged, so a per-block rate limiter
+  // does not help.
   let off = 12;
   const labels = [];
-  let panjangNama = 0;
+  let nameLength = 0;
   while (true) {
-    if (off >= buf.length) throw new Error('nama kepotong');
+    if (off >= buf.length) throw new Error('name truncated');
     const len = buf[off];
     if (len === 0) { off += 1; break; }
-    if ((len & 0xc0) === 0xc0) { // pointer kompresi — tidak sah di pertanyaan
-      if (off + 2 > buf.length) throw new Error('pointer kepotong');
+    if ((len & 0xc0) === 0xc0) { // compression pointer — not valid in a question
+      if (off + 2 > buf.length) throw new Error('pointer truncated');
       off += 2;
       break;
     }
-    if (len > 63) throw new Error('label lebih dari 63 oktet'); // RFC 1035 §2.3.4
-    panjangNama += len + 1;
-    if (panjangNama > 255) throw new Error('nama lebih dari 255 oktet'); // RFC 1035 §2.3.4
-    if (off + 1 + len > buf.length) throw new Error('label lewat ujung paket');
+    if (len > 63) throw new Error('label longer than 63 octets');  // RFC 1035 §2.3.4
+    nameLength += len + 1;
+    if (nameLength > 255) throw new Error('name longer than 255 octets'); // RFC 1035 §2.3.4
+    if (off + 1 + len > buf.length) throw new Error('label runs past end of packet');
     labels.push(buf.toString('ascii', off + 1, off + 1 + len));
     off += 1 + len;
   }
-  if (off + 4 > buf.length) throw new Error('pertanyaan tanpa qtype/qclass');
+  if (off + 4 > buf.length) throw new Error('question has no qtype/qclass');
   const qtype = buf.readUInt16BE(off);
-  off += 4; // lewati qtype + qclass
+  off += 4; // skip qtype + qclass
   const questionSection = buf.subarray(12, off);
 
-  // Sisa paket sesudah pertanyaan: answer + authority + additional. Kita cuma
-  // peduli additional, tapi qdcount>1 tidak didukung dan ancount/nscount di query
-  // sah selalu 0 — jadi menelusuri dari sini aman.
-  const edns = cariOpt(buf, off, arcount);
+  // What follows the question is answer + authority + additional. We only care about
+  // additional, but qdcount>1 is unsupported and ancount/nscount are always 0 in a
+  // valid query — so walking from here is safe.
+  const edns = findOpt(buf, off, arcount);
   return { id, flags, name: labels.join('.'), qtype, questionSection, edns };
 }
 
-const TC = 0x0200; // truncated — "jawabannya nggak muat, ulangi lewat TCP"
-
 /**
- * Balasan TERPOTONG tanpa isi: cuma menyalin pertanyaannya dan menyalakan TC=1.
+ * A TRUNCATED reply with no content: it copies the question back and sets TC=1.
  *
- * Dipakai oleh rate limiter sebagai jalan keluar buat klien sah. Klien yang benar
- * membaca TC=1 lalu mengulang lewat TCP; penyerang yang memalsukan alamat sumber
- * tidak pernah menerima paket ini, jadi tidak bisa menindaklanjutinya. Ukurannya
- * lebih kecil daripada query-nya sendiri, jadi tidak bisa dipakai mengamplifikasi.
+ * Used by the rate limiter as the escape hatch for legitimate clients. A correct client
+ * reads TC=1 and retries over TCP; an attacker forging their source address never
+ * receives this packet and cannot follow up. It is also smaller than the query itself,
+ * so it cannot be used to amplify anything.
  */
 export function buildTruncated({ id, flags, questionSection, edns }) {
-  // OPT tetap dibawa kalau query membawanya: klien yang mengirim EDNS lalu
-  // menerima balasan tanpa OPT bisa menyimpulkan server ini tidak paham EDNS
-  // dan berhenti memakainya — padahal ini cuma pembatasan laju sesaat.
-  const additional = edns && edns.ada ? [optRecord(PAYLOAD_KAMI)] : [];
+  // Keep the OPT if the query had one: a client that sends EDNS and gets a reply
+  // without OPT may conclude the server does not understand EDNS and stop using it —
+  // when in fact this was only a momentary rate limit.
+  const additional = edns && edns.present ? [optRecord(OUR_PAYLOAD)] : [];
   const header = Buffer.alloc(12);
   header.writeUInt16BE(id, 0);
   header.writeUInt16BE(QR | AA | TC | (flags & RD) | RCODE.OK, 2);
@@ -206,41 +204,41 @@ export function buildTruncated({ id, flags, questionSection, edns }) {
   return Buffer.concat([header, questionSection, ...additional]);
 }
 
-// Ukuran payload UDP yang kita iklankan. 1232 = angka yang direkomendasikan
-// DNS Flag Day 2020: muat di MTU 1280 (minimum IPv6) tanpa fragmentasi IP.
-// Fragmen DNS gampang hilang dan gampang dipalsukan, jadi lebih baik memaksa
-// klien pindah ke TCP daripada mengirim paket yang pecah.
-export const PAYLOAD_KAMI = 1232;
+// The UDP payload size we advertise. 1232 is the DNS Flag Day 2020 recommendation:
+// it fits inside a 1280-byte MTU (the IPv6 minimum) without IP fragmentation. DNS
+// fragments are easy to lose and easy to spoof, so it is better to push a client to
+// TCP than to send a packet that will be broken up.
+export const OUR_PAYLOAD = 1232;
 
 /**
- * Susun buffer response lengkap.
+ * Build a complete response buffer.
  *
- * Kalau query membawa OPT, balasannya WAJIB membawa OPT juga (RFC 6891 §6.1.1).
- * Resolver umum masih memaafkan kalau tidak, tapi ini prasyarat DNSSEC dan
- * beberapa resolver menandai server tanpa OPT sebagai "tidak mendukung EDNS"
- * lalu berhenti mencoba fitur yang butuh EDNS.
+ * If the query carried an OPT, the reply MUST carry one too (RFC 6891 §6.1.1). Common
+ * resolvers still forgive its absence, but it is a prerequisite for DNSSEC, and some
+ * resolvers mark a server without OPT as "does not support EDNS" and stop trying
+ * anything that needs it.
  *
- * Versi EDNS yang tidak kita kenal dijawab BADVERS (extended rcode 16) dengan
- * OPT versi 0 — bukan diabaikan, karena mengabaikan bikin klien mengira paketnya
- * hilang lalu mengulang terus.
+ * An EDNS version we do not know is answered with BADVERS (extended rcode 16) and an
+ * OPT of version 0 — not ignored, because ignoring it makes the client think the packet
+ * was lost and retry forever.
  */
 export function buildResponse({ id, flags, questionSection, edns }, { rcode = RCODE.OK, answers = [], authority = [] }) {
-  const pakaiOpt = !!(edns && edns.ada);
-  const versiAsing = pakaiOpt && edns.versi > 0;
+  const useOpt = !!(edns && edns.present);
+  const badVersion = useOpt && edns.version > 0;
 
-  const isi = versiAsing ? [] : answers;
-  const kuasa = versiAsing ? [] : authority;
-  const additional = pakaiOpt
-    ? [optRecord(PAYLOAD_KAMI, versiAsing ? 1 : 0, 0)] // extRcode hi-byte 1 => BADVERS (16)
+  const body = badVersion ? [] : answers;
+  const auth = badVersion ? [] : authority;
+  const additional = useOpt
+    ? [optRecord(OUR_PAYLOAD, badVersion ? 1 : 0, 0)] // extRcode high byte 1 => BADVERS (16)
     : [];
 
   const header = Buffer.alloc(12);
   const rd = flags & RD;
   header.writeUInt16BE(id, 0);
-  header.writeUInt16BE(QR | AA | rd | (versiAsing ? 0 : rcode), 2);
+  header.writeUInt16BE(QR | AA | rd | (badVersion ? 0 : rcode), 2);
   header.writeUInt16BE(1, 4); // qdcount
-  header.writeUInt16BE(isi.length, 6);
-  header.writeUInt16BE(kuasa.length, 8);
+  header.writeUInt16BE(body.length, 6);
+  header.writeUInt16BE(auth.length, 8);
   header.writeUInt16BE(additional.length, 10);
-  return Buffer.concat([header, questionSection, ...isi, ...kuasa, ...additional]);
+  return Buffer.concat([header, questionSection, ...body, ...auth, ...additional]);
 }
