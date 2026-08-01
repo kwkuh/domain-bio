@@ -13,6 +13,24 @@ import { tanya, TYPE, ambil, NAMA_RCODE } from './dns.js';
 import { ipv6ToBytes } from '../../src/parse.js';
 
 const acak8 = () => Math.random().toString(36).slice(2, 10);
+
+/**
+ * Label acak yang DIJAMIN bukan alamat IP dalam bentuk apa pun.
+ *
+ * 🚨 Ini bukan kerapian. `acak8()` memakai base36 [0-9a-z]; kalau kedelapan
+ * karakternya kebetulan jatuh di [0-9a-f], hasilnya adalah **hex 8 digit yang sah**
+ * dan server BENAR menjawabnya sebagai A record. Tesnya yang salah, bukan servernya.
+ *
+ * Terukur: 1 dari 659 label. Pemeriksaan ini jalan 8x per run (4 server × 2 zone),
+ * jadi 1,21% run berakhir merah tanpa ada yang rusak. Dengan jadwal 30 menit, itu
+ * alarm palsu rata-rata sekali tiap dua hari — dan alarm yang sering bohong lebih
+ * berbahaya daripada tidak ada alarm, karena orang berhenti menengoknya.
+ *
+ * "z" tidak ada di [0-9a-f], jadi label ini tidak akan pernah terbaca sebagai hex
+ * maupun IPv6 bergaris; tidak ada tanda hubung, jadi bukan IPv4 bergaris; dan
+ * bukan angka murni, jadi bukan oktet.
+ */
+const labelBukanIP = () => 'z' + Math.random().toString(36).slice(2, 9) + 'z';
 const oktet = () => Math.floor(Math.random() * 256);
 const oktetTakNol = () => 1 + Math.floor(Math.random() * 254);
 const rc = (n) => NAMA_RCODE[n] ?? `RCODE${n}`;
@@ -112,7 +130,7 @@ export function susunKasus({ zone, ip, nama, transport, timeout = 4000 }) {
 
   tambah('prefix bebas di depan IP tetap kejawab', async () => {
     const ip4 = ipv4Acak();
-    const nama2 = `${acak8()}.${acak8()}.${ip4.strip}.${zone}`;
+    const nama2 = `${labelBukanIP()}.${labelBukanIP()}.${ip4.strip}.${zone}`;
     const j = await T(nama2, TYPE.A);
     periksaHeaderOtoritatif(j);
     const a = ambil(j.answers, TYPE.A).map((r) => r.data);
@@ -129,14 +147,14 @@ export function susunKasus({ zone, ip, nama, transport, timeout = 4000 }) {
 
   // ---- jawaban negatif: sama pentingnya ----
   tambah('nama dalam zone tapi bukan IP -> NXDOMAIN + SOA di authority', async () => {
-    const j = await T(`${acak8()}.${acak8()}.${zone}`, TYPE.A);
+    const j = await T(`${labelBukanIP()}.${labelBukanIP()}.${zone}`, TYPE.A);
     periksaHeaderOtoritatif(j);
     wajib(j.rcode === 3, `rcode ${rc(j.rcode)}, harusnya NXDOMAIN`);
     wajib(ambil(j.authority, TYPE.SOA).length === 1, 'nggak ada SOA di authority — resolver jadi nggak bisa nge-cache jawaban negatif');
   });
 
   tambah('nama di luar zone -> REFUSED (bukan open resolver)', async () => {
-    const j = await T(`${acak8()}.example.com`, TYPE.A);
+    const j = await T(`${labelBukanIP()}.example.com`, TYPE.A);
     wajib(j.rcode === 5, `rcode ${rc(j.rcode)}, harusnya REFUSED — server otoritatif nggak boleh ngelayanin zone orang`);
     wajib(!j.ra, 'RA nyala di jawaban REFUSED — jangan ngaku bisa rekursi');
     wajib(j.answers.length === 0, 'ada answer buat nama di luar zone — ini gejala open resolver');
