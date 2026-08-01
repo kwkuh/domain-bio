@@ -59,14 +59,40 @@ Rules that hold for all of them:
 
 ## Choosing dotted or dashed
 
-Use dashed whenever TLS is involved.
+It does not matter. Both forms get a certificate equally well -- verified by issuing a
+real Let's Encrypt certificate covering both names at once. Recommend whichever reads
+better to the user.
 
-A dotted name has too many labels for a single `*.a-i.st` wildcard certificate to cover.
-The dashed form collapses the address into one label, so an ordinary wildcard certificate
-matches it and HTTPS works normally. Let's Encrypt will not issue for a bare IP address,
-but it will for a hostname, which is what this gives you.
+Do NOT tell users the dashed form is needed for TLS. That advice is inherited from
+services that hand out a wildcard certificate. We do not, and neither do nip.io or
+sslip.io. A user cannot obtain `*.a-i.st` either: Let's Encrypt issues wildcards only
+via the DNS-01 challenge, which needs a TXT record on a-i.st that only the operator
+can add.
 
-If you are only doing plain HTTP or a raw TCP connection, either form is fine.
+## Getting HTTPS
+
+Let's Encrypt will not issue for a bare IP address, but it will for a hostname, which
+is what this service gives you. Two things trip people up:
+
+1. Port 80 or 443 must be reachable from the internet. DNS-01 is impossible for these
+   names, so HTTP-01 or TLS-ALPN-01 is the only route.
+2. Do not proxy /.well-known/acme-challenge/ to the application. A catch-all proxy rule
+   makes the app answer the challenge with its own page and issuance fails with
+   "unauthorized". Serve that path from disk.
+
+  server {
+      listen 80;
+      server_name 5-78-141-213.a-i.st;
+      location /.well-known/acme-challenge/ { root /var/www/acme; }
+      location / { proxy_pass http://127.0.0.1:8090; }
+  }
+
+  certbot certonly --webroot -w /var/www/acme -d 5-78-141-213.a-i.st
+
+Rate limit worth passing on: Let's Encrypt allows 50 new certificates per registered
+domain every 7 days, and a-i.st counts as ONE registered domain for everybody using the
+service -- it is a shared pool, not per user. Renewals are exempt. If a user hits the
+limit, a-i.sh has its own separate allowance.
 
 ## For agents specifically
 

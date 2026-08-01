@@ -64,7 +64,7 @@ All formats are computed purely from the name, and every one of them works on **
 | Form | Example | Resolves to | Notes |
 |---|---|---|---|
 | Dotted IPv4 | `1.2.3.4.a-i.st` | `A` → `1.2.3.4` | the plain form |
-| Dashed IPv4 | `1-2-3-4.a-i.st` | `A` → `1.2.3.4` | **use this for wildcard TLS** (see below) |
+| Dashed IPv4 | `1-2-3-4.a-i.st` | `A` → `1.2.3.4` | one label instead of four (see below) |
 | Hex IPv4 | `0a000001.a-i.st` | `A` → `10.0.0.1` | 8 hex digits |
 | IPv6 (dashed) | `2001-db8--1.a-i.st` | `AAAA` → `2001:db8::1` | `:` → `-`, `::` → `--` |
 | Any prefix | `app.1.2.3.4.a-i.st` | `A` → `1.2.3.4` | anything before the IP is ignored |
@@ -74,15 +74,34 @@ All formats are computed purely from the name, and every one of them works on **
 
 Prefixes compose with every form, e.g. `agent1.203-0-113-10.a-i.sh` → `203.0.113.10`.
 
-## HTTPS via the dashed form
+## HTTPS
 
-A dotted name like `1.2.3.4.a-i.st` has too many labels for a single `*.a-i.st` wildcard certificate to cover. The **dashed form** collapses the IP into one label:
+Both forms work. A certificate for `5.78.141.213.a-i.st` issues exactly as easily as one for `5-78-141-213.a-i.st` — verified by issuing a real Let's Encrypt certificate covering both names at once. Use whichever you prefer.
 
+**We do not provide a wildcard certificate**, and neither do nip.io or sslip.io. You cannot obtain one for `*.a-i.st` yourself either: Let's Encrypt only issues wildcards through the DNS-01 challenge, and that requires adding a TXT record to `a-i.st` — which nobody but us can do. So the dashed form buys you nothing on its own. It matters only if someone hands you a wildcard certificate, and nobody does.
+
+What you get instead is an ordinary certificate for your exact hostname, which is all most people needed anyway. Let's Encrypt will not issue for a bare IP address, but it will for a hostname — and that is what this gives you.
+
+Two practical consequences, both learned the hard way:
+
+- **Port 80 or 443 must be reachable from the internet.** DNS-01 is impossible for these names, so HTTP-01 or TLS-ALPN-01 is your only route. If something else already owns those ports, that has to be sorted out first.
+- **Do not proxy `/.well-known/acme-challenge/` to your app.** A catch-all proxy rule sends the challenge to your application, your application answers with its own page, and issuance fails with `unauthorized`. Serve that path from disk.
+
+```nginx
+server {
+    listen 80;
+    server_name 5-78-141-213.a-i.st;
+
+    location /.well-known/acme-challenge/ { root /var/www/acme; }
+    location / { proxy_pass http://127.0.0.1:8090; }
+}
 ```
-1-2-3-4.a-i.st
+
+```sh
+certbot certonly --webroot -w /var/www/acme -d 5-78-141-213.a-i.st
 ```
 
-Now a single `*.a-i.st` wildcard TLS certificate matches the name, so HTTPS just works — ideal for local dev, preview environments, and ephemeral agent boxes that need a valid cert without provisioning one per host.
+**Certificates are rate-limited per suffix, not per user.** Let's Encrypt allows 50 new certificates per registered domain every 7 days, and `a-i.st` counts as one registered domain for everybody using it. Renewals are exempt, so this bites new names rather than existing ones. If you hit the limit, try `a-i.sh` — it has its own separate allowance.
 
 ## For AI agents
 

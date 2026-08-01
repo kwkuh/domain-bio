@@ -15,7 +15,7 @@ no human in the loop. Free for dev use. Project home: https://open-domain.com
 Append `.a-i.st` to the IP your agent runs on:
 
   <ipv4>.a-i.st                203.0.113.10.a-i.st        -> A     203.0.113.10
-  <ipv4-dashed>.a-i.st         203-0-113-10.a-i.st        -> A     203.0.113.10   (use this for wildcard TLS)
+  <ipv4-dashed>.a-i.st         203-0-113-10.a-i.st        -> A     203.0.113.10   (one label instead of four; both forms get certs fine)
   <8-hex>.a-i.st               0a000001.a-i.st            -> A     10.0.0.1
   <ipv6-dashed>.a-i.st         2001-db8--1.a-i.st         -> AAAA  2001:db8::1    (":" -> "-", "::" -> "--")
   <anything>.<ip>.a-i.st       agent1.203.0.113.10.a-i.st -> A     203.0.113.10   (any prefix is ignored)

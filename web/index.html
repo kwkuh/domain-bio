@@ -123,7 +123,7 @@
     </thead>
     <tbody>
       <tr><td>203.0.113.10.a-i.st</td><td>203.0.113.10</td><td class="note">dot separators (IPv4)</td></tr>
-      <tr><td>203-0-113-10.a-i.st</td><td>203.0.113.10</td><td class="note">dash separators — use this for wildcard TLS</td></tr>
+      <tr><td>203-0-113-10.a-i.st</td><td>203.0.113.10</td><td class="note">dash separators — one label instead of four</td></tr>
       <tr><td>203.0.113.10.a-i.sh</td><td>203.0.113.10</td><td class="note">the other domain, same answer</td></tr>
       <tr><td>www.192.168.0.1.a-i.st</td><td>192.168.0.1</td><td class="note">any prefix is ignored</td></tr>
       <tr><td>www-192-168-0-1.a-i.st</td><td>192.168.0.1</td><td class="note">prefix + dashes</td></tr>
@@ -141,7 +141,30 @@ dig +short 203.0.113.10.a-i.sh</code></pre>
 
   <h2 id="https">HTTPS <a class="anchor" href="#https" aria-label="Link to this section">#</a></h2>
 
-  <p>A dotted name such as <code>1.2.3.4.a-i.st</code> has too many labels for a single <code>*.a-i.st</code> wildcard certificate to cover. The dashed form collapses the IP into one label, so <code>1-2-3-4.a-i.st</code> is matched by an ordinary wildcard certificate and HTTPS works normally. Let's Encrypt will not issue a certificate for a bare IP address, but it will for a hostname — which is what this gives you.</p>
+  <p>Both forms work. A certificate for <code>5.78.141.213.a-i.st</code> issues exactly as easily as one for <code>5-78-141-213.a-i.st</code> — verified by issuing a real Let's Encrypt certificate covering both names at once. Use whichever you prefer.</p>
+
+  <p><strong>We do not provide a wildcard certificate</strong>, and neither do nip.io or sslip.io. You cannot obtain one for <code>*.a-i.st</code> yourself either: Let's Encrypt only issues wildcards through the DNS-01 challenge, and that requires adding a TXT record to <code>a-i.st</code> — which nobody but us can do. So the dashed form buys you nothing on its own. It matters only if someone hands you a wildcard certificate, and nobody does.</p>
+
+  <p>What you get instead is an ordinary certificate for your exact hostname, which is all most people needed anyway. Let's Encrypt will not issue for a bare IP address, but it will for a hostname — and that is what this gives you.</p>
+
+  <p>Two practical consequences, both learned the hard way:</p>
+  <ul>
+    <li><strong>Port 80 or 443 must be reachable from the internet.</strong> DNS-01 is impossible for these names, so HTTP-01 or TLS-ALPN-01 is your only route. If something else already owns those ports, that has to be sorted out first.</li>
+    <li><strong>Do not proxy <code>/.well-known/acme-challenge/</code> to your app.</strong> A catch-all proxy rule sends the challenge to your application, your application answers with its own page, and issuance fails with <code>unauthorized</code>. Serve that path from disk.</li>
+  </ul>
+
+  <p>A working nginx fragment:</p>
+  <pre><code>server {
+    listen 80;
+    server_name 5-78-141-213.a-i.st;
+
+    location /.well-known/acme-challenge/ { root /var/www/acme; }
+    location / { proxy_pass http://127.0.0.1:8090; }
+}</code></pre>
+
+  <pre><code>certbot certonly --webroot -w /var/www/acme -d 5-78-141-213.a-i.st</code></pre>
+
+  <p><strong>Certificates are rate-limited per suffix, not per user.</strong> Let's Encrypt allows 50 new certificates per registered domain every 7 days, and <code>a-i.st</code> counts as one registered domain for everybody using it. Renewals are exempt, so this bites new names, not existing ones. If you hit the limit, try <code>a-i.sh</code> — it has its own separate allowance.</p>
 
   <h2 id="for-agents-and-automated-tools">For agents and automated tools <a class="anchor" href="#for-agents-and-automated-tools" aria-label="Link to this section">#</a></h2>
 

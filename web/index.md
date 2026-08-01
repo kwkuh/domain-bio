@@ -29,7 +29,7 @@ separate locations are the next piece of work.
 | Hostname | Resolves to | Notes |
 |---|---|---|
 | `203.0.113.10.a-i.st` | 203.0.113.10 | dot separators (IPv4) |
-| `203-0-113-10.a-i.st` | 203.0.113.10 | dash separators — use this for wildcard TLS |
+| `203-0-113-10.a-i.st` | 203.0.113.10 | dash separators — one label instead of four |
 | `203.0.113.10.a-i.sh` | 203.0.113.10 | the other domain, same answer |
 | `www.192.168.0.1.a-i.st` | 192.168.0.1 | any prefix is ignored |
 | `www-192-168-0-1.a-i.st` | 192.168.0.1 | prefix + dashes |
@@ -47,13 +47,45 @@ dig +short 203.0.113.10.a-i.sh
 
 ## HTTPS
 
-A dotted name such as `1.2.3.4.a-i.st` has too many labels for a single `*.a-i.st`
-wildcard certificate to cover. The dashed form collapses the IP into one label, so
-`1-2-3-4.a-i.st` is matched by an ordinary wildcard certificate and HTTPS works normally.
-Let's Encrypt will not issue a certificate for a bare IP address, but it will for a
-hostname — which is what this gives you.
+Both forms work. A certificate for `5.78.141.213.a-i.st` issues exactly as easily as one
+for `5-78-141-213.a-i.st` — verified by issuing a real Let's Encrypt certificate covering
+both names at once. Use whichever you prefer.
 
-## For agents and automated tools
+**We do not provide a wildcard certificate**, and neither do nip.io or sslip.io. You cannot
+obtain one for `*.a-i.st` yourself either: Let's Encrypt only issues wildcards through the
+DNS-01 challenge, and that requires adding a TXT record to `a-i.st` — which nobody but us
+can do. So the dashed form buys you nothing on its own. It matters only if someone hands
+you a wildcard certificate, and nobody does.
+
+What you get instead is an ordinary certificate for your exact hostname, which is all most
+people needed anyway. Let's Encrypt will not issue for a bare IP address, but it will for a
+hostname — and that is what this gives you.
+
+Two practical consequences, both learned the hard way:
+
+- **Port 80 or 443 must be reachable from the internet.** DNS-01 is impossible for these
+  names, so HTTP-01 or TLS-ALPN-01 is your only route.
+- **Do not proxy `/.well-known/acme-challenge/` to your app.** A catch-all proxy rule sends
+  the challenge to your application, your application answers with its own page, and
+  issuance fails with `unauthorized`. Serve that path from disk.
+
+```
+server {
+    listen 80;
+    server_name 5-78-141-213.a-i.st;
+    location /.well-known/acme-challenge/ { root /var/www/acme; }
+    location / { proxy_pass http://127.0.0.1:8090; }
+}
+```
+
+```
+certbot certonly --webroot -w /var/www/acme -d 5-78-141-213.a-i.st
+```
+
+**Certificates are rate-limited per suffix, not per user.** Let's Encrypt allows 50 new
+certificates per registered domain every 7 days, and `a-i.st` counts as one registered
+domain for everybody using it. Renewals are exempt. If you hit the limit, try `a-i.sh` —
+it has its own separate allowance.## For agents and automated tools
 
 The hostname is a pure function of the IP: no lookup, no state, no registration step.
 An agent that has just been handed a public IP can construct its own address without
