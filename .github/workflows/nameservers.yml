@@ -1,0 +1,179 @@
+name: Nameservers
+
+# Monitoring eksternal: nembak nameserver PRODUKSI dari luar, tiap 30 menit.
+# Bukan unit test — ini yang bilang "layanannya lagi hidup atau nggak".
+#
+# Alur satu jalannya:
+#   1. buktikan dulu runner-nya layak mengukur (UDP/TCP 53 keluar, port 53 nggak dibajak);
+#   2. temukan sendiri daftar nameserver dari delegasi induk (nambah ns2 = nol perubahan kode);
+#   3. tembak tiap nameserver satu-satu, UDP dan TCP, IPv4 dan IPv6;
+#   4. sehat -> badge hijau & issue insiden ditutup; sakit -> job merah, issue dibuka, notif dikirim.
+#
+# Kode keluar dari monitor/periksa.js dibedakan sengaja:
+#   1 = nameserver bermasalah (ini insiden)
+#   3 = HASIL TIDAK SAH, jaringan runner-nya yang bau (ini masalah alat ukur, BUKAN insiden)
+
+on:
+  schedule:
+    # Tiap 30 menit. GitHub sering telat beberapa menit di jam sibuk — itu wajar,
+    # yang penting bukan presisi jadwalnya tapi ada mata yang ngelirik terus.
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      zones:
+        description: "Zone yang diperiksa (dipisah koma)"
+        default: "a-i.sh,a-i.st"
+      nameservers:
+        description: "Paksa daftar nameserver, format nama@ip (buat ns baru yang belum didelegasikan)"
+        default: ""
+      transports:
+        description: "Transport yang diuji"
+        default: "udp,tcp"
+  push:
+    # Kalau alat ukurnya sendiri diubah, langsung dibuktikan di jalur nyata.
+    paths:
+      - "monitor/**"
+      - "src/**"
+      - ".github/workflows/nameservers.yml"
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: nameservers
+  cancel-in-progress: false
+
+jobs:
+  periksa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Ditaruh di level job supaya bisa dipakai di `if:` step — context `secrets`
+    # nggak tersedia di `if:` step, tapi `env` tersedia.
+    env:
+      GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+      WA_WEBHOOK: ${{ secrets.WA_WEBHOOK }}
+    outputs:
+      status: ${{ steps.monitor.outputs.status }}
+      ringkas: ${{ steps.monitor.outputs.ringkas }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Asumsi "runner GitHub boleh kirim UDP 53 keluar" itu benar hari ini, tapi jangan
+      # dipercaya buta: dibuktikan tiap jalan. Kalau suatu saat GitHub (atau egress filter
+      # semacam harden-runner) nutup port 53, langkah ini yang merah duluan dan alasannya
+      # kebaca — bukan monitoring yang salah nuduh nameserver mati.
+      - name: Buktikan runner layak mengukur
+        run: node monitor/kemampuan.js
+
+      - name: Periksa nameserver produksi
+        id: monitor
+        env:
+          ZONES: ${{ inputs.zones || 'a-i.sh,a-i.st' }}
+          NAMESERVERS: ${{ inputs.nameservers || '' }}
+          TRANSPORTS: ${{ inputs.transports || 'udp,tcp' }}
+          # Runner GitHub-hosted nggak punya jalan keluar IPv6. "auto" bikin pemeriksaan v6
+          # dilewati dengan alasan tercatat, bukan dihitung gagal. Ganti ke "on" kalau
+          # nanti pindah ke runner yang beneran punya IPv6.
+          IPV6: auto
+          TIMEOUT: "4000"
+          JSON_KE: hasil.json
+        run: |
+          set +e
+          node monitor/periksa.js
+          KODE=$?
+          set -e
+          case "$KODE" in
+            0) STATUS=SEHAT ;;
+            1) STATUS=BERMASALAH ;;
+            3) STATUS=TIDAK_SAH ;;
+            *) STATUS=ERROR ;;
+          esac
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "ringkas=$(node -e 'const h=require("./hasil.json");console.log(`lulus ${h.lulus||0} gagal ${h.gagal||0}`)' 2>/dev/null || echo '-')" >> "$GITHUB_OUTPUT"
+          if [ "$STATUS" = "TIDAK_SAH" ]; then
+            echo "::error title=Alat ukur bermasalah::Jaringan runner membajak/memblokir port 53. Ini BUKAN tanda nameserver mati — hasil run ini nggak sah."
+          fi
+          [ "$KODE" -eq 0 ]
+
+      - name: Simpan hasil mentah
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hasil-monitoring
+          path: hasil.json
+          retention-days: 30
+
+      # Badge berwarna di README lewat shields.io "endpoint". Opsional: kalau secret
+      # GIST_TOKEN belum diisi, langkah ini dilewati dan README tetap boleh pakai badge
+      # bawaan GitHub (lihat docs/monitoring-eksternal.md).
+      - name: Perbarui badge (gist)
+        if: always() && env.GIST_TOKEN != ''
+        env:
+          GIST_ID: ${{ vars.BADGE_GIST_ID }}
+          STATUS: ${{ steps.monitor.outputs.status }}
+          RINGKAS: ${{ steps.monitor.outputs.ringkas }}
+        run: |
+          case "$STATUS" in
+            SEHAT)      PESAN="up"; WARNA="brightgreen" ;;
+            BERMASALAH) PESAN="down"; WARNA="red" ;;
+            TIDAK_SAH)  PESAN="unverified"; WARNA="lightgrey" ;;
+            *)          PESAN="error"; WARNA="orange" ;;
+          esac
+          node -e '
+            const [pesan, warna] = process.argv.slice(1);
+            const isi = JSON.stringify({ schemaVersion: 1, label: "nameservers", message: pesan, color: warna });
+            require("fs").writeFileSync("badge-payload.json", JSON.stringify({ files: { "nameservers.json": { content: isi } } }));
+          ' "$PESAN" "$WARNA"
+          curl -sS -X PATCH \
+            -H "Authorization: Bearer $GIST_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/gists/$GIST_ID" \
+            -d @badge-payload.json > /dev/null
+
+      # Satu issue insiden yang dipakai ulang, bukan satu issue tiap 30 menit.
+      - name: Buka/segarkan issue insiden
+        if: failure() && steps.monitor.outputs.status == 'BERMASALAH'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JUDUL: "Nameserver bermasalah"
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          NOMOR=$(gh issue list --state open --label monitoring --json number,title \
+            --jq ".[] | select(.title==\"$JUDUL\") | .number" | head -1)
+          BADAN="Monitoring terjadwal gagal. Detail: $RUN"
+          if [ -n "$NOMOR" ]; then
+            gh issue comment "$NOMOR" --body "$BADAN"
+          else
+            gh issue create --title "$JUDUL" --label monitoring --body "$BADAN"
+          fi
+
+      - name: Tutup issue insiden kalau sudah pulih
+        if: success() && steps.monitor.outputs.status == 'SEHAT'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JUDUL: "Nameserver bermasalah"
+        run: |
+          NOMOR=$(gh issue list --state open --label monitoring --json number,title \
+            --jq ".[] | select(.title==\"$JUDUL\") | .number" | head -1)
+          if [ -n "$NOMOR" ]; then
+            gh issue close "$NOMOR" --comment "Pulih: monitoring terjadwal hijau lagi."
+          fi
+
+      # Notifikasi cepat ke WhatsApp lewat gateway sendiri (wafa.st / baleswa).
+      # Sengaja dipisah dari kondisi TIDAK_SAH: jangan bangunin orang tengah malam
+      # gara-gara jaringan runner-nya yang bau.
+      - name: Kabari WhatsApp
+        if: failure() && steps.monitor.outputs.status == 'BERMASALAH' && env.WA_WEBHOOK != ''
+        env:
+          RINGKAS: ${{ steps.monitor.outputs.ringkas }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          curl -sS -X POST "$WA_WEBHOOK" \
+            -H 'content-type: application/json' \
+            -d "$(node -e 'console.log(JSON.stringify({ text: `Open-Domain: nameserver bermasalah (${process.env.RINGKAS}). ${process.env.RUN}` }))')" \
+            > /dev/null
