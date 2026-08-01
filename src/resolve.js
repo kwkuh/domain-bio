@@ -27,12 +27,16 @@ export function resolve(q, cfg) {
   // wajib punya A record sendiri, kalau tidak delegasinya buntu: resolver butuh alamat
   // nameserver untuk bertanya, tapi alamat itu cuma bisa ditanyakan ke nameserver itu.
   // Registry menutup lingkaran ini lewat glue, dan kita harus menjawab yang cocok.
-  if (cfg.selfIp && Array.isArray(cfg.ns)) {
+  if ((cfg.selfIp || cfg.selfIp6) && Array.isArray(cfg.ns)) {
     const nama = String(q.name).toLowerCase().replace(/\.$/, '');
     const cocok = cfg.ns.some((h) => String(h).toLowerCase().replace(/\.$/, '') === nama);
     if (cocok && matchZone(nama, zones)) {
-      if (t === TYPE.A || t === TYPE.ANY) answers.push(answerRecord(TYPE.A, cfg.ttl, ipv4ToBytes(cfg.selfIp)));
-      if (answers.length === 0) authority.push(soa());
+      if (t === TYPE.A && cfg.selfIp) answers.push(answerRecord(TYPE.A, cfg.ttl, ipv4ToBytes(cfg.selfIp)));
+      // AAAA nameserver bukan pemanis: resolver IPv6-only nggak punya jalan lain
+      // sampai ke sini, dan RFC 8109 bikin resolver milih nameserver yang punya
+      // dua-duanya. Tanpa ini, klien IPv6-only lihat zone-nya seolah mati.
+      if (t === TYPE.AAAA && cfg.selfIp6) answers.push(answerRecord(TYPE.AAAA, cfg.ttl, ipv6ToBytes(cfg.selfIp6)));
+      if (answers.length === 0) authority.push(soa()); // NODATA, bukan NXDOMAIN
       return buildResponse(q, { answers, authority });
     }
   }

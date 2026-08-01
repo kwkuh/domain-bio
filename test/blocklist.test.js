@@ -147,3 +147,28 @@ test('nameserver in-zone punya A record sendiri (kalau tidak, delegasi buntu)', 
   // tanpa selfIp, nama itu bukan pola IP -> NXDOMAIN
   assert.equal(rcode(resolve(tanya('ns1.a-i.sh'), cfgDasar)), RCODE.NXDOMAIN);
 });
+
+test('nameserver in-zone juga punya AAAA (klien IPv6-only butuh jalan masuk)', () => {
+  const cfg = { ...cfgDasar, selfIp: '167.235.234.220', selfIp6: '2a01:4f8:c015:8800::1' };
+  for (const ns of ['ns1.a-i.sh', 'ns2.a-i.st']) {
+    const r = resolve(tanya(ns, TYPE.AAAA), cfg);
+    assert.equal(rcode(r), RCODE.OK, `${ns} AAAA harus NOERROR`);
+    assert.equal(jumlahJawaban(r), 1, `${ns} harus punya satu AAAA`);
+  }
+});
+
+test('tipe yang tidak dipunyai nameserver -> NODATA, bukan NXDOMAIN', () => {
+  // NXDOMAIN di sini berbahaya: resolver menyimpan "nama ini tidak ada" secara
+  // negatif dan bisa berhenti menanyakan A/AAAA-nya juga.
+  const cfg = { ...cfgDasar, selfIp: '167.235.234.220' };
+  const r = resolve(tanya('ns1.a-i.sh', TYPE.TXT), cfg);
+  assert.equal(rcode(r), RCODE.OK);
+  assert.equal(jumlahJawaban(r), 0);
+});
+
+test('AAAA nameserver tidak muncul kalau selfIp6 tidak diisi', () => {
+  const cfg = { ...cfgDasar, selfIp: '167.235.234.220' };
+  const r = resolve(tanya('ns1.a-i.sh', TYPE.AAAA), cfg);
+  assert.equal(rcode(r), RCODE.OK, 'tetap NODATA, bukan NXDOMAIN');
+  assert.equal(jumlahJawaban(r), 0);
+});
