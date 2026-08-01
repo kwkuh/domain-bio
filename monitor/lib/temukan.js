@@ -88,8 +88,18 @@ export async function temukanDariInduk(zone, { transport = 'udp', timeout = 4000
   throw new Error(`kelamaan turun tanpa ketemu delegasi buat ${target}`);
 }
 
-/** Cari A/AAAA sebuah hostname lewat jalan-turun dari root (tanpa resolver rekursif). */
-export async function alamatNS(host, { transport = 'udp', timeout = 4000, ipv6 = true } = {}) {
+/**
+ * Cari A/AAAA sebuah hostname lewat jalan-turun dari root (tanpa resolver rekursif).
+ *
+ * 🚨 AAAA SELALU dicari, apa pun kemampuan jaringan pengukur. Pertanyaannya
+ * "apakah nameserver ini PUNYA alamat IPv6", dan itu sifat layanan yang diperiksa —
+ * bukan sifat jaringan kita. Query-nya sendiri jalan di atas IPv4, jadi runner
+ * tanpa jalan keluar IPv6 tetap bisa menjawabnya dengan benar.
+ *
+ * Yang boleh dimatikan oleh ketiadaan IPv6 cuma MENEMBAK server lewat IPv6, dan
+ * itu diputuskan di temukanNameserver, bukan di sini.
+ */
+export async function alamatNS(host, { transport = 'udp', timeout = 4000 } = {}) {
   const nama = bersih(host);
   const bagian = nama.split('.');
   // Cari zone induk terdekat yang punya delegasi, lalu tanya server-nya langsung.
@@ -104,10 +114,8 @@ export async function alamatNS(host, { transport = 'udp', timeout = 4000, ipv6 =
         const out = [];
         const a = await tanya({ ip, name: nama, type: TYPE.A, transport, timeout });
         out.push(...ambil(a.answers, TYPE.A).map((rr) => rr.data));
-        if (ipv6) {
-          const aaaa = await tanya({ ip, name: nama, type: TYPE.AAAA, transport, timeout }).catch(() => null);
-          if (aaaa) out.push(...ambil(aaaa.answers, TYPE.AAAA).map((rr) => rr.data));
-        }
+        const aaaa = await tanya({ ip, name: nama, type: TYPE.AAAA, transport, timeout }).catch(() => null);
+        if (aaaa) out.push(...ambil(aaaa.answers, TYPE.AAAA).map((rr) => rr.data));
         if (out.length) return out;
       } catch { /* coba server berikutnya */ }
     }
@@ -135,12 +143,14 @@ async function doh(nama, tipe) {
   throw new Error(`semua resolver DoH gagal: ${salahTerakhir?.message}`);
 }
 
-export async function temukanDariDoH(zone, { ipv6 = true } = {}) {
+// AAAA tetap ditanyakan walau jaringan pengukur nggak punya IPv6 — DoH jalan di
+// atas HTTPS/IPv4, dan yang ditanya adalah punya-atau-nggak, bukan bisa-dijangkau.
+export async function temukanDariDoH(zone) {
   const ns = [...new Set(await doh(bersih(zone), 'NS'))].sort();
   const glue = {};
   for (const n of ns) {
     const a = await doh(n, 'A').catch(() => []);
-    const aaaa = ipv6 ? await doh(n, 'AAAA').catch(() => []) : [];
+    const aaaa = await doh(n, 'AAAA').catch(() => []);
     glue[n] = [...a, ...aaaa];
   }
   return { sumber: 'doh', ns, glue, jejak: ['lewat DoH (HTTPS) — dipakai buat nemu, bukan buat menilai'] };
@@ -170,24 +180,36 @@ export async function temukanNameserver(zone, opsi = {}) {
 
   let hasil;
   if (daftarEnv || mode === 'env') hasil = temukanDariEnv(daftarEnv || '');
-  else if (mode === 'doh') hasil = await temukanDariDoH(zone, { ipv6 });
+  else if (mode === 'doh') hasil = await temukanDariDoH(zone);
   else {
     try { hasil = await temukanDariInduk(zone, { transport, timeout }); }
     catch (e) {
       if (mode === 'induk') throw e;
-      hasil = await temukanDariDoH(zone, { ipv6 });
+      hasil = await temukanDariDoH(zone);
       hasil.jejak.unshift(`jalan-turun dari root gagal (${e.message}), balik ke DoH`);
     }
   }
 
-  // Lengkapi alamat tiap NS yang belum punya glue.
+  // Lengkapi alamat tiap NS yang belum punya glue. Ini kena ke nameserver
+  // out-of-bailiwick: ns2.a-i.st nggak muncul di bagian additional delegasi
+  // a-i.sh (registry cuma nge-glue nama yang ada DI DALAM zone itu), jadi
+  // alamatnya harus dicari sendiri.
   for (const n of hasil.ns) {
     if (hasil.glue[n]?.length) continue;
     hasil.glue[n] = hasil.sumber === 'doh'
-      ? [...(await doh(n, 'A').catch(() => [])), ...(ipv6 ? await doh(n, 'AAAA').catch(() => []) : [])]
-      : await alamatNS(n, { transport, timeout, ipv6 }).catch(() => []);
+      ? [...(await doh(n, 'A').catch(() => [])), ...(await doh(n, 'AAAA').catch(() => []))]
+      : await alamatNS(n, { transport, timeout }).catch(() => []);
   }
 
+  // 🚨 `ipv6` cuma memutuskan siapa yang DITEMBAK, bukan apa yang DIKETAHUI.
+  // glue tetap lengkap (A + AAAA) supaya pemeriksaan tingkat zone "tiap
+  // nameserver punya alamat IPv6" menilai layanannya, bukan jaringan pengukur.
+  //
+  // Ini bukan kehati-hatian teoretis: versi sebelumnya menyembunyikan AAAA saat
+  // runner-nya nggak punya IPv6, lalu melaporkan "belum ada AAAA buat ns2.a-i.st"
+  // sebagai insiden — padahal AAAA-nya ada. Alat ukur yang menyalahkan benda yang
+  // diukur atas keterbatasan dirinya sendiri persis yang bikin monitor nggak bisa
+  // dipercaya, dan itu yang mau dihindari seluruh berkas ini.
   hasil.server = [];
   for (const n of hasil.ns) {
     for (const ip of hasil.glue[n] || []) {
