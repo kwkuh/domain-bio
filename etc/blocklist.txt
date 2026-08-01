@@ -1,21 +1,21 @@
-# Blocklist Open-Domain — satu aturan per baris, "#" komentar.
+# Open-Domain blocklist — one rule per line, "#" starts a comment.
 #
-#   ip     203.0.113.10       blokir satu alamat
-#   cidr   203.0.113.0/24     blokir satu blok
-#   allow  203.0.113.5        pengecualian, selalu menang atas blokir
+#   ip     203.0.113.10       block one address
+#   cidr   203.0.113.0/24     block one block
+#   allow  203.0.113.5        an exception; always beats a block
 #
-# Keputusan diambil atas ALAMAT HASIL, bukan atas nama. Jadi memblokir 203.0.113.10
-# otomatis menutup 203-0-113-10, cb00710a (heksa), apa-pun.203.0.113.10, dan
-# 0203.0.113.010 sekaligus — tidak ada bentuk penulisan yang bisa menyelinap.
+# Decisions are made on the RESULTING ADDRESS, never on the name. So blocking
+# 203.0.113.10 also closes 203-0-113-10, cb00710a (hex), anything.203.0.113.10 and
+# 0203.0.113.010 in one go — no spelling can slip past.
 #
-# Setelah mengubah berkas ini:  systemctl kill -s HUP open-domain
-# (atau tunggu paling lama 15 detik, perubahan mtime terbaca sendiri)
+# After editing this file:  systemctl kill -s HUP open-domain
+# (or wait at most 15 seconds; the mtime change is noticed on its own)
 #
-# Aturan asli dicatat di riwayat git — itu bukti berstempel waktu bahwa laporan
-# penyalahgunaan ditindak, dan tidak bisa dibuat-buat belakangan.
+# Every rule is recorded in git history — timestamped evidence that an abuse report
+# was acted on, which cannot be manufactured after the fact.
 
-# Alamat dokumentasi RFC 5737 — dipakai contoh di situs, tidak boleh benar-benar
-# diblokir supaya contoh di dokumentasi tetap bisa dicoba orang.
+# RFC 5737 documentation address — used as the example on the website, so it must
+# never actually be blocked or the documented example stops working for people.
 allow 203.0.113.10
 
-# (belum ada laporan penyalahgunaan yang ditindak)
+# (no abuse reports acted on yet)
