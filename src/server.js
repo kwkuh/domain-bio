@@ -7,6 +7,7 @@ import { parseQuery, buildTruncated } from './wire.js';
 import { resolve } from './resolve.js';
 import { bukaDaftar } from './blocklist.js';
 import { bikinPembatas } from './ratelimit.js';
+import { bukaCatatan } from './querylog.js';
 
 // ---- Config dari env ----
 // ZONES = daftar zone yang kita layani, dipisah koma. Satu proses bisa otoritatif
@@ -41,6 +42,32 @@ const RRL_PERDETIK = Number(process.env.RRL_PERDETIK ?? 100);
 const RRL_LEDAKAN = process.env.RRL_LEDAKAN ? Number(process.env.RRL_LEDAKAN) : null;
 const RRL_SLIP = Number(process.env.RRL_SLIP ?? 5);
 
+/**
+ * Serial SOA. Dulu `Date.now()/1000`, dan itu diam-diam salah: serialnya melompat
+ * TIAP RESTART, dan dua nameserver TIDAK AKAN PERNAH punya angka yang sama. Begitu
+ * ns2 menyala, pemeriksaan "serial seragam" merah permanen, dan alat pihak ketiga
+ * (Zonemaster, dnsviz) melaporkannya sebagai zone yang tidak konsisten.
+ *
+ * Bentuk berbasis tanggal YYYYMMDDnn mengikuti RFC 1912 §2.2: sama di semua mesin,
+ * naik secara wajar, dan tidak berubah gara-gara proses dinyalakan ulang.
+ * SOA_SERIAL boleh menimpanya kalau nanti ada proses rilis yang menetapkannya.
+ */
+function serialHariIni() {
+  const d = new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const t = String(d.getUTCDate()).padStart(2, '0');
+  return Number(`${y}${m}${t}01`);
+}
+const SERIAL = Number(process.env.SOA_SERIAL) || serialHariIni();
+
+// Catatan query. Mati kalau QUERYLOG tidak diisi.
+const catatan = bukaCatatan({
+  berkas: process.env.QUERYLOG || null,
+  penuh: process.env.QUERYLOG_PENUH === '1',
+  log: (m) => console.log(m),
+});
+
 const pembatas = bikinPembatas({
   perDetik: RRL_PERDETIK,
   ledakan: RRL_LEDAKAN,
@@ -61,7 +88,7 @@ const cfg = {
   retry: Number(process.env.SOA_RETRY || 600),
   expire: Number(process.env.SOA_EXPIRE || 604800),
   minttl: Number(process.env.SOA_MINTTL || 60),
-  serial: Math.floor(Date.now() / 1000), // serial naik tiap restart
+  serial: SERIAL,
   apexIp: process.env.APEX_IP || null, // opsional: A record buat apex (landing page)
   selfIp: SELF_IP && SELF_IP !== '0.0.0.0' ? SELF_IP : null,
   selfIp6: SELF_IP6 && SELF_IP6 !== '::' ? SELF_IP6 : null,
@@ -71,10 +98,17 @@ const cfg = {
 
 const TYPE_NAME = { 1: 'A', 2: 'NS', 6: 'SOA', 16: 'TXT', 28: 'AAAA', 255: 'ANY' };
 
-function handle(msg, from) {
+function handle(msg, from, v6 = false, transport = 'udp') {
   const q = parseQuery(msg); // lempar kalau paket rusak
   if (DEBUG) console.log(`${from} ${q.name} ${TYPE_NAME[q.qtype] || q.qtype}`);
-  return resolve(q, cfg);
+  const res = resolve(q, cfg);
+  if (catatan.aktif) {
+    catatan.catat({
+      ip: from, v6, nama: q.name, qtype: TYPE_NAME[q.qtype] || q.qtype,
+      rcode: res.readUInt16BE(2) & 0x0f, hasil: 'lolos', transport,
+    });
+  }
+  return res;
 }
 
 // ---- UDP ----
@@ -91,12 +125,22 @@ function pasangUdp(keluarga, alamat) {
       // memakan CPU, dan yang 'buang' tidak boleh menghasilkan paket sama sekali —
       // paket itulah yang akan mendarat di korban kalau alamatnya dipalsukan.
       const putusan = pembatas.putuskan(rinfo.address, v6);
-      if (putusan === 'buang') return;
-      if (putusan === 'potong') {
+      if (putusan !== 'lolos') {
+        // Query yang dibatasi tetap dicatat kalau catatan menyala. Justru ini yang
+        // paling berguna waktu ada insiden: pola "siapa yang membanjiri" cuma
+        // kelihatan dari query yang DITOLAK, dan itu persis yang hilang kalau
+        // pembatas dipasang sebelum pencatat.
+        if (catatan.aktif) {
+          try {
+            const q = parseQuery(msg);
+            catatan.catat({ ip: rinfo.address, v6, nama: q.name, qtype: q.qtype, rcode: null, hasil: putusan, transport: 'udp' });
+          } catch { /* paket rusak: tidak ada yang bisa dicatat */ }
+        }
+        if (putusan === 'buang') return;
         sock.send(buildTruncated(parseQuery(msg)), rinfo.port, rinfo.address);
         return;
       }
-      sock.send(handle(msg, rinfo.address), rinfo.port, rinfo.address);
+      sock.send(handle(msg, rinfo.address, v6, 'udp'), rinfo.port, rinfo.address);
     } catch (err) {
       if (DEBUG) console.error(`${keluarga}:`, err.message);
     }
@@ -145,7 +189,7 @@ function bikinTcp() {
         const msg = buf.subarray(2, 2 + len);
         buf = buf.subarray(2 + len);
         try {
-          const res = handle(msg, sock.remoteAddress);
+          const res = handle(msg, sock.remoteAddress, sock.remoteFamily === 'IPv6', 'tcp');
           const framed = Buffer.alloc(2 + res.length);
           framed.writeUInt16BE(res.length, 0);
           res.copy(framed, 2);
