@@ -4,9 +4,9 @@ import { ringkas } from '../monitor/stats.js';
 
 const baris = (o) => JSON.stringify({ t: '2026-08-01T11:00:00Z', c: '8.8.8.0/24', q: 'A', r: 0, h: 'pass', x: 'udp', ...o });
 
-// ---- penggolongan: bagian yang menentukan angka boleh dipercaya atau tidak ----
+// ---- classification: what decides whether the numbers can be trusted ----
 
-test('cuma nama yang menghasilkan alamat yang dihitung sebagai pemakaian', () => {
+test('only names that produce an address count as usage', () => {
   const r = ringkas([
     baris({ n: '1.2.3.4.a-i.st' }),
     baris({ n: '5-6-7-8.a-i.sh' }),
@@ -17,10 +17,10 @@ test('cuma nama yang menghasilkan alamat yang dihitung sebagai pemakaian', () =>
   assert.equal(r.golongan.infrastruktur, 0);
 });
 
-test('🚨 pencarian ns1/ns2 TIDAK boleh dihitung sebagai pemakaian', () => {
-  // Terukur di hari pertama produksi: 1.378 dari 3.772 query cuma resolver mencari
-  // alamat nameserver kita. Kalau ini ikut dihitung, angka "pemakaian" naik sendiri
-  // setiap kali ada yang me-resolve zone-nya — tanpa satu pun orang memakainya.
+test('lookups of ns1/ns2 must NOT count as usage', () => {
+  // Measured on the first day in production: 1,378 of 3,772 queries were only
+  // resolvers looking up our nameserver addresses. Counting those makes "usage"
+  // climb every time someone resolves the zone -- with nobody using the service.
   const r = ringkas([
     baris({ n: 'ns1.a-i.sh' }),
     baris({ n: 'ns2.a-i.st', q: 'AAAA' }),
@@ -30,7 +30,7 @@ test('🚨 pencarian ns1/ns2 TIDAK boleh dihitung sebagai pemakaian', () => {
   ]);
   assert.equal(r.golongan.infrastruktur, 4);
   assert.equal(r.golongan.layanan, 1);
-  assert.equal(r.tujuanUnik, 1, 'alamat tujuan cuma dihitung dari golongan layanan');
+  assert.equal(r.tujuanUnik, 1, 'target addresses are counted from the service class only');
 });
 
 test('pemindai dan errors ketik masuk derau, bukan pemakaian', () => {
@@ -44,7 +44,7 @@ test('pemindai dan errors ketik masuk derau, bukan pemakaian', () => {
   assert.equal(r.tujuanUnik, 0);
 });
 
-test('nama di luar zone masuk golongan ditolak', () => {
+test('names outside the zone are classified as refused', () => {
   const r = ringkas([baris({ n: 'google.com' }), baris({ n: 'example.org' })]);
   assert.equal(r.golongan.ditolak, 2);
   assert.equal(r.golongan.layanan, 0);
@@ -52,10 +52,10 @@ test('nama di luar zone masuk golongan ditolak', () => {
 
 // ---- lalu lintas sendiri ----
 
-test('🚨 lalu lintas kita sendiri dibuang sebelum dihitung', () => {
-  // Monitor jalan tiap 30 menit dengan alamat acak. Tanpa saringan ini, grafiknya
-  // naik terus selamanya tanpa satu pun pengguna nyata — grafik yang naik cuma
-  // karena kita menatapnya.
+test('our own traffic is discarded before counting', () => {
+  // The monitor runs every 30 minutes with random addresses. Without this filter
+  // the graph climbs forever with no real users -- a graph that goes up only
+  // because we are looking at it.
   const r = ringkas([
     baris({ n: '1.2.3.4.a-i.st', c: '5.78.141.0/24' }),
     baris({ n: '9.9.9.9.a-i.st', c: '5.78.141.0/24' }),
@@ -63,14 +63,14 @@ test('🚨 lalu lintas kita sendiri dibuang sebelum dihitung', () => {
   ], { abaikanBlok: ['5.78.141.'] });
   assert.equal(r.diabaikan, 2);
   assert.equal(r.query, 1);
-  assert.equal(r.tujuanUnik, 1, 'alamat dari lalu lintas sendiri tidak boleh ikut terhitung');
+  assert.equal(r.tujuanUnik, 1, 'addresses from our own traffic must not be counted');
 });
 
 // ---- alamat tujuan unik: penanda pertumbuhan ----
 
-test('alamat yang sama lewat ejaan berbeda dihitung SEKALI', () => {
-  // 1.2.3.4 dan 1-2-3-4 dan 01020304 menunjuk mesin yang sama. Menghitungnya tiga
-  // kali membuat pertumbuhan terlihat tiga kali lipat dari yang sebenarnya.
+test('the same address in different spellings counts ONCE', () => {
+  // 1.2.3.4 and 1-2-3-4 and 01020304 name the same machine. Counting it three
+  // times makes growth look three times larger than it is.
   const r = ringkas([
     baris({ n: '1.2.3.4.a-i.st' }),
     baris({ n: '1-2-3-4.a-i.sh' }),
@@ -78,10 +78,10 @@ test('alamat yang sama lewat ejaan berbeda dihitung SEKALI', () => {
     baris({ n: 'app.1.2.3.4.a-i.st' }),
   ]);
   assert.equal(r.golongan.layanan, 4);
-  assert.equal(r.tujuanUnik, 1, 'empat ejaan, satu mesin');
+  assert.equal(r.tujuanUnik, 1, 'four spellings, one machine');
 });
 
-test('alamat berbeda dihitung terpisah', () => {
+test('different addresses count separately', () => {
   const r = ringkas([
     baris({ n: '1.2.3.4.a-i.st' }),
     baris({ n: '5.6.7.8.a-i.st' }),
@@ -90,25 +90,25 @@ test('alamat berbeda dihitung terpisah', () => {
   assert.equal(r.tujuanUnik, 3);
 });
 
-// ---- keluaran tidak boleh membocorkan apa pun ----
+// ---- the output must never leak anything ----
 
-test('🚨 keluaran cuma berisi angka — nol nama, nol alamat, nol blok', () => {
+test('the output is numbers only -- no names, no addresses, no blocks', () => {
   const r = ringkas([
     baris({ n: 'rahasia-banget.203.0.113.77.a-i.st', c: '198.51.100.0/24' }),
     baris({ n: 'ns1.a-i.sh', c: '2001:db8::/48' }),
   ]);
   const teks = JSON.stringify(r);
-  assert.ok(!teks.includes('rahasia-banget'), 'nama query bocor ke ringkasan');
-  assert.ok(!teks.includes('203.0.113.77'), 'alamat tujuan bocor ke ringkasan');
-  assert.ok(!teks.includes('198.51.100'), 'blok resolver bocor ke ringkasan');
-  assert.ok(!teks.includes('2001:db8'), 'blok resolver v6 bocor ke ringkasan');
-  // Yang boleh ada cuma jumlahnya.
+  assert.ok(!teks.includes('rahasia-banget'), 'the query name leaked into the summary');
+  assert.ok(!teks.includes('203.0.113.77'), 'the target address leaked into the summary');
+  assert.ok(!teks.includes('198.51.100'), 'the resolver block leaked into the summary');
+  assert.ok(!teks.includes('2001:db8'), 'the v6 resolver block leaked into the summary');
+  // Only the counts are allowed through.
   assert.equal(r.tujuanUnik, 1);
   assert.equal(r.blokResolver, 1);
 });
 
-test('baris rusak dihitung terpisah, tidak menjatuhkan sisanya', () => {
+test('broken lines are counted separately and do not drop the rest', () => {
   const r = ringkas(['{bukan json', baris({ n: '1.2.3.4.a-i.st' }), '', '{}']);
   assert.equal(r.query, 1);
-  assert.equal(r.rusak, 2, 'baris rusak dan baris tanpa nama sama-sama dicatat rusak');
+  assert.equal(r.rusak, 2, 'broken lines and nameless lines both count as broken');
 });

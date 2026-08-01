@@ -34,7 +34,7 @@ const arcount = (b) => b.readUInt16BE(10);
 const ancount = (b) => b.readUInt16BE(6);
 const rcode = (b) => b.readUInt16BE(2) & 0x0f;
 
-// ---- membaca OPT dari query ----
+// ---- reading OPT out of a query ----
 
 test('query tanpa OPT: edns tidak terdeteksi', () => {
   assert.equal(parseQuery(bikinQuery('1.2.3.4.a-i.st')).edns, null);
@@ -118,8 +118,8 @@ test('ANY ber-EDNS0 tetap minimal (anti amplifikasi tidak boleh bocor lewat OPT)
 
 test('alamat klien disamarkan ke blok, bukan disimpan utuh', () => {
   assert.equal(anonymise('203.0.113.77'), '203.0.113.0/24');
-  // Dipanjangkan dulu, jadi bentuknya selalu empat-heksa penuh — lihat
-  // test/paket-rusak.test.js untuk alasannya.
+  // Expanded first, so the shape is always full four-hex groups -- see
+  // test/malformed-packets.test.js for the reasoning.
   assert.equal(anonymise('2a01:4f8:c015:8800::1', true), '2a01:04f8:c015::/48');
 });
 

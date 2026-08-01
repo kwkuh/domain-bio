@@ -9,7 +9,7 @@ test('IPv4 dotted', () => {
   assert.deepEqual(parseName('1.2.3.4.a-i.sh', Z), { kind: 'A', ip: '1.2.3.4', zone: 'a-i.sh' });
 });
 
-test('IPv4 dotted dengan prefix bebas', () => {
+test('dotted IPv4 with an arbitrary prefix', () => {
   assert.deepEqual(parseName('app.10.0.0.1.a-i.sh', Z), { kind: 'A', ip: '10.0.0.1', zone: 'a-i.sh' });
 });
 
@@ -47,7 +47,7 @@ test('trailing dot & huruf besar dinormalisasi', () => {
 
 // ---- multi-zone ----
 
-test('multi-zone: dua suffix dilayani proses yang sama', () => {
+test('multi-zone: two suffixes served by one process', () => {
   assert.deepEqual(parseName('1.2.3.4.a-i.sh', ZS), { kind: 'A', ip: '1.2.3.4', zone: 'a-i.sh' });
   assert.deepEqual(parseName('1.2.3.4.a-i.st', ZS), { kind: 'A', ip: '1.2.3.4', zone: 'a-i.st' });
 });
@@ -56,11 +56,11 @@ test('multi-zone: apex tiap zone kebaca sebagai apex-nya sendiri', () => {
   assert.deepEqual(parseName('a-i.st', ZS), { kind: 'apex', zone: 'a-i.st' });
 });
 
-test('multi-zone: di luar semua zone -> refused', () => {
+test('multi-zone: outside every zone -> refused', () => {
   assert.deepEqual(parseName('1.2.3.4.example.com', ZS), { kind: 'refused' });
 });
 
-test('matchZone: match terpanjang menang kalau zone saling menaungi', () => {
+test('matchZone: the longest match wins when zones nest', () => {
   assert.equal(matchZone('1.2.3.4.dev.a-i.sh', ['a-i.sh', 'dev.a-i.sh']), 'dev.a-i.sh');
   assert.equal(matchZone('1.2.3.4.a-i.sh', ['a-i.sh', 'dev.a-i.sh']), 'a-i.sh');
 });

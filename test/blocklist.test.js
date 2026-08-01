@@ -9,45 +9,45 @@ const ZONES = ['a-i.st', 'a-i.sh'];
 
 // ---- lapisan aturan ----
 
-test('ip: cocok persis', () => {
+test('ip: exact match', () => {
   const d = parseRules('ip 203.0.113.10');
   assert.equal(d.isBlocked('203.0.113.10'), true);
   assert.equal(d.isBlocked('203.0.113.11'), false);
 });
 
-test('cidr: batas blok dihormati', () => {
+test('cidr: block boundaries are respected', () => {
   const d = parseRules('cidr 203.0.113.0/24');
   assert.equal(d.isBlocked('203.0.113.0'), true);
   assert.equal(d.isBlocked('203.0.113.255'), true);
   assert.equal(d.isBlocked('203.0.114.0'), false);
 });
 
-test('cidr /32 dan /0', () => {
+test('cidr /32 and /0', () => {
   assert.equal(parseRules('cidr 1.2.3.4/32').isBlocked('1.2.3.4'), true);
   assert.equal(parseRules('cidr 1.2.3.4/32').isBlocked('1.2.3.5'), false);
   assert.equal(parseRules('cidr 0.0.0.0/0').isBlocked('8.8.8.8'), true);
 });
 
-test('allow selalu menang atas blokir', () => {
+test('allow always beats block', () => {
   const d = parseRules('cidr 203.0.113.0/24\nallow 203.0.113.5');
   assert.equal(d.isBlocked('203.0.113.4'), true);
   assert.equal(d.isBlocked('203.0.113.5'), false);
 });
 
-test('IPv6: ip dan cidr', () => {
+test('IPv6: ip and cidr', () => {
   assert.equal(parseRules('ip 2001:db8::1').isBlocked('2001:db8::1', true), true);
   assert.equal(parseRules('ip 2001:db8::1').isBlocked('2001:db8::2', true), false);
   assert.equal(parseRules('cidr 2001:db8::/32').isBlocked('2001:db8:ffff::9', true), true);
   assert.equal(parseRules('cidr 2001:db8::/32').isBlocked('2001:dead::9', true), false);
 });
 
-test('IPv4 dan IPv6 tidak saling mencemari', () => {
+test('IPv4 and IPv6 never contaminate each other', () => {
   const d = parseRules('cidr 0.0.0.0/0');
   assert.equal(d.isBlocked('1.2.3.4', false), true);
   assert.equal(d.isBlocked('2001:db8::1', true), false);
 });
 
-test('komentar, baris kosong, dan baris rusak diabaikan tanpa menjatuhkan sisanya', () => {
+test('comments, blank lines and broken lines are ignored without dropping the rest', () => {
   const d = parseRules(`
 # komentar
 ip 1.2.3.4      # komentar di ujung baris
@@ -62,9 +62,9 @@ cidr 5.6.7.0/24
   assert.equal(d.isBlocked('5.6.7.8'), true);
 });
 
-// ---- lapisan yang sebenarnya penting: tidak bisa ditembus lewat cara mengetik ----
+// ---- the layer that actually matters: no way around it through spelling ----
 
-test('SEMUA bentuk penulisan alamat yang sama ikut terblokir', () => {
+test('EVERY spelling of the same address is blocked too', () => {
   const d = parseRules('ip 1.2.3.4');
   const bentuk = [
     '1.2.3.4.a-i.st',            // titik
@@ -88,7 +88,7 @@ test('SEMUA bentuk penulisan alamat yang sama ikut terblokir', () => {
   }
 });
 
-test('alamat tetangga yang mirip TIDAK ikut terblokir', () => {
+test('a similar neighbouring address is NOT caught', () => {
   const d = parseRules('ip 1.2.3.4');
   for (const nama of ['1.2.3.40.a-i.st', '1.2.3.5.a-i.st', '11.2.3.4.a-i.st']) {
     const p = parseName(nama, ZONES);
@@ -111,27 +111,27 @@ const tanya = (nama, qtype = TYPE.A) => {
 const rcode = (buf) => buf.readUInt16BE(2) & 0x0f;
 const jumlahJawaban = (buf) => buf.readUInt16BE(6);
 
-test('nama yang isBlocked -> NXDOMAIN, bukan alamatnya', () => {
+test('a blocked name -> NXDOMAIN, never the address', () => {
   const cfg = { ...cfgDasar, blocklist: parseRules('ip 9.9.9.9') };
   assert.equal(rcode(resolve(tanya('9.9.9.9.a-i.st'), cfg)), RCODE.NXDOMAIN);
   assert.equal(rcode(resolve(tanya('9-9-9-9.a-i.sh'), cfg)), RCODE.NXDOMAIN, 'bentuk garis juga');
   assert.equal(rcode(resolve(tanya('8.8.8.8.a-i.st'), cfg)), RCODE.OK, 'yang lain tetap normal');
 });
 
-test('sinkhole: kalau diisi, blokir mengarah ke alamat penjelasan', () => {
+test('sinkhole: when set, a block points at an explanation address', () => {
   const cfg = { ...cfgDasar, blocklist: parseRules('ip 9.9.9.9'), sinkholeIp: '192.0.2.1' };
   const r = resolve(tanya('9.9.9.9.a-i.st'), cfg);
   assert.equal(rcode(r), RCODE.OK);
   assert.equal(jumlahJawaban(r), 1);
 });
 
-test('tanpa blocklist, perilaku lama tidak berubah', () => {
+test('with no blocklist, the previous behaviour is unchanged', () => {
   const r = resolve(tanya('9.9.9.9.a-i.st'), cfgDasar);
   assert.equal(rcode(r), RCODE.OK);
   assert.equal(jumlahJawaban(r), 1);
 });
 
-test('ANY dijawab minimal HINFO (RFC 8482, anti amplifikasi)', () => {
+test('ANY is answered with a minimal HINFO (RFC 8482, anti-amplification)', () => {
   const apexAny = resolve(tanya('a-i.st', TYPE.ANY), cfgDasar);
   assert.equal(jumlahJawaban(apexAny), 1, 'cuma satu record, bukan SOA+NS+A');
   const soaPenuh = resolve(tanya('a-i.st', TYPE.SOA), cfgDasar);
@@ -139,16 +139,16 @@ test('ANY dijawab minimal HINFO (RFC 8482, anti amplifikasi)', () => {
     `balasan ANY (${apexAny.length}B) harus lebih kecil dari SOA biasa (${soaPenuh.length}B)`);
 });
 
-test('nameserver in-zone punya A record sendiri (kalau tidak, delegasi buntu)', () => {
+test('an in-zone nameserver has its own A record (without it the delegation deadlocks)', () => {
   const cfg = { ...cfgDasar, selfIp: '167.235.234.220' };
   const r = resolve(tanya('ns1.a-i.sh'), cfg);
   assert.equal(rcode(r), RCODE.OK);
   assert.equal(jumlahJawaban(r), 1);
-  // tanpa selfIp, nama itu bukan pola IP -> NXDOMAIN
+  // without selfIp that name is not an IP pattern -> NXDOMAIN
   assert.equal(rcode(resolve(tanya('ns1.a-i.sh'), cfgDasar)), RCODE.NXDOMAIN);
 });
 
-test('nameserver in-zone juga punya AAAA (klien IPv6-only butuh jalan masuk)', () => {
+test('an in-zone nameserver also has an AAAA (IPv6-only clients need a way in)', () => {
   const cfg = { ...cfgDasar, selfIp: '167.235.234.220', selfIp6: '2a01:4f8:c015:8800::1' };
   for (const ns of ['ns1.a-i.sh', 'ns2.a-i.st']) {
     const r = resolve(tanya(ns, TYPE.AAAA), cfg);
@@ -157,16 +157,16 @@ test('nameserver in-zone juga punya AAAA (klien IPv6-only butuh jalan masuk)', (
   }
 });
 
-test('tipe yang tidak dipunyai nameserver -> NODATA, bukan NXDOMAIN', () => {
-  // NXDOMAIN di sini berbahaya: resolver menyimpan "nama ini tidak ada" secara
-  // negatif dan bisa berhenti menanyakan A/AAAA-nya juga.
+test('a type the nameserver does not have -> NODATA, not NXDOMAIN', () => {
+  // NXDOMAIN would be dangerous here: a resolver caches "this name does not exist"
+  // negatively and may stop asking for its A/AAAA as well.
   const cfg = { ...cfgDasar, selfIp: '167.235.234.220' };
   const r = resolve(tanya('ns1.a-i.sh', TYPE.TXT), cfg);
   assert.equal(rcode(r), RCODE.OK);
   assert.equal(jumlahJawaban(r), 0);
 });
 
-test('AAAA nameserver tidak muncul kalau selfIp6 tidak diisi', () => {
+test('the nameserver AAAA does not appear when selfIp6 is unset', () => {
   const cfg = { ...cfgDasar, selfIp: '167.235.234.220' };
   const r = resolve(tanya('ns1.a-i.sh', TYPE.AAAA), cfg);
   assert.equal(rcode(r), RCODE.OK, 'tetap NODATA, bukan NXDOMAIN');
