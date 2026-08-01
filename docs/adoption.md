@@ -67,7 +67,7 @@ Diurutkan dari yang paling mematikan:
 2. **Sertifikat gagal terbit.** Batas Let's Encrypt 50 sertifikat per registered domain
    per 7 hari adalah **kolam bersama** untuk seluruh pengguna `a-i.st`. Pengguna ke-51
    tidak melihat "kuota habis" — dia melihat layanan yang rusak. Permohonan penyesuaian
-   ada di `permohonan-letsencrypt.md` dan makan waktu berminggu-minggu; itu sebabnya
+   ada di `letsencrypt-rate-limit-request.md` dan makan waktu berminggu-minggu; itu sebabnya
    diajukan sebelum promosi, bukan sesudah.
 3. **Menjanjikan lebih dari yang benar.** Kategori ini dipakai oleh orang yang membaca
    dokumentasi dengan teliti. Satu klaim yang terbukti salah menghapus kepercayaan pada

@@ -19,7 +19,7 @@ const acak8 = () => Math.random().toString(36).slice(2, 10);
  *
  * 🚨 Ini bukan kerapian. `acak8()` memakai base36 [0-9a-z]; kalau kedelapan
  * karakternya kebetulan jatuh di [0-9a-f], hasilnya adalah **hex 8 digit yang sah**
- * dan server BENAR menjawabnya sebagai A record. Tesnya yang salah, bukan servernya.
+ * dan server BENAR menjawabnya sebagai A record. Tesnya yang errors, bukan servernya.
  *
  * Terukur: 1 dari 659 label. Pemeriksaan ini jalan 8x per run (4 server × 2 zone),
  * jadi 1,21% run berakhir merah tanpa ada yang rusak. Dengan jadwal 30 menit, itu
@@ -55,7 +55,7 @@ function wajib(syarat, pesan) { if (!syarat) throw new Error(pesan); }
 /** Pemeriksaan header yang berlaku buat SEMUA jawaban otoritatif. */
 function periksaHeaderOtoritatif(j, { bolehTanpaAA = false } = {}) {
   wajib(j.qr, 'QR mati — ini bukan paket jawaban');
-  wajib(bolehTanpaAA || j.aa, 'AA mati — jawaban dari server otoritatif wajib AA=1 (kalau nggak: salah zone, atau ada yang mencegat)');
+  wajib(bolehTanpaAA || j.aa, 'AA mati — jawaban dari server otoritatif wajib AA=1 (kalau nggak: errors zone, atau ada yang mencegat)');
   wajib(!j.ra, 'RA nyala — nameserver kita nggak boleh ngaku bisa rekursi (tanda jawaban resolver/pembajak)');
   wajib(!j.tc, 'TC nyala — jawaban kepotong padahal harusnya muat');
 }
@@ -225,7 +225,7 @@ export function susunKasusZone({ zone, delegasi, apexPerServer }) {
   tambah('serial SOA seragam di semua nameserver', async () => {
     const serial = Object.entries(apexPerServer).map(([k, v]) => [k, v.serial]);
     const unik = [...new Set(serial.map(([, s]) => s))];
-    wajib(unik.length <= 1, `serial beda-beda: ${serial.map(([k, s]) => `${k}=${s}`).join(', ')} — resolver bisa nganggep salah satu zone-nya basi`);
+    wajib(unik.length <= 1, `serial beda-beda: ${serial.map(([k, s]) => `${k}=${s}`).join(', ')} — resolver bisa nganggep errors satu zone-nya basi`);
     return `serial=${unik[0]}`;
   });
 

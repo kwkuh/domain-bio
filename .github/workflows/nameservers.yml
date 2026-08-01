@@ -9,7 +9,7 @@ name: Nameservers
 #   3. tembak tiap nameserver satu-satu, UDP dan TCP, IPv4 dan IPv6;
 #   4. sehat -> badge hijau & issue insiden ditutup; sakit -> job merah, issue dibuka, notif dikirim.
 #
-# Kode keluar dari monitor/periksa.js dibedakan sengaja:
+# Kode keluar dari monitor/check.js dibedakan sengaja:
 #   1 = nameserver bermasalah (ini insiden)
 #   3 = HASIL TIDAK SAH, jaringan runner-nya yang bau (ini masalah alat ukur, BUKAN insiden)
 
@@ -68,7 +68,7 @@ jobs:
       # semacam harden-runner) nutup port 53, langkah ini yang merah duluan dan alasannya
       # kebaca — bukan monitoring yang salah nuduh nameserver mati.
       - name: Buktikan runner layak mengukur
-        run: node monitor/kemampuan.js
+        run: node monitor/capability.js
 
       - name: Periksa nameserver produksi
         id: monitor
@@ -84,7 +84,7 @@ jobs:
           JSON_KE: hasil.json
         run: |
           set +e
-          node monitor/periksa.js
+          node monitor/check.js
           KODE=$?
           set -e
           case "$KODE" in
@@ -110,7 +110,7 @@ jobs:
 
       # Badge berwarna di README lewat shields.io "endpoint". Opsional: kalau secret
       # GIST_TOKEN belum diisi, langkah ini dilewati dan README tetap boleh pakai badge
-      # bawaan GitHub (lihat docs/monitoring-eksternal.md).
+      # bawaan GitHub (lihat docs/external-monitoring.md).
       - name: Perbarui badge (gist)
         if: always() && env.GIST_TOKEN != ''
         env:

@@ -4,11 +4,11 @@
 // nyala di benua lain, tes harus langsung ikut mengujinya tanpa satu baris pun diubah.
 //
 // Sumber kebenaran = **delegasi di zona induk**, bukan NS di apex zone kita sendiri.
-// Alasannya: NS di apex itu jawaban dari server yang lagi kita uji — kalau salah konfigurasi,
+// Alasannya: NS di apex itu jawaban dari server yang lagi kita uji — kalau errors konfigurasi,
 // dia bisa "mengaku" apa saja. Yang menentukan siapa yang berhak menjawab dunia adalah
 // record NS di induk (buat a-i.sh: server TLD .sh). Jadi kita jalan turun dari root:
 //     root  ->  server .sh  ->  delegasi a-i.sh (+ glue A/AAAA)
-// Selisih antara delegasi induk dan NS apex justru salah satu hal yang kita periksa.
+// Selisih antara delegasi induk dan NS apex justru errors satu hal yang kita periksa.
 //
 // Tiga mode, dipilih otomatis, bisa dipaksa lewat env TEMUKAN=induk|doh|env:
 //   induk : jalan turun dari root pakai DNS asli (paling benar, butuh port 53 keluar)

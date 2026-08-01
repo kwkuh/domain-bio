@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# jauh.sh — pinjam mata server lain buat ngukur.
+# remote.sh — pinjam mata server lain buat ngukur.
 #
 # Kepakai kalau jaringan tempat kita duduk membajak port 53 (jaringan seluler Indonesia
 # sering begitu) — laptop nggak bisa dipercaya jadi alat ukur, tapi VPS-nya bisa.
 # Skrip ini nyalin monitor + src ke host SSH, jalanin di sana, hasilnya balik ke layar kita.
 #
-#   ./monitor/jauh.sh aicoid
-#   ./monitor/jauh.sh aicoid --json > hasil.json
-#   NAMESERVERS="ns2.open-domain.com@203.0.113.9" ./monitor/jauh.sh kula
+#   ./monitor/remote.sh aicoid
+#   ./monitor/remote.sh aicoid --json > hasil.json
+#   NAMESERVERS="ns2.open-domain.com@203.0.113.9" ./monitor/remote.sh kula
 #
 # Syarat di sisi server: node >= 18 dan port 53 keluar nggak dibajak (dicek sendiri sama
 # preflight-nya; kalau server itu ternyata juga kotor, hasilnya tetap ditolak).
@@ -40,5 +40,5 @@ ssh -o BatchMode=yes "$HOST" \
    IPV6='${IPV6:-auto}' \
    TIMEOUT='${TIMEOUT:-4000}' \
    NO_COLOR=1 \
-   node monitor/periksa.js $*; \
+   node monitor/check.js $*; \
    KODE=\$?; rm -rf '$TUJUAN'; exit \$KODE"

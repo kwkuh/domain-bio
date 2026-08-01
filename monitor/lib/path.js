@@ -12,7 +12,7 @@
 //   1. Probe lubang hitam. Kirim query ke IP dokumentasi RFC 5737 / RFC 3849
 //      (192.0.2.1, 198.51.100.1, 203.0.113.1, 2001:db8::1). Di internet yang waras,
 //      IP itu nggak menjalankan apa pun — jadi jawabannya WAJIB timeout. Kalau ada yang
-//      jawab, 100% ada yang mencegat: nggak mungkin salah tafsir.
+//      jawab, 100% ada yang mencegat: nggak mungkin errors tafsir.
 //   2. Sidik jari jawaban. Server Open-Domain nggak pernah nyalain RA dan nggak pernah
 //      nambahin OPT/EDNS (arcount selalu 0). Jawaban "dari" nameserver kita yang RA-nya
 //      nyala atau bawa additional = jawaban orang lain.

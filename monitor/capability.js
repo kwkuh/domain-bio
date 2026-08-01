@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// kemampuan.js — laporan singkat: mesin ini layak nggak dipakai buat ngukur DNS?
+// capability.js — laporan singkat: mesin ini layak nggak dipakai buat ngukur DNS?
 //
 // Dipakai dua-duanya:
 //   - di CI, sebagai langkah pertama, biar asumsi "runner boleh kirim UDP 53 keluar"
@@ -9,12 +9,12 @@
 // Yang dilaporkan: UDP/53 keluar, TCP/53 keluar, IPv6 keluar, DoH (HTTPS), dan yang
 // paling penting — ada pembajakan port 53 atau nggak.
 //
-//   node monitor/kemampuan.js
-//   node monitor/kemampuan.js --json
+//   node monitor/capability.js
+//   node monitor/capability.js --json
 
 import { tanya, TYPE } from './lib/dns.js';
-import { periksaTransport } from './lib/jalur.js';
-import { ROOT } from './lib/temukan.js';
+import { periksaTransport } from './lib/path.js';
+import { ROOT } from './lib/discover.js';
 
 const json = process.argv.includes('--json');
 

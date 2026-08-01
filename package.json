@@ -10,11 +10,11 @@
     "start": "node src/server.js",
     "dev": "PORT=5353 BIND=127.0.0.1 DEBUG=1 node src/server.js",
     "test": "node --test \"test/**/*.test.js\"",
-    "monitor": "node monitor/periksa.js",
-    "monitor:test": "node --test monitor/produksi.test.js",
-    "monitor:jauh": "./monitor/jauh.sh",
-    "kemampuan": "node monitor/kemampuan.js",
-    "statistik": "node monitor/statistik.js"
+    "monitor": "node monitor/check.js",
+    "monitor:test": "node --test monitor/production.test.js",
+    "monitor:remote": "./monitor/remote.sh",
+    "capability": "node monitor/capability.js",
+    "stats": "node monitor/stats.js"
   },
   "engines": {
     "node": ">=18"

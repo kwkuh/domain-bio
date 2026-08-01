@@ -19,7 +19,7 @@ diulang untuk **tiap transport (UDP dan TCP)** dan **tiap keluarga alamat (IPv4 
 Semua nama yang diuji **diacak tiap kali**, biar nggak ada cache di mana pun yang bisa bikin
 server mati kelihatan hidup.
 
-Sumbernya: `monitor/lib/kasus.js`.
+Sumbernya: `monitor/lib/cases.js`.
 
 ### Apex
 
@@ -103,7 +103,7 @@ Sumber kebenarannya = **delegasi di zona induk**, bukan NS di apex zone kita sen
 NS di apex itu jawaban dari server yang lagi kita uji — kalau salah konfigurasi, dia bisa
 "mengaku" apa saja. Yang menentukan siapa yang berhak menjawab dunia adalah NS di induk.
 
-Jadi `monitor/lib/temukan.js` jalan turun dari root, pakai DNS asli:
+Jadi `monitor/lib/discover.js` jalan turun dari root, pakai DNS asli:
 
 ```
 root (198.41.0.4)  ->  server .sh (65.22.161.9)  ->  delegasi a-i.sh + glue A/AAAA
@@ -141,7 +141,7 @@ Tiga mode, `TEMUKAN=auto|induk|doh|env`:
   dibuktikan di jalur nyata.
 - `concurrency: nameservers` — nggak ada dua run yang tumpang tindih.
 
-Kode keluar `monitor/periksa.js` sengaja dibedakan:
+Kode keluar `monitor/check.js` sengaja dibedakan:
 
 | Kode | Arti | Tindakan |
 |---|---|---|
@@ -190,7 +190,7 @@ Yang sudah diperiksa:
 - **IPv6 keluar praktis nggak tersedia** di runner GitHub-hosted (isu lama, belum kelar). Ini juga
   kemungkinan besar alasan sslip.io pakai runner **self-hosted** buat spec nameserver-nya.
 
-Makanya langkah **pertama** di workflow adalah `node monitor/kemampuan.js`, yang ngelaporin:
+Makanya langkah **pertama** di workflow adalah `node monitor/capability.js`, yang ngelaporin:
 UDP/53 keluar, TCP/53 keluar, IPv6 keluar, DoH, dan ada pembajakan atau nggak. Kalau suatu hari
 GitHub nutup port 53, langkah itu yang merah duluan dengan alasan kebaca — bukan monitoring yang
 salah nuduh nameserver mati.
@@ -207,7 +207,7 @@ mesin yang emang nggak punya jalan keluar IPv6. Ganti ke `IPV6=on` di runner yan
 3. **Cron di VPS**, lepas total dari GitHub — ini juga penangkal auto-disable 60 hari:
    ```
    */30 * * * *  cd /opt/open-domain && JSON_KE=/var/log/open-domain-monitor.json \
-                 node monitor/periksa.js >> /var/log/open-domain-monitor.log 2>&1
+                 node monitor/check.js >> /var/log/open-domain-monitor.log 2>&1
    ```
    Taruh di server yang **bukan** ns1 — mengukur diri sendiri dari dalam nggak ada artinya.
 4. **DoH cuma buat discovery** (`TEMUKAN=doh`). Penilaian tetap wajib nembak langsung; DoH nggak
@@ -246,7 +246,7 @@ Query ke **IP mana pun** di port 53 dibelokin ke resolver operator. Efeknya dua-
   nyebut `ganz.ns.cloudflare.com` — itu jawaban resolver operator, **bukan** jawaban ns1;
 - kalau ns1 beneran mati, laptop tetap dapat jawaban dan monitoring bilang "aman".
 
-**Cara ngendusnya (3 lapis, `monitor/lib/jalur.js`):**
+**Cara ngendusnya (3 lapis, `monitor/lib/path.js`):**
 
 1. **Probe lubang hitam** — kirim query ke `192.0.2.1`, `198.51.100.1`, `203.0.113.1` (RFC 5737)
    dan `2001:db8::1` (RFC 3849). Di internet yang waras jawabannya **wajib timeout**. Ada yang
@@ -265,7 +265,7 @@ diam-diam. Diam itu yang bikin orang salah simpulan.
 
 1. ganti jaringan (Wi-Fi lain / tethering operator lain);
 2. VPN/WireGuard yang bawa DNS-nya sendiri;
-3. **pinjam mata server lain** — `./monitor/jauh.sh aicoid` nge-rsync `monitor/` + `src/` ke host
+3. **pinjam mata server lain** — `./monitor/remote.sh aicoid` nge-rsync `monitor/` + `src/` ke host
    SSH, jalanin di sana, hasilnya balik ke layar laptop, lalu direktori sementaranya dihapus.
    Sudah diuji dari laptop yang jaringannya kotor: jalan;
 4. `gh workflow run nameservers.yml`.
@@ -280,13 +280,13 @@ diuji justru tiap nameserver otoritatif satu-satu. DoH cuma dipakai buat discove
 | Berkas | Isi |
 |---|---|
 | `monitor/lib/dns.js` | klien DNS mini: query ke satu server, UDP/TCP, v4/v6, bongkar header + RR |
-| `monitor/lib/jalur.js` | preflight anti-pembajakan + teks peringatannya |
-| `monitor/lib/temukan.js` | discovery nameserver: jalan-turun dari root, DoH, env |
-| `monitor/lib/kasus.js` | daftar pemeriksaan (§1) — dipakai bareng CLI dan bentuk tes |
-| `monitor/periksa.js` | CLI buat manusia + kode keluar 0/1/2/3 |
-| `monitor/produksi.test.js` | pembungkus `node:test` buat CI |
-| `monitor/kemampuan.js` | laporan kelayakan jaringan pengukur |
-| `monitor/jauh.sh` | jalanin monitor dari host SSH lain |
+| `monitor/lib/path.js` | preflight anti-pembajakan + teks peringatannya |
+| `monitor/lib/discover.js` | discovery nameserver: jalan-turun dari root, DoH, env |
+| `monitor/lib/cases.js` | daftar pemeriksaan (§1) — dipakai bareng CLI dan bentuk tes |
+| `monitor/check.js` | CLI buat manusia + kode keluar 0/1/2/3 |
+| `monitor/production.test.js` | pembungkus `node:test` buat CI |
+| `monitor/capability.js` | laporan kelayakan jaringan pengukur |
+| `monitor/remote.sh` | jalanin monitor dari host SSH lain |
 | `.github/workflows/nameservers.yml` | jadwal, badge, issue insiden, notifikasi |
 
 `npm test` sekarang cuma jalanin `test/**/*.test.js` (unit, offline, milidetik). Monitoring

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// statistik.js — ringkas catatan query jadi ANGKA, lalu buang sisanya.
+// stats.js — ringkas catatan query jadi ANGKA, lalu buang sisanya.
 //
 // 🚨 Batas yang menentukan segalanya, dan harus disebut sebelum angka mana pun:
 //
@@ -21,9 +21,9 @@
 // itu yang bikin catatan mentahnya aman dihapus setelah 14 hari.
 //
 // Pakai:
-//   node monitor/statistik.js /var/log/open-domain/query.jsonl
-//   node monitor/statistik.js --json berkas.jsonl >> stats/harian.jsonl
-//   zcat query.jsonl.1.gz | node monitor/statistik.js -
+//   node monitor/stats.js /var/log/open-domain/query.jsonl
+//   node monitor/stats.js --json berkas.jsonl >> stats/harian.jsonl
+//   zcat query.jsonl.1.gz | node monitor/stats.js -
 
 import fs from 'node:fs';
 import readline from 'node:readline';
@@ -126,7 +126,7 @@ export function ringkas(baris, { abaikanBlok = [] } = {}) {
     golongan: t.golongan,
     // Jumlah ALAMAT TUJUAN berbeda, dihitung HANYA dari golongan "layanan".
     // Ini penanda pertumbuhan paling jujur yang kita punya: berapa banyak mesin
-    // berbeda yang benar-benar dialamati. Bukan jumlah pengguna — satu orang bisa
+    // berbeda yang benar-benar dialamati. Bukan count pengguna — satu orang bisa
     // punya banyak mesin, dan satu mesin bisa dipakai banyak orang.
     tujuanUnik: tujuan.size,
     // Blok resolver yang meneruskan permintaan layanan. Naiknya angka ini berarti
@@ -171,11 +171,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log('');
     console.log(`  ${String(g.layanan).padStart(8)}  LAYANAN DIPAKAI   nama yang benar-benar menghasilkan alamat`);
     console.log(`  ${String(g.infrastruktur).padStart(8)}  infrastruktur     resolver mencari ns1/ns2 & apex — pipa DNS, bukan pemakaian`);
-    console.log(`  ${String(g.derau).padStart(8)}  derau             nama dalam zone tapi bukan IP — pemindai & salah ketik`);
+    console.log(`  ${String(g.derau).padStart(8)}  derau             nama dalam zone tapi bukan IP — pemindai & errors ketik`);
     console.log(`  ${String(g.ditolak).padStart(8)}  ditolak           di luar zone kita — kita bukan open resolver`);
     console.log('');
     console.log(`  ${r.tujuanUnik.toLocaleString()} alamat tujuan berbeda   <- ini penanda pertumbuhannya`);
-    console.log(`  ${r.blokResolver.toLocaleString()} blok resolver          <- sebaran, BUKAN jumlah pengguna`);
+    console.log(`  ${r.blokResolver.toLocaleString()} blok resolver          <- sebaran, BUKAN count pengguna`);
     if (r.jamTersibuk) console.log(`  jam tersibuk: ${r.jamTersibuk.jam} (${r.jamTersibuk.query} query)`);
     tabel('per zone', r.zone);
     tabel('bentuk nama (golongan layanan saja)', r.bentuk);

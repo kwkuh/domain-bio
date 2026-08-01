@@ -1,21 +1,21 @@
-// produksi.test.js — bungkus monitoring produksi jadi tes node:test.
+// production.test.js — bungkus monitoring produksi jadi tes node:test.
 //
 // Ini SENGAJA dipisah dari test/ (yang isinya unit test murni, offline, milidetik).
 // Yang di sini nembak internet dan bisa merah gara-gara hal di luar kode: nameserver mati,
-// delegasi salah, atau jaringan pengukurnya sendiri yang bau.
+// delegasi errors, atau jaringan pengukurnya sendiri yang bau.
 //   npm test          -> unit test doang  (node --test test/)
 //   npm run monitor:test -> file ini      (node --test monitor/)
 //
-// Kenapa dua antarmuka (CLI `periksa.js` dan tes ini)? Isinya sama persis — kasusnya
-// dipakai bareng dari lib/kasus.js. Bedanya cuma pembungkus: CLI enak dibaca manusia dan
+// Kenapa dua antarmuka (CLI `check.js` dan tes ini)? Isinya sama persis — kasusnya
+// dipakai bareng dari lib/cases.js. Bedanya cuma pembungkus: CLI enak dibaca manusia dan
 // punya kode keluar khusus buat "hasil tidak sah", sedangkan bentuk tes enak buat CI yang
 // pengin laporan TAP per-pemeriksaan.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { periksaJalur, pesanJalurKotor } from './lib/jalur.js';
-import { temukanNameserver, ROOT } from './lib/temukan.js';
-import { susunKasus, susunKasusZone } from './lib/kasus.js';
+import { periksaJalur, pesanJalurKotor } from './lib/path.js';
+import { temukanNameserver, ROOT } from './lib/discover.js';
+import { susunKasus, susunKasusZone } from './lib/cases.js';
 import { tanya, TYPE, ambil } from './lib/dns.js';
 
 const ZONES = (process.env.ZONES || 'a-i.sh,a-i.st').split(',').map((s) => s.trim()).filter(Boolean);

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// periksa.js — monitoring eksternal Open-Domain.
+// check.js — monitoring eksternal Open-Domain.
 //
 // Nembak nameserver PRODUKSI satu per satu (bukan lewat resolver rekursif), lewat UDP dan
 // TCP, IPv4 dan IPv6, lalu ngasih vonis. Dipakai di tiga tempat dengan perintah yang sama:
@@ -10,7 +10,7 @@
 // Kode keluar:
 //   0  semua lulus
 //   1  ada pemeriksaan yang gagal (nameserver bermasalah)
-//   2  nggak bisa mulai (discovery gagal / salah konfigurasi)
+//   2  nggak bisa mulai (discovery gagal / errors konfigurasi)
 //   3  HASIL TIDAK SAH — jalur jaringannya dibajak, jangan disimpulkan apa-apa
 //
 // Env:
@@ -23,9 +23,9 @@
 //   ABAIKAN_PREFLIGHT=1        lanjut walau jalur kotor (buat debug doang, hasilnya nggak sah)
 
 import fs from 'node:fs';
-import { periksaJalur, pesanJalurKotor, periksaSidikJari } from './lib/jalur.js';
-import { temukanNameserver, ROOT } from './lib/temukan.js';
-import { susunKasus, susunKasusZone } from './lib/kasus.js';
+import { periksaJalur, pesanJalurKotor, periksaSidikJari } from './lib/path.js';
+import { temukanNameserver, ROOT } from './lib/discover.js';
+import { susunKasus, susunKasusZone } from './lib/cases.js';
 import { tanya, TYPE, ambil } from './lib/dns.js';
 
 const argv = process.argv.slice(2);
