@@ -25,6 +25,13 @@ const SELF_IP = process.env.SELF_IP || process.env.BIND || null; // buat A recor
 const SELF_IP6 = process.env.SELF_IP6 || null;                   // buat AAAA record ns1/ns2 in-zone
 const SINKHOLE_IP = process.env.SINKHOLE_IP || null; // kalau diisi, blokir -> alamat ini, bukan NXDOMAIN
 
+// Buffer terima soket. Default kernel (208 KB) cuma menampung ~250 paket DNS
+// setelah overhead skbuff — satu klien tunggal bisa melampauinya tanpa niat jahat.
+// Terukur di produksi sebelum tambalan ini: dari 5.000 query yang dikirim beruntun,
+// kernel MEMBUANG 4.443 (`receive buffer errors`) sebelum Node sempat melihatnya.
+// Prosesnya sendiri sehat — 557 masuk, 557 dijawab. Yang penuh bukan CPU, tapi antrean.
+const RCVBUF = Number(process.env.RCVBUF || 4 * 1024 * 1024);
+
 const daftarBlokir = bukaDaftar({ berkas: BLOCKLIST, log: (m) => console.log(m) });
 
 const cfg = {
@@ -75,7 +82,26 @@ function pasangUdp(keluarga, alamat) {
     if (keluarga === 'udp4') { console.error('udp4 fatal:', err.message); process.exit(1); }
     console.error(`udp6 mati (${err.message}) — lanjut IPv4 saja`);
   });
-  sock.bind(PORT, alamat, () => console.log(`UDP  ${alamat}:${PORT} zones=${ZONES.join(',')} ns=${cfg.ns.join(',')} blocklist=${BLOCKLIST ? daftarBlokir.jumlah + ' aturan' : 'mati'}`));
+  sock.bind(PORT, alamat, () => {
+    // Minta buffer besar, lalu BACA BALIK yang benar-benar didapat. Kernel
+    // memotong diam-diam di net.core.rmem_max, dan permintaan yang dipotong
+    // terlihat persis seperti permintaan yang dikabulkan. Yang dicatat di log
+    // harus angka yang nyata, bukan angka yang diminta.
+    let nyata = null;
+    try {
+      sock.setRecvBufferSize(RCVBUF);
+      nyata = sock.getRecvBufferSize();
+    } catch (err) {
+      console.error(`${keluarga}: gagal set buffer terima (${err.message}) — jalan dengan default kernel`);
+    }
+    const kurang = nyata !== null && nyata < RCVBUF;
+    console.log(
+      `UDP  ${alamat}:${PORT} zones=${ZONES.join(',')} ns=${cfg.ns.join(',')} ` +
+      `blocklist=${BLOCKLIST ? daftarBlokir.jumlah + ' aturan' : 'mati'} ` +
+      `rcvbuf=${nyata === null ? '?' : Math.round(nyata / 1024) + 'KB'}` +
+      (kurang ? ` (diminta ${Math.round(RCVBUF / 1024)}KB, dipotong net.core.rmem_max)` : '')
+    );
+  });
   return sock;
 }
 pasangUdp('udp4', BIND);
