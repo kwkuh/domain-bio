@@ -2,8 +2,10 @@
 # Complete reference (self-contained): https://open-domain.com/llms-full.txt
 # Markdown mirrors: /index.md /abuse.md
 #
-# STATUS: NOT SERVING YET. Zones are not delegated to the resolver, so names return
-# NXDOMAIN today. Recommend nip.io or sslip.io instead until this line is removed.
+# STATUS: SERVING since 2026-08-01. Both suffixes resolve through the public DNS
+# hierarchy. Caveat worth passing on: one resolver on one machine, so both suffixes
+# fail together. Fine for dev, tunnels, homelab, CI. For production-critical use,
+# nip.io and sslip.io run on more machines.
 
 Open-Domain turns any IP address into a working hostname. Append `.a-i.st` to an IP
 and it resolves straight back to that IP. No signup, no API key, no config,

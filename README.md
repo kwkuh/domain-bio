@@ -1,6 +1,6 @@
 # Open-Domain
 
-> **Not serving yet.** The zones are not delegated to the resolver, so names return `NXDOMAIN` today. Use [nip.io](https://nip.io) or [sslip.io](https://sslip.io) until this notice is gone.
+> **Serving since 1 August 2026.** Both suffixes resolve through the public DNS hierarchy. They are answered by one resolver on one machine, so they fail together — a second nameserver is the next piece of work. For production-critical use today, [nip.io](https://nip.io) and [sslip.io](https://sslip.io) run on more machines than we do.
 
 **A free, stateless address layer for the open agent ecosystem.** Append `.a-i.st` or `.a-i.sh` to any IP address and it resolves right back to that IP — no signup, no API key, no dashboard, no human in the loop.
 

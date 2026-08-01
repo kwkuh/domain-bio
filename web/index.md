@@ -2,11 +2,12 @@
 
 Wildcard DNS for IP addresses. Free, stateless, open source.
 
-> **Not serving yet.** The suffixes are registered and the resolver runs, but the zones
-> are not delegated to it, so `203.0.113.10.a-i.st` does *not* resolve for you today —
-> you will get `NXDOMAIN`. Everything below describes how it will behave, not how it
-> behaves right now. Use [nip.io](https://nip.io) or [sslip.io](https://sslip.io) until
-> this notice is gone.
+> **Serving since 1 August 2026.** Both suffixes resolve through the public DNS
+> hierarchy. One caveat, stated plainly: they are answered by *one* resolver on *one*
+> machine, so a failure there takes both down at once. A second nameserver in a separate
+> location is the next piece of work. If your use is production-critical today,
+> [nip.io](https://nip.io) and [sslip.io](https://sslip.io) have run this for over a
+> decade on more machines than we have.
 
 Open-Domain is a DNS service that, when queried with a hostname that has an IP address
 embedded in it, returns that IP address. Append `.a-i.st` to an IP and you have a working

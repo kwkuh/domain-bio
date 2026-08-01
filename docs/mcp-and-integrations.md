@@ -320,9 +320,11 @@ a ready hostname for a cluster IP with no external DNS setup.
 
 ## Status & placeholders
 
-- Public deployment of a-i.sh is **not live yet** (needs a public IPv4 + port 53).
-  Until then, run this repo's DNS server locally and point a resolver at it, or
-  self-host under your own zone. See the repo README.
+- Public deployment is **live since 2026-08-01**: `a-i.st` and `a-i.sh` are both
+  delegated to `ns1.a-i.sh` + `ns2.a-i.st` and answer through the public hierarchy.
+  One resolver on one machine, so both suffixes fail together — a second nameserver
+  is still outstanding. Self-hosting under your own zone remains supported; see the
+  repo README.
 - Adoption metrics are intentionally omitted — do not cite numbers here.
   Fill in only when measured: `[TODO: query volume]`, `[TODO: integrations]`.
 - Canonical repo: `github.com/kwkuh/open-domain` (GitHub user `kwkuh`).
