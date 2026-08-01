@@ -3,9 +3,10 @@
 
 import dgram from 'node:dgram';
 import net from 'node:net';
-import { parseQuery } from './wire.js';
+import { parseQuery, buildTruncated } from './wire.js';
 import { resolve } from './resolve.js';
 import { bukaDaftar } from './blocklist.js';
+import { bikinPembatas } from './ratelimit.js';
 
 // ---- Config dari env ----
 // ZONES = daftar zone yang kita layani, dipisah koma. Satu proses bisa otoritatif
@@ -31,6 +32,20 @@ const SINKHOLE_IP = process.env.SINKHOLE_IP || null; // kalau diisi, blokir -> a
 // kernel MEMBUANG 4.443 (`receive buffer errors`) sebelum Node sempat melihatnya.
 // Prosesnya sendiri sehat — 557 masuk, 557 dijawab. Yang penuh bukan CPU, tapi antrean.
 const RCVBUF = Number(process.env.RCVBUF || 4 * 1024 * 1024);
+
+// Rate limiting (RRL). Angka per BLOK alamat, bukan per alamat tunggal — lihat
+// ratelimit.js. Bawaan 100/dtk sengaja longgar: resolver besar seperti Google
+// dan Cloudflare berbagi satu /24, jadi batas ketat menghukum pengguna sah lebih
+// dulu daripada penyerang. RRL_PERDETIK=0 mematikan pembatas.
+const RRL_PERDETIK = Number(process.env.RRL_PERDETIK ?? 100);
+const RRL_LEDAKAN = process.env.RRL_LEDAKAN ? Number(process.env.RRL_LEDAKAN) : null;
+const RRL_SLIP = Number(process.env.RRL_SLIP ?? 5);
+
+const pembatas = bikinPembatas({
+  perDetik: RRL_PERDETIK,
+  ledakan: RRL_LEDAKAN,
+  slip: RRL_SLIP,
+});
 
 const daftarBlokir = bukaDaftar({ berkas: BLOCKLIST, log: (m) => console.log(m) });
 
@@ -69,8 +84,18 @@ function handle(msg, from) {
 // di mana pun, dan matinya IPv6 nggak ikut menjatuhkan IPv4.
 function pasangUdp(keluarga, alamat) {
   const sock = dgram.createSocket({ type: keluarga, ipv6Only: keluarga === 'udp6' });
+  const v6 = keluarga === 'udp6';
   sock.on('message', (msg, rinfo) => {
     try {
+      // Pembatas dipanggil SEBELUM resolve: query yang lewat batas tidak boleh
+      // memakan CPU, dan yang 'buang' tidak boleh menghasilkan paket sama sekali —
+      // paket itulah yang akan mendarat di korban kalau alamatnya dipalsukan.
+      const putusan = pembatas.putuskan(rinfo.address, v6);
+      if (putusan === 'buang') return;
+      if (putusan === 'potong') {
+        sock.send(buildTruncated(parseQuery(msg)), rinfo.port, rinfo.address);
+        return;
+      }
       sock.send(handle(msg, rinfo.address), rinfo.port, rinfo.address);
     } catch (err) {
       if (DEBUG) console.error(`${keluarga}:`, err.message);
@@ -99,7 +124,8 @@ function pasangUdp(keluarga, alamat) {
       `UDP  ${alamat}:${PORT} zones=${ZONES.join(',')} ns=${cfg.ns.join(',')} ` +
       `blocklist=${BLOCKLIST ? daftarBlokir.jumlah + ' aturan' : 'mati'} ` +
       `rcvbuf=${nyata === null ? '?' : Math.round(nyata / 1024) + 'KB'}` +
-      (kurang ? ` (diminta ${Math.round(RCVBUF / 1024)}KB, dipotong net.core.rmem_max)` : '')
+      (kurang ? ` (diminta ${Math.round(RCVBUF / 1024)}KB, dipotong net.core.rmem_max)` : '') +
+      ` rrl=${pembatas.aktif ? `${RRL_PERDETIK}/dtk per blok, slip ${RRL_SLIP}` : 'mati'}`
     );
   });
   return sock;

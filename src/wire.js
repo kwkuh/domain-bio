@@ -86,6 +86,27 @@ export function parseQuery(buf) {
   return { id, flags, name: labels.join('.'), qtype, questionSection: buf.subarray(12, off) };
 }
 
+const TC = 0x0200; // truncated — "jawabannya nggak muat, ulangi lewat TCP"
+
+/**
+ * Balasan TERPOTONG tanpa isi: cuma menyalin pertanyaannya dan menyalakan TC=1.
+ *
+ * Dipakai oleh rate limiter sebagai jalan keluar buat klien sah. Klien yang benar
+ * membaca TC=1 lalu mengulang lewat TCP; penyerang yang memalsukan alamat sumber
+ * tidak pernah menerima paket ini, jadi tidak bisa menindaklanjutinya. Ukurannya
+ * lebih kecil daripada query-nya sendiri, jadi tidak bisa dipakai mengamplifikasi.
+ */
+export function buildTruncated({ id, flags, questionSection }) {
+  const header = Buffer.alloc(12);
+  header.writeUInt16BE(id, 0);
+  header.writeUInt16BE(QR | AA | TC | (flags & RD) | RCODE.OK, 2);
+  header.writeUInt16BE(1, 4); // qdcount
+  header.writeUInt16BE(0, 6);
+  header.writeUInt16BE(0, 8);
+  header.writeUInt16BE(0, 10);
+  return Buffer.concat([header, questionSection]);
+}
+
 /** Susun buffer response lengkap. */
 export function buildResponse({ id, flags, questionSection }, { rcode = RCODE.OK, answers = [], authority = [] }) {
   const header = Buffer.alloc(12);
