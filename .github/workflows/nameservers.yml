@@ -143,13 +143,23 @@ jobs:
           JUDUL: "Nameserver bermasalah"
           RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          # Label harus dipastikan ADA duluan. `gh issue create --label` gagal total
+          # kalau labelnya belum pernah dibuat, dan gagalnya bikin insiden nggak
+          # pernah kebuka — alarm yang diam justru lebih bahaya daripada nggak ada
+          # alarm sama sekali. Ini kejadian di run pertama (30687364149).
+          gh label create monitoring --color B60205 \
+            --description "Insiden dari monitoring nameserver terjadwal" 2>/dev/null || true
+
           NOMOR=$(gh issue list --state open --label monitoring --json number,title \
             --jq ".[] | select(.title==\"$JUDUL\") | .number" | head -1)
           BADAN="Monitoring terjadwal gagal. Detail: $RUN"
           if [ -n "$NOMOR" ]; then
             gh issue comment "$NOMOR" --body "$BADAN"
           else
-            gh issue create --title "$JUDUL" --label monitoring --body "$BADAN"
+            # Kalau pelabelan tetap gagal (mis. token tanpa izin label), issue-nya
+            # HARUS tetap kebuka. Insiden tanpa label lebih baik daripada nol insiden.
+            gh issue create --title "$JUDUL" --label monitoring --body "$BADAN" \
+              || gh issue create --title "$JUDUL" --body "$BADAN"
           fi
 
       - name: Tutup issue insiden kalau sudah pulih
@@ -158,7 +168,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           JUDUL: "Nameserver bermasalah"
         run: |
-          NOMOR=$(gh issue list --state open --label monitoring --json number,title \
+          # Sengaja TIDAK menyaring pakai --label: kalau pelabelan tadi gagal, issue
+          # insidennya ada tapi tanpa label, dan penyaring label bikin dia nggak
+          # pernah ketutup — insiden hantu yang nempel selamanya. Judul saja cukup,
+          # dan judulnya memang dipakai ulang.
+          NOMOR=$(gh issue list --state open --json number,title \
             --jq ".[] | select(.title==\"$JUDUL\") | .number" | head -1)
           if [ -n "$NOMOR" ]; then
             gh issue close "$NOMOR" --comment "Pulih: monitoring terjadwal hijau lagi."
