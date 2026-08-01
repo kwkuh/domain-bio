@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light dark" />
+<title>Terms of Use — Open-Domain</title>
+<meta name="description" content="Terms of use for Open-Domain (a-i.st, a-i.sh): as-is, no warranty, no SLA, acceptable use, and how blocking works." />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="canonical" href="https://open-domain.com/terms.html" />
+<link rel="alternate" type="text/markdown" href="/terms.md" title="Markdown version" />
+<meta name="robots" content="index,follow" />
+<style>
+  :root{
+    --bg:#fff; --fg:#1a1a1a; --muted:#5c5c5c; --line:#e0e0e0;
+    --link:#0b5fbe; --code-bg:#f6f6f4;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#15171a; --fg:#e6e6e6; --muted:#9aa0a6; --line:#2c3036;
+      --link:#7fb4f5; --code-bg:#1d2024;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  main{max-width:46rem; margin:0 auto; padding:2.5rem 1.25rem 4rem}
+  h1{font-size:1.6rem; font-weight:600; margin:0 0 .25rem; letter-spacing:-.01em}
+  h2{font-size:1.15rem; font-weight:600; margin:2.5rem 0 .6rem; letter-spacing:-.01em}
+  .tagline{color:var(--muted); margin:0 0 2rem}
+  p{margin:0 0 1rem}
+  a{color:var(--link)}
+  a:hover{text-decoration:none}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;background:var(--code-bg); padding:.12em .35em; border-radius:3px}
+  ul{margin:0 0 1rem; padding-left:1.25rem}
+  li{margin:.35rem 0}
+  .box{border:1px solid var(--line); border-radius:4px; padding:1rem 1.15rem; margin:0 0 1rem}
+  .box p:last-child{margin:0}
+  hr{border:0; border-top:1px solid var(--line); margin:2.5rem 0 1.25rem}
+  footer{color:var(--muted); font-size:.9rem}
+  footer a{color:var(--muted)}
+  /* — target sentuh & fokus keyboard — */
+  a:focus-visible, summary:focus-visible{outline:2px solid var(--link); outline-offset:3px; border-radius:2px}
+  .skip{position:absolute; left:-9999px; top:0; background:var(--bg); color:var(--fg);
+        padding:.6rem .9rem; border:1px solid var(--line); border-radius:4px; z-index:10}
+  .skip:focus{left:.75rem; top:.75rem}
+  footer a{display:inline-block; padding:.35rem 0}          /* tinggi sentuh naik dari 17px */
+  h2 a.anchor{color:var(--muted); text-decoration:none; opacity:0; margin-left:.4rem; font-weight:400}
+  h2:hover a.anchor, h2 a.anchor:focus-visible{opacity:1}
+  .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden;
+                   clip-path:inset(50%); white-space:nowrap}
+  @media (max-width:30rem){
+    main{padding:1.75rem 1rem 3rem}
+    footer a{padding:.5rem 0}                                /* jempol butuh ruang lebih */
+    pre{font-size:.82em}                                     /* perintah panjang muat tanpa scroll jauh */
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#isi">Skip to content</a>
+<main id="isi">
+
+  <h1>Terms of Use</h1>
+  <p class="tagline">Effective 1 August 2026. Plain language on purpose.</p>
+
+  <div class="box">
+    <p><strong>Provided as is, with no warranty and no uptime commitment.</strong> Both suffixes are answered by one resolver on one machine, so they fail together. Names may stop resolving at any moment. Do not build anything on the assumption that a name will keep working.</p>
+    <p>Not legal advice, and not drafted by a lawyer. If you need certainty for a regulated or commercial use, get your own.</p>
+  </div>
+
+  <h2 id="what">What the service does <a class="anchor" href="#what" aria-label="Link to this section">#</a></h2>
+  <p>Query a hostname with an IP address embedded in it, get that IP back. Every answer is computed from the query name. There is no database, no account, no signup, and nothing stored about you.</p>
+  <p>Open-Domain is <code>a-i.st</code> and <code>a-i.sh</code>, operated by an individual as a free service. The source is <a href="https://github.com/kwkuh/open-domain">public and MIT-licensed</a>.</p>
+
+  <h2 id="warranty">No warranty, no SLA <a class="anchor" href="#warranty" aria-label="Link to this section">#</a></h2>
+  <p>The service is provided <strong>as is</strong> and <strong>as available</strong>, with no warranty of any kind — express or implied — including merchantability, fitness for a particular purpose, and non-infringement.</p>
+  <ul>
+    <li><strong>One resolver on one machine.</strong> Both suffixes fail together. There is no redundancy.</li>
+    <li>No uptime commitment, no support commitment, no response-time commitment.</li>
+    <li>The service may change, break, be suspended, or be shut down <strong>at any time, without notice</strong>.</li>
+  </ul>
+  <p>If your use is production-critical, use something with more machines behind it. <a href="https://nip.io">nip.io</a> and <a href="https://sslip.io">sslip.io</a> have run this for over a decade.</p>
+
+  <h2 id="liability">Limitation of liability <a class="anchor" href="#liability" aria-label="Link to this section">#</a></h2>
+  <p>To the maximum extent permitted by law, the operator is not liable for any damages arising from use of, or inability to use, the service — including lost profits, lost data, service interruption, or any indirect, incidental, special, consequential, or punitive damages, even if advised of the possibility. You use this service at your own risk.</p>
+
+  <h2 id="acceptable">Acceptable use <a class="anchor" href="#acceptable" aria-label="Link to this section">#</a></h2>
+  <p>Do not use Open-Domain to conduct phishing, fraud, or impersonation; to distribute malware or operate command-and-control infrastructure; to attack, overload, or probe systems you do not own or have permission to test; to send unsolicited bulk email or evade an email or domain block; to evade a lawful takedown, block, or court order; or to disguise the destination of traffic in order to defeat someone&#8217;s security controls.</p>
+  <p><strong>Names are computed, not registered.</strong> Nobody owns a name under these suffixes, and creating one grants no rights. A name resolving does not mean the operator has reviewed, endorsed, or has any connection to what is running at that address.</p>
+
+  <h2 id="blocking">Blocking <a class="anchor" href="#blocking" aria-label="Link to this section">#</a></h2>
+  <p>Addresses may be blocked at the operator&#8217;s discretion — typically in response to a credible abuse report, but no reason is required and no notice will be given. Blocking is by <strong>destination address</strong>, so blocking one address blocks every way of spelling it. Blocking a destination is the only enforcement available: the operator does not control, host, or have access to whatever runs at the address you point at.</p>
+
+  <h2 id="rate">Rate limiting <a class="anchor" href="#rate" aria-label="Link to this section">#</a></h2>
+  <p>Responses are rate-limited per client address block. Legitimate clients that hit the limit receive a truncated response and can retry over TCP. This is anti-abuse machinery, not a quota you can buy out of.</p>
+
+  <h2 id="reporting">Reporting abuse <a class="anchor" href="#reporting" aria-label="Link to this section">#</a></h2>
+  <p><a href="mailto:abuse@open-domain.com">abuse@open-domain.com</a> — the <a href="/abuse.html">abuse page</a> explains what to include and what happens next. Security issues: <a href="mailto:security@open-domain.com">security@open-domain.com</a>.</p>
+
+  <h2 id="privacy">Privacy <a class="anchor" href="#privacy" aria-label="Link to this section">#</a></h2>
+  <p>See the <a href="/privacy.html">privacy page</a>. Short version: no accounts, no cookies, no tracking, and client IP addresses are truncated before anything is written down.</p>
+
+  <h2 id="changes">Changes <a class="anchor" href="#changes" aria-label="Link to this section">#</a></h2>
+  <p>These terms may change. The effective date at the top will change with them, and the history is public in the git repository — every revision is a commit.</p>
+
+  <hr />
+  <footer>
+    <a href="/">Open-Domain</a> ·
+    <a href="/abuse.html">Abuse</a> ·
+    <a href="/privacy.html">Privacy</a> ·
+    <a href="https://github.com/kwkuh/open-domain">Source on GitHub</a> ·
+    <a href="/llms.txt">llms.txt</a> ·
+    <a href="mailto:abuse@open-domain.com">abuse@open-domain.com</a>
+  </footer>
+
+</main>
+</body>
+</html>

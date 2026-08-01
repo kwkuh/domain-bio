@@ -25,7 +25,8 @@
   "url": "https://open-domain.com",
   "description": "Wildcard DNS for IP addresses. Query a hostname with an embedded IP address and it returns that IP address. Free, stateless, open source, no signup.",
   "documentation": "https://open-domain.com/llms-full.txt",
-  "termsOfService": "https://open-domain.com/abuse.html",
+  "termsOfService": "https://open-domain.com/terms.html",
+  "privacyPolicy": "https://open-domain.com/privacy.html",
   "isAccessibleForFree": true,
   "license": "https://opensource.org/licenses/MIT",
   "provider": { "@type": "Person", "name": "Kukuh Adi Laksana Rahman" },
@@ -174,7 +175,7 @@ dig +short -p 15353 @127.0.0.1 1.2.3.4.example.dev</code></pre>
 
   <h2 id="abuse">Abuse <a class="anchor" href="#abuse" aria-label="Link to this section">#</a></h2>
 
-  <p>A free wildcard DNS service gets misused, and we would rather hear about it. Report a hostname to <a href="mailto:abuse@open-domain.com">abuse@open-domain.com</a> and we will act on phishing, malware, and command-and-control. What we can do is stop an address from resolving under our suffixes; what we cannot do is remove content we never hosted, or tell you who used a name, because we keep no query logs. The <a href="/abuse.html">abuse page</a> explains both sides plainly, including how to reach the host directly — which is usually faster than reaching us.</p>
+  <p>A free wildcard DNS service gets misused, and we would rather hear about it. Report a hostname to <a href="mailto:abuse@open-domain.com">abuse@open-domain.com</a> and we will act on phishing, malware, and command-and-control. What we can do is stop an address from resolving under our suffixes; what we cannot do is remove content we never hosted, or tell you who used a name, because query logs truncate the client address before writing it (see <a href="/privacy.html">privacy</a>). The <a href="/abuse.html">abuse page</a> explains both sides plainly, including how to reach the host directly — which is usually faster than reaching us.</p>
 
   <h2 id="sponsor">Sponsor <a class="anchor" href="#sponsor" aria-label="Link to this section">#</a></h2>
 
@@ -186,6 +187,8 @@ dig +short -p 15353 @127.0.0.1 1.2.3.4.example.dev</code></pre>
     <a href="/llms.txt">llms.txt</a> ·
     <a href="/index.md">Markdown</a> ·
     <a href="/abuse.html">Abuse</a> ·
+    <a href="/terms.html">Terms</a> ·
+    <a href="/privacy.html">Privacy</a> ·
     MIT licensed ·
     In the tradition of <a href="https://nip.io">nip.io</a> and <a href="https://sslip.io">sslip.io</a>
   </footer>

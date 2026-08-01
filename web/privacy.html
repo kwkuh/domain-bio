@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light dark" />
+<title>Privacy — Open-Domain</title>
+<meta name="description" content="Privacy for Open-Domain: no accounts, no cookies, no tracking, client IP addresses truncated before logging, 14-day retention." />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="canonical" href="https://open-domain.com/privacy.html" />
+<link rel="alternate" type="text/markdown" href="/privacy.md" title="Markdown version" />
+<meta name="robots" content="index,follow" />
+<style>
+  :root{
+    --bg:#fff; --fg:#1a1a1a; --muted:#5c5c5c; --line:#e0e0e0;
+    --link:#0b5fbe; --code-bg:#f6f6f4;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#15171a; --fg:#e6e6e6; --muted:#9aa0a6; --line:#2c3036;
+      --link:#7fb4f5; --code-bg:#1d2024;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  main{max-width:46rem; margin:0 auto; padding:2.5rem 1.25rem 4rem}
+  h1{font-size:1.6rem; font-weight:600; margin:0 0 .25rem; letter-spacing:-.01em}
+  h2{font-size:1.15rem; font-weight:600; margin:2.5rem 0 .6rem; letter-spacing:-.01em}
+  .tagline{color:var(--muted); margin:0 0 2rem}
+  p{margin:0 0 1rem}
+  a{color:var(--link)}
+  a:hover{text-decoration:none}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;background:var(--code-bg); padding:.12em .35em; border-radius:3px}
+  ul{margin:0 0 1rem; padding-left:1.25rem}
+  li{margin:.35rem 0}
+  .box{border:1px solid var(--line); border-radius:4px; padding:1rem 1.15rem; margin:0 0 1rem}
+  .box p:last-child{margin:0}
+  hr{border:0; border-top:1px solid var(--line); margin:2.5rem 0 1.25rem}
+  footer{color:var(--muted); font-size:.9rem}
+  footer a{color:var(--muted)}
+  /* — target sentuh & fokus keyboard — */
+  a:focus-visible, summary:focus-visible{outline:2px solid var(--link); outline-offset:3px; border-radius:2px}
+  .skip{position:absolute; left:-9999px; top:0; background:var(--bg); color:var(--fg);
+        padding:.6rem .9rem; border:1px solid var(--line); border-radius:4px; z-index:10}
+  .skip:focus{left:.75rem; top:.75rem}
+  footer a{display:inline-block; padding:.35rem 0}          /* tinggi sentuh naik dari 17px */
+  h2 a.anchor{color:var(--muted); text-decoration:none; opacity:0; margin-left:.4rem; font-weight:400}
+  h2:hover a.anchor, h2 a.anchor:focus-visible{opacity:1}
+  .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden;
+                   clip-path:inset(50%); white-space:nowrap}
+  @media (max-width:30rem){
+    main{padding:1.75rem 1rem 3rem}
+    footer a{padding:.5rem 0}                                /* jempol butuh ruang lebih */
+    pre{font-size:.82em}                                     /* perintah panjang muat tanpa scroll jauh */
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#isi">Skip to content</a>
+<main id="isi">
+
+  <h1>Privacy</h1>
+  <p class="tagline">Effective 1 August 2026. Plain language on purpose.</p>
+
+  <div class="box">
+    <p><strong>No accounts, no cookies, no analytics, no tracking, no third-party scripts.</strong> There is nothing to log into, so there is nothing tying a query to a person.</p>
+    <p>Client IP addresses are <strong>truncated before they are written down</strong>. The full address is never stored.</p>
+  </div>
+
+  <h2 id="written">What is written down <a class="anchor" href="#written" aria-label="Link to this section">#</a></h2>
+  <p>One line per DNS query. The nameservers run in Falkenstein, Germany.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Field</th><th>Example</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>timestamp</td><td><code>2026-08-01T11:02:26Z</code></td><td>when</td></tr>
+      <tr><td>client address block</td><td><code>74.63.19.0/24</code></td><td>to tell &#8220;one source flooding&#8221; from &#8220;many people using&#8221;</td></tr>
+      <tr><td>queried name</td><td><code>203.0.113.10.a-i.st</code></td><td>this is what an abuse report is about</td></tr>
+      <tr><td>query type</td><td><code>A</code></td><td></td></tr>
+      <tr><td>result</td><td><code>0</code></td><td>answered, refused, or blocked</td></tr>
+      <tr><td>transport</td><td><code>udp</code></td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>IPv4 keeps the first three octets (<code>/24</code>); IPv6 keeps the first three groups (<code>/48</code>).</p>
+  <p>That is deliberate, and it comes from asking what the log is actually for. An abuse report says <em>&#8220;bank.203.0.113.10.a-i.st was used for phishing.&#8221;</em> Answering it requires knowing that the name was served, when, and how often — all of which live in <strong>the name</strong>. None of it requires knowing <strong>who asked</strong>. Under GDPR a full IP address is personal data, so keeping one we do not need would add obligation without adding capability.</p>
+
+  <h2 id="not">What is not written down <a class="anchor" href="#not" aria-label="Link to this section">#</a></h2>
+  <ul>
+    <li>Full client IP addresses.</li>
+    <li>Anything linking queries to each other or to a person.</li>
+    <li>Anything about what runs at the address you point a name at. The service answers a DNS question and never contacts that address.</li>
+  </ul>
+
+  <h2 id="retention">Retention <a class="anchor" href="#retention" aria-label="Link to this section">#</a></h2>
+  <p><strong>14 days</strong>, then deleted by log rotation. Abuse reports arrive within days, not years.</p>
+
+  <h2 id="sharing">Sharing <a class="anchor" href="#sharing" aria-label="Link to this section">#</a></h2>
+  <p>Logs are not sold, rented, or shared. They may be disclosed if required by a valid legal order, or quoted in narrow excerpt when responding to an abuse report about a specific name — and even then, the addresses in them are already truncated.</p>
+
+  <h2 id="site">The website <a class="anchor" href="#site" aria-label="Link to this section">#</a></h2>
+  <p>This site is a static page on GitHub Pages. No cookies, no scripts, no fonts or assets fetched from anywhere else. GitHub sees the request as the party serving it; their practices are theirs, not ours. Email to <code>abuse@</code> and <code>security@</code> is routed by Cloudflare Email Routing and forwarded to the operator&#8217;s mailbox.</p>
+
+  <h2 id="rights">Your rights <a class="anchor" href="#rights" aria-label="Link to this section">#</a></h2>
+  <p>If you are in the EU/EEA/UK you have rights of access, rectification, erasure, and complaint. In practice there is very little to exercise them against: with the client address truncated at write time, a query cannot be traced back to you, and we cannot identify your records even if you ask us to.</p>
+
+  <h2 id="contact">Contact <a class="anchor" href="#contact" aria-label="Link to this section">#</a></h2>
+  <p><a href="mailto:abuse@open-domain.com">abuse@open-domain.com</a>.</p>
+
+  <hr />
+  <footer>
+    <a href="/">Open-Domain</a> ·
+    <a href="/abuse.html">Abuse</a> ·
+    <a href="/terms.html">Terms</a> ·
+    <a href="https://github.com/kwkuh/open-domain">Source on GitHub</a> ·
+    <a href="/llms.txt">llms.txt</a> ·
+    <a href="mailto:abuse@open-domain.com">abuse@open-domain.com</a>
+  </footer>
+
+</main>
+</body>
+</html>

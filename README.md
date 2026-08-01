@@ -151,7 +151,7 @@ Open-Domain is free and intends to stay free. If it saves you time — or if you
 
 A free wildcard DNS service gets misused. Report a hostname to **[abuse@open-domain.com](mailto:abuse@open-domain.com)** and we will act on phishing, malware, and command-and-control. We aim to acknowledge within 24 hours and to act within 72.
 
-Worth knowing before you write: we can stop an address from resolving under our suffixes, but we cannot remove content we never hosted, and we cannot say who used a name because we keep no query logs. The IP is inside the hostname — `login-example.203-0-113-10.a-i.st` is `203.0.113.10` — so the host's own provider can act where we cannot, usually faster.
+Worth knowing before you write: we can stop an address from resolving under our suffixes, but we cannot remove content we never hosted, and we cannot say who used a name because query logs truncate the client address before writing it (see [PRIVACY.md](./PRIVACY.md)). The IP is inside the hostname — `login-example.203-0-113-10.a-i.st` is `203.0.113.10` — so the host's own provider can act where we cannot, usually faster.
 
 Full policy in **[ABUSE.md](./ABUSE.md)** or at <https://open-domain.com/abuse.html>. Vulnerabilities in the resolver itself go to [security@open-domain.com](mailto:security@open-domain.com) instead — see [SECURITY.md](./SECURITY.md).
 

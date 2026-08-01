@@ -107,7 +107,8 @@ your own from the source above, on a domain you control.
 
 Report a hostname to abuse@open-domain.com. We act on phishing, malware, and
 command-and-control. We can stop an address from resolving under our suffixes; we cannot
-remove content we never hosted, and we cannot say who used a name because no query logs
+remove content we never hosted, and we cannot say who used a name because query logs truncate
+the client address before writing it (see /privacy.md). No full query logs
 are kept. Full policy: [/abuse.md](https://open-domain.com/abuse.md).
 
 Security flaws in the resolver go to security@open-domain.com instead.

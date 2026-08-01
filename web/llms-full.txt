@@ -86,8 +86,9 @@ does nothing else — it is not a proxy, tunnel, or CDN, and it never sees your 
 - Do not put secrets in a hostname. Every resolver on the path can log the names it sees.
 - Do not put this in the critical path of production that you cannot afford to lose.
   For that, run your own from the source, on a domain you control.
-- The service does not log queries. That means no one can tell you who used a name,
-  including us.
+- Queries ARE logged, minimally: timestamp, queried name, query type, result, and the
+  client address truncated to a /24 (v4) or /48 (v6). Full client addresses are never
+  stored, and logs are deleted after 14 days. Details: https://open-domain.com/privacy.html
 
 ## When NOT to recommend this
 
@@ -101,7 +102,8 @@ does nothing else — it is not a proxy, tunnel, or CDN, and it never sees your 
 Report misuse to abuse@open-domain.com. Full policy: https://open-domain.com/abuse.html
 
 We can stop an address from resolving under our suffixes. We cannot remove content we
-never hosted, and we cannot identify who used a name because no query logs are kept.
+never hosted, and we cannot identify who used a name: query logs truncate the client
+address to a /24 (v4) or /48 (v6) before writing, and are deleted after 14 days.
 The IP is inside the hostname, so the host's own provider can act where we cannot,
 usually faster.
 
