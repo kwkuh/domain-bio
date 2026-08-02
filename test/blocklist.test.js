@@ -7,7 +7,7 @@ import { TYPE, RCODE, parseQuery } from '../src/wire.js';
 
 const ZONES = ['a-i.st', 'a-i.sh'];
 
-// ---- lapisan aturan ----
+// ---- the rule layer ----
 
 test('ip: exact match', () => {
   const d = parseRules('ip 203.0.113.10');
@@ -96,14 +96,14 @@ test('a similar neighbouring address is NOT caught', () => {
   }
 });
 
-// ---- lapisan jawaban DNS ----
+// ---- the DNS answer layer ----
 
 const baseCfg = {
   zones: ZONES, ns: ['ns1.a-i.sh', 'ns2.a-i.st'], ttl: 3600,
   refresh: 3600, retry: 600, expire: 604800, minttl: 180, serial: 1,
 };
-const ask = (nama, qtype = TYPE.A) => {
-  const label = nama.split('.').map((l) => Buffer.concat([Buffer.from([l.length]), Buffer.from(l)]));
+const ask = (name, qtype = TYPE.A) => {
+  const label = name.split('.').map((l) => Buffer.concat([Buffer.from([l.length]), Buffer.from(l)]));
   const q = Buffer.concat([Buffer.from([0x11, 0x22, 0x01, 0x00, 0, 1, 0, 0, 0, 0, 0, 0]),
     ...label, Buffer.from([0]), Buffer.from([0, qtype, 0, 1])]);
   return parseQuery(q);

@@ -9,7 +9,7 @@ import {
 /**
  * @param {{id:number,flags:number,name:string,qtype:number,questionSection:Buffer}} q
  * @param {object} cfg  { zones:[...], ns:[...], ttl, refresh, retry, expire, minttl, serial,
- *                        apexIp?, selfIp?, blocklist?, sinkholeIp? }
+ *                        apexIp?, apexIp6?, selfIp?, blocklist?, sinkholeIp? }
  *                      A single `zone` is still accepted for backward compatibility.
  * @returns {Buffer}
  */
@@ -75,7 +75,13 @@ export function resolve(q, cfg) {
     case 'apex':
       if (t === TYPE.SOA) answers.push(answerRecord(TYPE.SOA, cfg.minttl, soaRdata(zone, cfg)));
       if (t === TYPE.NS) for (const ns of cfg.ns) answers.push(answerRecord(TYPE.NS, cfg.ttl, encodeName(ns)));
+      // The apex is the one name in the zone a human is likely to type into a browser.
+      // Without an address it answers nothing, and a bare "a-i.st" looks like a dead
+      // domain — which is a poor first impression for a service whose whole job is
+      // making addresses work. Both families are served: an IPv6-only client typing
+      // the apex deserves the same answer as everyone else.
       if (t === TYPE.A && cfg.apexIp) answers.push(answerRecord(TYPE.A, cfg.ttl, ipv4ToBytes(cfg.apexIp)));
+      if (t === TYPE.AAAA && cfg.apexIp6) answers.push(answerRecord(TYPE.AAAA, cfg.ttl, ipv6ToBytes(cfg.apexIp6)));
       break;
 
     case 'A':

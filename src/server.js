@@ -90,7 +90,8 @@ const cfg = {
   expire: Number(process.env.SOA_EXPIRE || 604800),
   minttl: Number(process.env.SOA_MINTTL || 60),
   serial: SERIAL,
-  apexIp: process.env.APEX_IP || null, // optional: an A record for the apex (landing page)
+  apexIp: process.env.APEX_IP || null,   // optional: an A record for the apex (landing page)
+  apexIp6: process.env.APEX_IP6 || null, // and the AAAA to go with it
   selfIp: SELF_IP && SELF_IP !== '0.0.0.0' ? SELF_IP : null,
   selfIp6: SELF_IP6 && SELF_IP6 !== '::' ? SELF_IP6 : null,
   sinkholeIp: SINKHOLE_IP,
