@@ -52,7 +52,7 @@ test('multi-zone: two suffixes served by one process', () => {
   assert.deepEqual(parseName('1.2.3.4.a-i.st', ZS), { kind: 'A', ip: '1.2.3.4', zone: 'a-i.st' });
 });
 
-test('multi-zone: apex tiap zone kebaca sebagai apex-nya sendiri', () => {
+test('multi-zone: each apex is read as the apex of its own zone', () => {
   assert.deepEqual(parseName('a-i.st', ZS), { kind: 'apex', zone: 'a-i.st' });
 });
 

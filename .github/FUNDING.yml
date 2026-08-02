@@ -1,11 +1,11 @@
-# GitHub Sponsors + funding platforms untuk Open-Domain
+# GitHub Sponsors and funding platforms for Open-Domain
 # Docs: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
 
 github: [kwkuh]
 
-# Aktifkan salah satu di bawah setelah akunnya siap (isi username-nya, buang tanda #):
-# open_collective: [TODO: slug Open Collective]
-# ko_fi: [TODO: username Ko-fi]
-# liberapay: [TODO: username Liberapay]
+# Enable one of these once the account exists (fill in the username, drop the #):
+# open_collective: [TODO: Open Collective slug]
+# ko_fi: [TODO: Ko-fi username]
+# liberapay: [TODO: Liberapay username]
 
 custom: ['https://open-domain.com']

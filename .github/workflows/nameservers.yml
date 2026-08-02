@@ -1,33 +1,33 @@
 name: Nameservers
 
-# Monitoring eksternal: nembak nameserver PRODUKSI dari luar, tiap 30 menit.
-# Bukan unit test — ini yang bilang "layanannya lagi hidup atau nggak".
+# External monitoring: query the PRODUCTION nameservers from outside, every 30 minutes.
+# Not a unit test — this is what says "the service is up right now, or it is not".
 #
 # Alur satu jalannya:
-#   1. buktikan dulu runner-nya layak mengukur (UDP/TCP 53 keluar, port 53 nggak dibajak);
+#   1. first prove the runner is fit to measure (outbound UDP/TCP 53, port 53 not hijacked);
 #   2. temukan sendiri daftar nameserver dari delegasi induk (nambah ns2 = nol perubahan kode);
-#   3. tembak tiap nameserver satu-satu, UDP dan TCP, IPv4 dan IPv6;
+#   3. query each nameserver individually, UDP and TCP, IPv4 and IPv6;
 #   4. sehat -> badge hijau & issue insiden ditutup; sakit -> job merah, issue dibuka, notif dikirim.
 #
 # Kode keluar dari monitor/check.js dibedakan sengaja:
 #   1 = nameserver bermasalah (ini insiden)
-#   3 = HASIL TIDAK SAH, jaringan runner-nya yang bau (ini masalah alat ukur, BUKAN insiden)
+#   3 = RESULT INVALID, the runner's own network is dirty (an instrument problem, NOT an incident)
 
 on:
   schedule:
     # Tiap 30 menit. GitHub sering telat beberapa menit di jam sibuk — itu wajar,
-    # yang penting bukan presisi jadwalnya tapi ada mata yang ngelirik terus.
+    # what matters is not schedule precision but that something keeps looking.
     - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       zones:
-        description: "Zone yang diperiksa (dipisah koma)"
+        description: "Zones to check (comma-separated)"
         default: "a-i.sh,a-i.st"
       nameservers:
-        description: "Paksa daftar nameserver, format nama@ip (buat ns baru yang belum didelegasikan)"
+        description: "Force the nameserver list, name@ip format (for a new ns not yet delegated)"
         default: ""
       transports:
-        description: "Transport yang diuji"
+        description: "Transports to test"
         default: "udp,tcp"
   push:
     # Kalau alat ukurnya sendiri diubah, langsung dibuktikan di jalur nyata.
@@ -48,8 +48,8 @@ jobs:
   periksa:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Ditaruh di level job supaya bisa dipakai di `if:` step — context `secrets`
-    # nggak tersedia di `if:` step, tapi `env` tersedia.
+    # Put at job level so it can be used in a step `if:` — the `secrets` context
+    # is not available in a step `if:`, but `env` is.
     env:
       GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
       WA_WEBHOOK: ${{ secrets.WA_WEBHOOK }}
@@ -63,22 +63,22 @@ jobs:
         with:
           node-version: "22"
 
-      # Asumsi "runner GitHub boleh kirim UDP 53 keluar" itu benar hari ini, tapi jangan
-      # dipercaya buta: dibuktikan tiap jalan. Kalau suatu saat GitHub (atau egress filter
-      # semacam harden-runner) nutup port 53, langkah ini yang merah duluan dan alasannya
-      # kebaca — bukan monitoring yang salah nuduh nameserver mati.
-      - name: Buktikan runner layak mengukur
+      # The assumption "a GitHub runner may send UDP 53 outbound" holds today, but must
+      # not be trusted blindly: it is proven on every run. If GitHub (or an egress filter
+      # such as harden-runner) ever closes port 53, this step goes red first and says why —
+      # instead of the monitoring falsely accusing the nameserver of being down.
+      - name: Prove the runner is fit to measure
         run: node monitor/capability.js
 
-      - name: Periksa nameserver produksi
+      - name: Check the production nameservers
         id: monitor
         env:
           ZONES: ${{ inputs.zones || 'a-i.sh,a-i.st' }}
           NAMESERVERS: ${{ inputs.nameservers || '' }}
           TRANSPORTS: ${{ inputs.transports || 'udp,tcp' }}
-          # Runner GitHub-hosted nggak punya jalan keluar IPv6. "auto" bikin pemeriksaan v6
-          # dilewati dengan alasan tercatat, bukan dihitung gagal. Ganti ke "on" kalau
-          # nanti pindah ke runner yang beneran punya IPv6.
+          # GitHub-hosted runners have no IPv6 route out. "auto" makes the v6 checks be
+          # skipped with the reason recorded, not counted as failures. Switch to "on" if
+          # this ever moves to a runner that genuinely has IPv6.
           IPV6: auto
           TIMEOUT: "4000"
           JSON_KE: hasil.json
@@ -96,11 +96,11 @@ jobs:
           echo "status=$STATUS" >> "$GITHUB_OUTPUT"
           echo "ringkas=$(node -e 'const h=require("./hasil.json");console.log(`lulus ${h.lulus||0} gagal ${h.gagal||0}`)' 2>/dev/null || echo '-')" >> "$GITHUB_OUTPUT"
           if [ "$STATUS" = "TIDAK_SAH" ]; then
-            echo "::error title=Alat ukur bermasalah::Jaringan runner membajak/memblokir port 53. Ini BUKAN tanda nameserver mati — hasil run ini nggak sah."
+            echo "::error title=Instrument problem::The runner network hijacks or blocks port 53. This is NOT a sign the nameserver is down — this run is invalid."
           fi
           [ "$KODE" -eq 0 ]
 
-      - name: Simpan hasil mentah
+      - name: Store the raw result
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -108,10 +108,10 @@ jobs:
           path: hasil.json
           retention-days: 30
 
-      # Badge berwarna di README lewat shields.io "endpoint". Opsional: kalau secret
+      # A coloured README badge via shields.io "endpoint". Optional: if the secret
       # GIST_TOKEN belum diisi, langkah ini dilewati dan README tetap boleh pakai badge
       # bawaan GitHub (lihat docs/external-monitoring.md).
-      - name: Perbarui badge (gist)
+      - name: Update the badge (gist)
         if: always() && env.GIST_TOKEN != ''
         env:
           GIST_ID: ${{ vars.BADGE_GIST_ID }}
@@ -135,8 +135,8 @@ jobs:
             "https://api.github.com/gists/$GIST_ID" \
             -d @badge-payload.json > /dev/null
 
-      # Satu issue insiden yang dipakai ulang, bukan satu issue tiap 30 menit.
-      - name: Buka/segarkan issue insiden
+      # One incident issue, reused — not a new issue every 30 minutes.
+      - name: Open or refresh the incident issue
         if: failure() && steps.monitor.outputs.status == 'BERMASALAH'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -144,8 +144,8 @@ jobs:
           RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           # Label harus dipastikan ADA duluan. `gh issue create --label` gagal total
-          # kalau labelnya belum pernah dibuat, dan gagalnya bikin insiden nggak
-          # pernah kebuka — alarm yang diam justru lebih bahaya daripada nggak ada
+          # if the label was never created, and that failure means the incident is
+          # never opened — an alarm that goes silent is more dangerous than no alarm
           # alarm sama sekali. Ini kejadian di run pertama (30687364149).
           gh label create monitoring --color B60205 \
             --description "Insiden dari monitoring nameserver terjadwal" 2>/dev/null || true
@@ -162,16 +162,16 @@ jobs:
               || gh issue create --title "$JUDUL" --body "$BADAN"
           fi
 
-      - name: Tutup issue insiden kalau sudah pulih
+      - name: Close the incident issue once recovered
         if: success() && steps.monitor.outputs.status == 'SEHAT'
         env:
           GH_TOKEN: ${{ github.token }}
           JUDUL: "Nameserver bermasalah"
         run: |
-          # Sengaja TIDAK menyaring pakai --label: kalau pelabelan tadi gagal, issue
-          # insidennya ada tapi tanpa label, dan penyaring label bikin dia nggak
-          # pernah ketutup — insiden hantu yang nempel selamanya. Judul saja cukup,
-          # dan judulnya memang dipakai ulang.
+          # Deliberately NOT filtering by --label: if the labelling above failed, the issue
+          # the incident exists but has no label, and a label filter would leave it
+          # never closed — a ghost incident that sticks around forever. The title is
+          # enough, and the title is reused on purpose.
           NOMOR=$(gh issue list --state open --json number,title \
             --jq ".[] | select(.title==\"$JUDUL\") | .number" | head -1)
           if [ -n "$NOMOR" ]; then
@@ -179,9 +179,9 @@ jobs:
           fi
 
       # Notifikasi cepat ke WhatsApp lewat gateway sendiri (wafa.st / baleswa).
-      # Sengaja dipisah dari kondisi TIDAK_SAH: jangan bangunin orang tengah malam
-      # gara-gara jaringan runner-nya yang bau.
-      - name: Kabari WhatsApp
+      # Deliberately separate from the INVALID condition: do not wake anyone at midnight
+      # because the runner's own network was dirty.
+      - name: Notify via WhatsApp
         if: failure() && steps.monitor.outputs.status == 'BERMASALAH' && env.WA_WEBHOOK != ''
         env:
           RINGKAS: ${{ steps.monitor.outputs.ringkas }}
