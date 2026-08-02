@@ -47,7 +47,7 @@ if (jalur.tepercaya) {
 
   for (const zone of ZONES) {
     const delegasi = await temukanNameserver(zone, {
-      mode: process.env.TEMUKAN || 'auto',
+      mode: process.env.DISCOVER || 'auto',
       ipv6: pakaiIpv6,
       timeout: TIMEOUT,
       daftarEnv: process.env.NAMESERVERS || null,

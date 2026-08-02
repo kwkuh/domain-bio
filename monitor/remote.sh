@@ -35,7 +35,7 @@ ssh -o BatchMode=yes "$HOST" \
   "cd '$TUJUAN' && \
    ZONES='${ZONES:-a-i.sh,a-i.st}' \
    NAMESERVERS='${NAMESERVERS:-}' \
-   TEMUKAN='${TEMUKAN:-auto}' \
+   DISCOVER='${DISCOVER:-auto}' \
    TRANSPORTS='${TRANSPORTS:-udp,tcp}' \
    IPV6='${IPV6:-auto}' \
    TIMEOUT='${TIMEOUT:-4000}' \

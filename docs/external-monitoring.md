@@ -90,14 +90,14 @@ in the parent, so discovery walks down from the root:
 
 A mismatch between the parent delegation and the apex NS is itself one of the checks.
 
-Three modes, chosen automatically, forceable via `TEMUKAN=induk|doh|env`:
+Three modes, chosen automatically, forceable via `DISCOVER=parent|doh|env`:
 
 | Mode | When it is used |
 |---|---|
-| `induk` | normal — walk down from the root over real DNS |
+| `parent` | normal — walk down from the root over real DNS |
 | `doh` | networks that block port 53. Ask a public resolver over HTTPS. **Only to FIND nameservers, never to JUDGE them** — judging always requires querying the server directly |
 | `env` | `NAMESERVERS="ns3.example@198.51.100.7"` — for testing a nameserver **before** it is delegated |
-| `auto` | try `induk`, fall back to `doh` (the reason is recorded in the trace) |
+| `auto` | try `parent`, fall back to `doh` (the reason is recorded in the trace) |
 
 ---
 
@@ -164,7 +164,7 @@ pass or a fail. Ways out, easiest first:
 
 1. change network, then retry;
 2. bring up a VPN that carries its own DNS;
-3. borrow another server's eyes: `npm run monitor:jauh -- <ssh-host>`;
+3. borrow another server's eyes: `npm run monitor:remote -- <ssh-host>`;
 4. run it from CI: `gh workflow run nameservers.yml`.
 
 DoH/DoT does not help here. Both can only talk to a recursive resolver, whereas the whole

@@ -18,48 +18,49 @@ import { ROOT } from './lib/discover.js';
 
 const json = process.argv.includes('--json');
 
-/** Root server itu titik uji paling netral: pasti hidup, pasti otoritatif, ada v4 & v6. */
-async function coba(kunci, fn) {
+/** A root server is the most neutral probe there is: always up, always authoritative,
+ *  and reachable over both IPv4 and IPv6. */
+async function attempt(key, fn) {
   const t0 = Date.now();
-  try { const catatan = await fn(); return { kunci, bisa: true, ms: Date.now() - t0, catatan }; }
-  catch (e) { return { kunci, bisa: false, ms: Date.now() - t0, catatan: e.message }; }
+  try { const note = await fn(); return { key, ok: true, ms: Date.now() - t0, note }; }
+  catch (e) { return { key, ok: false, ms: Date.now() - t0, note: e.message }; }
 }
 
-const hasil = { waktu: new Date().toISOString(), uji: [] };
+const result = { time: new Date().toISOString(), tests: [] };
 
-hasil.uji.push(await coba('udp53 keluar (IPv4)', async () => {
-  const j = await tanya({ ip: ROOT[0].v4, name: '.', type: TYPE.NS, transport: 'udp', timeout: 4000 });
-  return `${ROOT[0].nama} jawab ${j.answers.length} NS`;
+result.tests.push(await attempt('udp53 outbound (IPv4)', async () => {
+  const r = await tanya({ ip: ROOT[0].v4, name: '.', type: TYPE.NS, transport: 'udp', timeout: 4000 });
+  return `${ROOT[0].nama} answered with ${r.answers.length} NS`;
 }));
 
-hasil.uji.push(await coba('tcp53 keluar (IPv4)', async () => {
-  const j = await tanya({ ip: ROOT[0].v4, name: '.', type: TYPE.NS, transport: 'tcp', timeout: 5000 });
-  return `${ROOT[0].nama} jawab ${j.answers.length} NS`;
+result.tests.push(await attempt('tcp53 outbound (IPv4)', async () => {
+  const r = await tanya({ ip: ROOT[0].v4, name: '.', type: TYPE.NS, transport: 'tcp', timeout: 5000 });
+  return `${ROOT[0].nama} answered with ${r.answers.length} NS`;
 }));
 
-hasil.uji.push(await coba('udp53 keluar (IPv6)', async () => {
-  const j = await tanya({ ip: ROOT[0].v6, name: '.', type: TYPE.NS, transport: 'udp', timeout: 4000 });
-  return `${ROOT[0].nama} jawab ${j.answers.length} NS`;
+result.tests.push(await attempt('udp53 outbound (IPv6)', async () => {
+  const r = await tanya({ ip: ROOT[0].v6, name: '.', type: TYPE.NS, transport: 'udp', timeout: 4000 });
+  return `${ROOT[0].nama} answered with ${r.answers.length} NS`;
 }));
 
-hasil.uji.push(await coba('DoH (HTTPS 443)', async () => {
+result.tests.push(await attempt('DoH (HTTPS 443)', async () => {
   const r = await fetch('https://cloudflare-dns.com/dns-query?name=example.com&type=A', { headers: { accept: 'application/dns-json' } });
   return `HTTP ${r.status}`;
 }));
 
-const bajakUdp = await periksaTransport({ transport: 'udp', keluarga: 'v4', timeout: 3000 });
-const bajakTcp = await periksaTransport({ transport: 'tcp', keluarga: 'v4', timeout: 3000 });
-hasil.pembajakan = { udp: bajakUdp, tcp: bajakTcp };
-hasil.layakMengukur = !bajakUdp.dibajak && !bajakTcp.dibajak && hasil.uji[0].bisa;
+const hijackUdp = await periksaTransport({ transport: 'udp', keluarga: 'v4', timeout: 3000 });
+const hijackTcp = await periksaTransport({ transport: 'tcp', keluarga: 'v4', timeout: 3000 });
+result.hijacking = { udp: hijackUdp, tcp: hijackTcp };
+result.fitToMeasure = !hijackUdp.dibajak && !hijackTcp.dibajak && result.tests[0].ok;
 
 if (json) {
-  console.log(JSON.stringify(hasil, null, 2));
+  console.log(JSON.stringify(result, null, 2));
 } else {
-  console.log('kemampuan jaringan pengukur:');
-  for (const u of hasil.uji) console.log(`  ${u.bisa ? 'BISA  ' : 'GAGAL '} ${u.kunci.padEnd(24)} ${u.catatan} (${u.ms}ms)`);
-  for (const [nama, p] of Object.entries(hasil.pembajakan)) {
-    console.log(`  ${p.dibajak ? 'BAJAK ' : 'BERSIH'} port 53 ${nama}${p.dibajak ? ` — ${p.bukti.length}/${p.diuji} IP lubang hitam menjawab` : ''}`);
+  console.log('capability of the measuring network:');
+  for (const t of result.tests) console.log(`  ${t.ok ? 'YES   ' : 'NO    '} ${t.key.padEnd(24)} ${t.note} (${t.ms}ms)`);
+  for (const [name, h] of Object.entries(result.hijacking)) {
+    console.log(`  ${h.dibajak ? 'HIJACK' : 'CLEAN '} port 53 ${name}${h.dibajak ? ` — ${h.bukti.length}/${h.diuji} blackhole IPs answered` : ''}`);
   }
-  console.log(`\n  fit to measure: ${hasil.layakMengukur ? 'YES' : 'NO'}`);
+  console.log(`\n  fit to measure: ${result.fitToMeasure ? 'YES' : 'NO'}`);
 }
-process.exit(hasil.layakMengukur ? 0 : 1);
+process.exit(result.fitToMeasure ? 0 : 1);

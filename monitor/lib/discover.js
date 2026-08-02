@@ -10,8 +10,8 @@
 //     root  ->  server .sh  ->  delegasi a-i.sh (+ glue A/AAAA)
 // A mismatch between the parent delegation and the apex NS is itself one of the things we check.
 //
-// Three modes, chosen automatically, forceable via env TEMUKAN=induk|doh|env:
-//   induk : walk down from the root over real DNS (most correct, needs outbound port 53)
+// Three modes, chosen automatically, forceable via env DISCOVER=parent|doh|env:
+//   parent: walk down from the root over real DNS (most correct, needs outbound port 53)
 //   doh   : ask a public resolver over HTTPS (for networks that block port 53;
 //           enough to FIND nameservers, never used to JUDGE them)
 //   env   : a manual list from env NAMESERVERS — for a new ns that is not delegated yet
@@ -62,13 +62,13 @@ export async function temukanDariInduk(zone, { transport = 'udp', timeout = 4000
     if (!hasil) throw new Error(`no server could be reached at step ${langkah}: ${jejak.join('; ')}`);
 
     glueTotal = { ...glueTotal, ...hasil.glue };
-    const pemilik = hasil.ns.length ? hasil.ns[0].pemilik : '(kosong)';
-    jejak.push(`@${ipDipakai} -> delegasi "${pemilik}" (${hasil.ns.length} NS)`);
+    const pemilik = hasil.ns.length ? hasil.ns[0].pemilik : '(empty)';
+    jejak.push(`@${ipDipakai} -> delegation "${pemilik}" (${hasil.ns.length} NS)`);
 
     // Found it: the NS records are owned by exactly the zone we are looking for.
     if (hasil.ns.length && hasil.ns.every((n) => n.pemilik === target)) {
       const nama = [...new Set(hasil.ns.map((n) => n.nama))].sort();
-      return { sumber: 'induk', ns: nama, glue: glueTotal, jejak };
+      return { sumber: 'parent', ns: nama, glue: glueTotal, jejak };
     }
     if (!hasil.ns.length) throw new Error(`step ${langkah}: no NS in the answer — zone "${target}" is probably not delegated yet`);
 
@@ -184,7 +184,7 @@ export async function temukanNameserver(zone, opsi = {}) {
   else {
     try { hasil = await temukanDariInduk(zone, { transport, timeout }); }
     catch (e) {
-      if (mode === 'induk') throw e;
+      if (mode === 'parent') throw e;
       hasil = await temukanDariDoH(zone);
       hasil.jejak.unshift(`jalan-turun dari root gagal (${e.message}), balik ke DoH`);
     }

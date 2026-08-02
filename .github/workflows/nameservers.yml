@@ -3,20 +3,21 @@ name: Nameservers
 # External monitoring: query the PRODUCTION nameservers from outside, every 30 minutes.
 # Not a unit test — this is what says "the service is up right now, or it is not".
 #
-# Alur satu jalannya:
+# What one run does:
 #   1. first prove the runner is fit to measure (outbound UDP/TCP 53, port 53 not hijacked);
-#   2. temukan sendiri daftar nameserver dari delegasi induk (nambah ns2 = nol perubahan kode);
+#   2. discover the nameserver list from the parent delegation (adding ns2 needs no code change);
 #   3. query each nameserver individually, UDP and TCP, IPv4 and IPv6;
-#   4. sehat -> badge hijau & issue insiden ditutup; sakit -> job merah, issue dibuka, notif dikirim.
+#   4. healthy -> green badge and the incident issue is closed; sick -> red job, issue
+#      opened, notification sent.
 #
-# Kode keluar dari monitor/check.js dibedakan sengaja:
-#   1 = nameserver bermasalah (ini insiden)
+# The exit codes from monitor/check.js are deliberately distinct:
+#   1 = the nameservers have a problem (this is an incident)
 #   3 = RESULT INVALID, the runner's own network is dirty (an instrument problem, NOT an incident)
 
 on:
   schedule:
-    # Tiap 30 menit. GitHub sering telat beberapa menit di jam sibuk — itu wajar,
-    # what matters is not schedule precision but that something keeps looking.
+    # Every 30 minutes. GitHub is often a few minutes late at busy hours, and that is
+    # fine — what matters is not schedule precision but that something keeps looking.
     - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
@@ -30,7 +31,7 @@ on:
         description: "Transports to test"
         default: "udp,tcp"
   push:
-    # Kalau alat ukurnya sendiri diubah, langsung dibuktikan di jalur nyata.
+    # If the measuring instrument itself changes, prove it on the real path immediately.
     paths:
       - "monitor/**"
       - "src/**"
@@ -44,8 +45,14 @@ concurrency:
   group: nameservers
   cancel-in-progress: false
 
+env:
+  # The title is reused on purpose: one incident issue, reopened and closed, rather than
+  # a new issue every 30 minutes. Both the opening and the closing step must agree on it,
+  # so it lives here rather than being spelled out twice.
+  INCIDENT_TITLE: "Nameservers have a problem"
+
 jobs:
-  periksa:
+  check:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Put at job level so it can be used in a step `if:` — the `secrets` context
@@ -55,7 +62,7 @@ jobs:
       WA_WEBHOOK: ${{ secrets.WA_WEBHOOK }}
     outputs:
       status: ${{ steps.monitor.outputs.status }}
-      ringkas: ${{ steps.monitor.outputs.ringkas }}
+      summary: ${{ steps.monitor.outputs.summary }}
     steps:
       - uses: actions/checkout@v4
 
@@ -81,54 +88,54 @@ jobs:
           # this ever moves to a runner that genuinely has IPv6.
           IPV6: auto
           TIMEOUT: "4000"
-          JSON_KE: hasil.json
+          JSON_TO: result.json
         run: |
           set +e
           node monitor/check.js
-          KODE=$?
+          CODE=$?
           set -e
-          case "$KODE" in
-            0) STATUS=SEHAT ;;
-            1) STATUS=BERMASALAH ;;
-            3) STATUS=TIDAK_SAH ;;
+          case "$CODE" in
+            0) STATUS=HEALTHY ;;
+            1) STATUS=PROBLEMS ;;
+            3) STATUS=INVALID ;;
             *) STATUS=ERROR ;;
           esac
           echo "status=$STATUS" >> "$GITHUB_OUTPUT"
-          echo "ringkas=$(node -e 'const h=require("./hasil.json");console.log(`lulus ${h.lulus||0} gagal ${h.gagal||0}`)' 2>/dev/null || echo '-')" >> "$GITHUB_OUTPUT"
-          if [ "$STATUS" = "TIDAK_SAH" ]; then
+          echo "summary=$(node -e 'const h=require("./result.json");console.log(`passed ${h.lulus||0} failed ${h.gagal||0}`)' 2>/dev/null || echo '-')" >> "$GITHUB_OUTPUT"
+          if [ "$STATUS" = "INVALID" ]; then
             echo "::error title=Instrument problem::The runner network hijacks or blocks port 53. This is NOT a sign the nameserver is down — this run is invalid."
           fi
-          [ "$KODE" -eq 0 ]
+          [ "$CODE" -eq 0 ]
 
       - name: Store the raw result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hasil-monitoring
-          path: hasil.json
+          name: monitoring-result
+          path: result.json
           retention-days: 30
 
       # A coloured README badge via shields.io "endpoint". Optional: if the secret
-      # GIST_TOKEN belum diisi, langkah ini dilewati dan README tetap boleh pakai badge
-      # bawaan GitHub (lihat docs/external-monitoring.md).
+      # GIST_TOKEN is not set, this step is skipped and the README can keep using
+      # GitHub's own badge (see docs/external-monitoring.md).
       - name: Update the badge (gist)
         if: always() && env.GIST_TOKEN != ''
         env:
           GIST_ID: ${{ vars.BADGE_GIST_ID }}
           STATUS: ${{ steps.monitor.outputs.status }}
-          RINGKAS: ${{ steps.monitor.outputs.ringkas }}
+          SUMMARY: ${{ steps.monitor.outputs.summary }}
         run: |
           case "$STATUS" in
-            SEHAT)      PESAN="up"; WARNA="brightgreen" ;;
-            BERMASALAH) PESAN="down"; WARNA="red" ;;
-            TIDAK_SAH)  PESAN="unverified"; WARNA="lightgrey" ;;
-            *)          PESAN="error"; WARNA="orange" ;;
+            HEALTHY)  MESSAGE="up"; COLOR="brightgreen" ;;
+            PROBLEMS) MESSAGE="down"; COLOR="red" ;;
+            INVALID)  MESSAGE="unverified"; COLOR="lightgrey" ;;
+            *)        MESSAGE="error"; COLOR="orange" ;;
           esac
           node -e '
-            const [pesan, warna] = process.argv.slice(1);
-            const isi = JSON.stringify({ schemaVersion: 1, label: "nameservers", message: pesan, color: warna });
-            require("fs").writeFileSync("badge-payload.json", JSON.stringify({ files: { "nameservers.json": { content: isi } } }));
-          ' "$PESAN" "$WARNA"
+            const [message, color] = process.argv.slice(1);
+            const payload = JSON.stringify({ schemaVersion: 1, label: "nameservers", message, color });
+            require("fs").writeFileSync("badge-payload.json", JSON.stringify({ files: { "nameservers.json": { content: payload } } }));
+          ' "$MESSAGE" "$COLOR"
           curl -sS -X PATCH \
             -H "Authorization: Bearer $GIST_TOKEN" \
             -H "Accept: application/vnd.github+json" \
@@ -137,57 +144,56 @@ jobs:
 
       # One incident issue, reused — not a new issue every 30 minutes.
       - name: Open or refresh the incident issue
-        if: failure() && steps.monitor.outputs.status == 'BERMASALAH'
+        if: failure() && steps.monitor.outputs.status == 'PROBLEMS'
         env:
           GH_TOKEN: ${{ github.token }}
-          JUDUL: "Nameserver bermasalah"
           RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          # Label harus dipastikan ADA duluan. `gh issue create --label` gagal total
-          # if the label was never created, and that failure means the incident is
-          # never opened — an alarm that goes silent is more dangerous than no alarm
-          # alarm sama sekali. Ini kejadian di run pertama (30687364149).
+          # The label must be made to EXIST first. `gh issue create --label` fails
+          # outright if the label was never created, and that failure means the incident
+          # is never opened — an alarm that goes silent is more dangerous than no alarm
+          # at all. This actually happened on the very first run (30687364149).
           gh label create monitoring --color B60205 \
-            --description "Insiden dari monitoring nameserver terjadwal" 2>/dev/null || true
+            --description "Incidents from the scheduled nameserver monitoring" 2>/dev/null || true
 
-          NOMOR=$(gh issue list --state open --label monitoring --json number,title \
-            --jq ".[] | select(.title==\"$JUDUL\") | .number" | head -1)
-          BADAN="Monitoring terjadwal gagal. Detail: $RUN"
-          if [ -n "$NOMOR" ]; then
-            gh issue comment "$NOMOR" --body "$BADAN"
+          NUMBER=$(gh issue list --state open --label monitoring --json number,title \
+            --jq ".[] | select(.title==\"$INCIDENT_TITLE\") | .number" | head -1)
+          BODY="The scheduled monitoring failed. Details: $RUN"
+          if [ -n "$NUMBER" ]; then
+            gh issue comment "$NUMBER" --body "$BODY"
           else
-            # Kalau pelabelan tetap gagal (mis. token tanpa izin label), issue-nya
-            # HARUS tetap kebuka. Insiden tanpa label lebih baik daripada nol insiden.
-            gh issue create --title "$JUDUL" --label monitoring --body "$BADAN" \
-              || gh issue create --title "$JUDUL" --body "$BADAN"
+            # If labelling still fails (a token without permission to create labels,
+            # say), the issue MUST be opened anyway. An unlabelled incident is better
+            # than no incident.
+            gh issue create --title "$INCIDENT_TITLE" --label monitoring --body "$BODY" \
+              || gh issue create --title "$INCIDENT_TITLE" --body "$BODY"
           fi
 
       - name: Close the incident issue once recovered
-        if: success() && steps.monitor.outputs.status == 'SEHAT'
+        if: success() && steps.monitor.outputs.status == 'HEALTHY'
         env:
           GH_TOKEN: ${{ github.token }}
-          JUDUL: "Nameserver bermasalah"
         run: |
-          # Deliberately NOT filtering by --label: if the labelling above failed, the issue
-          # the incident exists but has no label, and a label filter would leave it
+          # Deliberately NOT filtering by --label: if the labelling above failed, the
+          # incident exists but carries no label, and a label filter would leave it
           # never closed — a ghost incident that sticks around forever. The title is
           # enough, and the title is reused on purpose.
-          NOMOR=$(gh issue list --state open --json number,title \
-            --jq ".[] | select(.title==\"$JUDUL\") | .number" | head -1)
-          if [ -n "$NOMOR" ]; then
-            gh issue close "$NOMOR" --comment "Pulih: monitoring terjadwal hijau lagi."
+          NUMBER=$(gh issue list --state open --json number,title \
+            --jq ".[] | select(.title==\"$INCIDENT_TITLE\") | .number" | head -1)
+          if [ -n "$NUMBER" ]; then
+            gh issue close "$NUMBER" --comment "Recovered: the scheduled monitoring is green again."
           fi
 
-      # Notifikasi cepat ke WhatsApp lewat gateway sendiri (wafa.st / baleswa).
+      # A fast notification to WhatsApp through our own gateway (wafa.st / baleswa).
       # Deliberately separate from the INVALID condition: do not wake anyone at midnight
       # because the runner's own network was dirty.
       - name: Notify via WhatsApp
-        if: failure() && steps.monitor.outputs.status == 'BERMASALAH' && env.WA_WEBHOOK != ''
+        if: failure() && steps.monitor.outputs.status == 'PROBLEMS' && env.WA_WEBHOOK != ''
         env:
-          RINGKAS: ${{ steps.monitor.outputs.ringkas }}
+          SUMMARY: ${{ steps.monitor.outputs.summary }}
           RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           curl -sS -X POST "$WA_WEBHOOK" \
             -H 'content-type: application/json' \
-            -d "$(node -e 'console.log(JSON.stringify({ text: `Open-Domain: nameserver bermasalah (${process.env.RINGKAS}). ${process.env.RUN}` }))')" \
+            -d "$(node -e 'console.log(JSON.stringify({ text: `Open-Domain: the nameservers have a problem (${process.env.SUMMARY}). ${process.env.RUN}` }))')" \
             > /dev/null

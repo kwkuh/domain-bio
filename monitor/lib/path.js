@@ -106,7 +106,7 @@ export function pesanJalurKotor(hasil) {
     '  Ways out, easiest first:',
     '    1. Change network (another Wi-Fi / a different carrier), then retry.',
     '    2. Bring up a VPN/WireGuard that carries its own DNS, then retry.',
-    '    3. Borrow another server\'s eyes:  npm run monitor:jauh -- <ssh-host>',
+    '    3. Borrow another server\'s eyes:  npm run monitor:remote -- <ssh-host>',
     '       (this script is rsynced there, run there, and the result comes back here)',
     '    4. Run it from CI:  gh workflow run nameservers.yml',
     '',
