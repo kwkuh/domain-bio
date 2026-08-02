@@ -1,24 +1,24 @@
 #!/usr/bin/env node
-// stats.js — ringkas catatan query jadi ANGKA, lalu buang sisanya.
+// stats.js — reduce the query log to NUMBERS, then discard the rest.
 //
-// 🚨 Batas yang menentukan segalanya, dan harus disebut sebelum angka mana pun:
+// 🚨 The limit that decides everything, and it must be stated before any number:
 //
-// Yang bertanya ke nameserver otoritatif adalah RESOLVER, bukan pengguna. Terukur
-// di produksi: penanya terbanyak adalah Google, Microsoft, dan Quad9. Ditambah TTL
-// 3600 detik, satu query dari Google melayani entah berapa orang selama satu jam.
+// What asks an authoritative nameserver is a RESOLVER, not a user. Measured in
+// production: the top askers are Google, Microsoft and Quad9. Add a TTL of 3600
+// seconds, and one query from Google serves who-knows-how-many people for an hour.
 //
-// Akibatnya, dua hal yang biasanya orang mau TIDAK BISA dijawab dari sini, dan
-// bukan karena kita menolak — karena datanya memang tidak ada:
-//   - "siapa saja yang memakai"      -> yang terlihat cuma resolver
-//   - "berapa orang yang memakai"    -> cache menyembunyikan sebagian besar
+// So the two things people usually want CANNOT be answered from here — not because
+// we refuse, but because the data genuinely does not exist:
+//   - "who is using it"        -> all that is visible is resolvers
+//   - "how many people use it" -> caching hides most of it
 //
-// Yang bisa dijawab jujur: berapa banyak PERMINTAAN, untuk berapa banyak ALAMAT
-// TUJUAN yang berbeda, dalam bentuk apa, dan lewat jalur apa. Itu cukup untuk
-// menjawab "apakah ini tumbuh" tanpa perlu tahu apa pun tentang siapa pun.
+// What can be answered honestly: how many REQUESTS, for how many distinct TARGET
+// ADDRESSES, in what form, and over which transport. That is enough to answer
+// "is this growing" without knowing anything about anyone.
 //
-// Keluarannya sengaja cuma bilangan: nol nama, nol alamat, nol blok. Berkas harian
-// ini boleh disimpan selamanya justru karena isinya tidak bisa menunjuk siapa pun —
-// itu yang bikin catatan mentahnya aman dihapus setelah 14 hari.
+// The output is deliberately numbers only: no names, no addresses, no blocks. The
+// daily file may be kept forever precisely because it cannot point at anyone —
+// which is what makes deleting the raw log after 14 days safe.
 //
 // Pakai:
 //   node monitor/stats.js /var/log/open-domain/query.jsonl
@@ -53,15 +53,15 @@ function bentuk(nama) {
 }
 
 /**
- * Golongkan tiap query. Ini bagian terpenting seluruh berkas ini.
+ * Classify every query. This is the most important part of this whole file.
  *
- * 🚨 Menjumlahkan semua query lalu menyebutnya "pemakaian" adalah menipu diri
- * sendiri. Terukur di hari pertama produksi: dari 3.772 query, 1.378 di antaranya
- * cuma resolver mencari alamat ns1/ns2 kita — itu pipa DNS bekerja, bukan seorang
- * pun memakai layanan. Ratusan lagi adalah pengujian kami sendiri, dan sisanya
- * pemindai yang menebak nama seperti "login" dan "fileshare".
+ * 🚨 Adding up every query and calling it "usage" is self-deception. Measured on
+ * the first day in production: of 3,772 queries, 1,378 were only resolvers looking
+ * up our ns1/ns2 addresses — that is DNS plumbing working, not a single person
+ * using the service. Hundreds more were our own testing, and the rest were
+ * scanners guessing names like "login" and "fileshare".
  *
- * Yang layak disebut pemakaian cuma satu: nama yang benar-benar menghasilkan
+ * Only one thing deserves to be called usage: a name that actually produces
  * sebuah ALAMAT. Sisanya dipisahkan supaya tidak pernah ikut membesarkan angka.
  */
 function golongan(nama, p) {
@@ -81,21 +81,21 @@ export function ringkas(baris, { abaikanBlok = [] } = {}) {
     zone: {}, tipe: {}, rcode: {}, transport: {}, keluarga: { v4: 0, v6: 0 },
     bentuk: {}, hasil: {}, jam: {},
   };
-  // Set dipakai SEMENTARA lalu dibuang; yang keluar cuma jumlahnya.
+  // The Sets are TEMPORARY and then discarded; only their sizes leave this function.
   const resolver = new Set();
   const tujuan = new Set();
 
   for (const l of baris) {
     // Baris kosong bukan data rusak — itu bukan apa-apa. Menghitungnya sebagai
     // rusak bikin angka "rusak" kehilangan arti, padahal gunanya justru sebagai
-    // penanda catatan yang benar-benar bermasalah dan perlu dilihat.
+    // a marker for records that are genuinely broken and worth looking at.
     if (!String(l).trim()) continue;
     let e;
     try { e = JSON.parse(l); } catch { t.rusak++; continue; }
     if (!e || !e.n) { t.rusak++; continue; }
-    // Lalu lintas pengujian kami sendiri dibuang sebelum dihitung. Kalau tidak,
-    // monitor yang jalan tiap 30 menit akan membuat grafik naik terus tanpa satu
-    // pun pengguna nyata — grafik yang naik karena kita menatapnya.
+    // Our own test traffic is discarded before counting. Without this,
+    // the monitor running every 30 minutes would make the graph climb forever with
+    // no real user at all — a graph that goes up because we are looking at it.
     if (abaikanBlok.length && abaikanBlok.some((b) => String(e.c).startsWith(b))) { t.diabaikan++; continue; }
     t.query++;
 
@@ -124,12 +124,12 @@ export function ringkas(baris, { abaikanBlok = [] } = {}) {
     rusak: t.rusak,
     diabaikan: t.diabaikan,
     golongan: t.golongan,
-    // Jumlah ALAMAT TUJUAN berbeda, dihitung HANYA dari golongan "layanan".
-    // Ini penanda pertumbuhan paling jujur yang kita punya: berapa banyak mesin
-    // berbeda yang benar-benar dialamati. Bukan count pengguna — satu orang bisa
-    // punya banyak mesin, dan satu mesin bisa dipakai banyak orang.
+    // The count of distinct TARGET ADDRESSES, taken ONLY from the "layanan" class.
+    // This is the most honest growth signal we have: how many different machines
+    // are actually being addressed. Not a user count — one person can own many
+    // machines, and one machine can serve many people.
     tujuanUnik: tujuan.size,
-    // Blok resolver yang meneruskan permintaan layanan. Naiknya angka ini berarti
+    // Resolver blocks forwarding service requests. This number rising means the
     // sebarannya melebar, BUKAN penggunanya bertambah.
     blokResolver: resolver.size,
     zone: t.zone, tipe: t.tipe, rcode: t.rcode, transport: t.transport,
@@ -150,7 +150,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const rl = readline.createInterface({ input: sumber, crlfDelay: Infinity });
   const baris = [];
   for await (const l of rl) if (l.trim()) baris.push(l);
-  // ABAIKAN_BLOK="5.78.141.,2a01:4ff:1f0" — awalan blok yang dibuang sebelum dihitung.
+  // ABAIKAN_BLOK="5.78.141.,2a01:4ff:1f0" — block prefixes discarded before counting.
   const abaikanBlok = (process.env.ABAIKAN_BLOK || '').split(',').map((s) => s.trim()).filter(Boolean);
   const r = ringkas(baris, { abaikanBlok });
 
@@ -165,26 +165,26 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       }
     };
     const g = r.golongan;
-    console.log(`\n  ${r.query.toLocaleString()} query dicatat` +
-      (r.diabaikan ? `, ${r.diabaikan.toLocaleString()} dibuang (lalu lintas kita sendiri)` : '') +
-      (r.rusak ? `, ${r.rusak} baris rusak` : ''));
+    console.log(`\n  ${r.query.toLocaleString()} queries recorded` +
+      (r.diabaikan ? `, ${r.diabaikan.toLocaleString()} discarded (our own traffic)` : '') +
+      (r.rusak ? `, ${r.rusak} malformed lines` : ''));
     console.log('');
-    console.log(`  ${String(g.layanan).padStart(8)}  LAYANAN DIPAKAI   nama yang benar-benar menghasilkan alamat`);
-    console.log(`  ${String(g.infrastruktur).padStart(8)}  infrastruktur     resolver mencari ns1/ns2 & apex — pipa DNS, bukan pemakaian`);
-    console.log(`  ${String(g.derau).padStart(8)}  derau             nama dalam zone tapi bukan IP — pemindai & errors ketik`);
-    console.log(`  ${String(g.ditolak).padStart(8)}  ditolak           di luar zone kita — kita bukan open resolver`);
+    console.log(`  ${String(g.layanan).padStart(8)}  SERVICE USED      names that actually produced an address`);
+    console.log(`  ${String(g.infrastruktur).padStart(8)}  infrastructure    resolvers looking up ns1/ns2 & apex — plumbing, not usage`);
+    console.log(`  ${String(g.derau).padStart(8)}  noise             in-zone names that are not IPs — scanners & typos`);
+    console.log(`  ${String(g.ditolak).padStart(8)}  refused           outside our zones — we are not an open resolver`);
     console.log('');
-    console.log(`  ${r.tujuanUnik.toLocaleString()} alamat tujuan berbeda   <- ini penanda pertumbuhannya`);
-    console.log(`  ${r.blokResolver.toLocaleString()} blok resolver          <- sebaran, BUKAN count pengguna`);
-    if (r.jamTersibuk) console.log(`  jam tersibuk: ${r.jamTersibuk.jam} (${r.jamTersibuk.query} query)`);
-    tabel('per zone', r.zone);
-    tabel('bentuk nama (golongan layanan saja)', r.bentuk);
-    tabel('per tipe query', r.tipe);
-    tabel('per hasil', r.hasil);
-    tabel('per transport', r.transport);
-    tabel('per keluarga alamat', r.keluarga);
-    console.log('\n  Catatan: yang bertanya adalah RESOLVER, bukan pengguna, dan TTL 3600');
-    console.log('  menyembunyikan sebagian besar pemakaian. Angka di atas adalah PERMINTAAN,');
-    console.log('  bukan orang. Tidak ada nama atau alamat yang ikut keluar dari sini.\n');
+    console.log(`  ${r.tujuanUnik.toLocaleString()} distinct target addresses   <- this is the growth signal`);
+    console.log(`  ${r.blokResolver.toLocaleString()} resolver blocks            <- reach, NOT a user count`);
+    if (r.jamTersibuk) console.log(`  busiest hour: ${r.jamTersibuk.jam} (${r.jamTersibuk.query} queries)`);
+    tabel('by zone', r.zone);
+    tabel('name form (service class only)', r.bentuk);
+    tabel('by query type', r.tipe);
+    tabel('by outcome', r.hasil);
+    tabel('by transport', r.transport);
+    tabel('by address family', r.keluarga);
+    console.log('\n  Note: what asks is a RESOLVER, not a user, and a TTL of 3600 hides');
+    console.log('  most of the usage. The numbers above are REQUESTS, not people. No name and');
+    console.log('  no address leaves this function.\n');
   }
 }

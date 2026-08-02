@@ -153,7 +153,7 @@ export async function temukanDariDoH(zone) {
     const aaaa = await doh(n, 'AAAA').catch(() => []);
     glue[n] = [...a, ...aaaa];
   }
-  return { sumber: 'doh', ns, glue, jejak: ['lewat DoH (HTTPS) — dipakai buat nemu, bukan buat menilai'] };
+  return { sumber: 'doh', ns, glue, jejak: ['via DoH (HTTPS) — used to find, never to judge'] };
 }
 
 // ---- Mode env: daftar manual ----

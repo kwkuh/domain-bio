@@ -1,15 +1,15 @@
-// production.test.js — bungkus monitoring produksi jadi tes node:test.
+// production.test.js — wrap the production monitoring as node:test cases.
 //
-// Ini SENGAJA dipisah dari test/ (yang isinya unit test murni, offline, milidetik).
-// Yang di sini nembak internet dan bisa merah gara-gara hal di luar kode: nameserver mati,
-// delegasi errors, atau jaringan pengukurnya sendiri yang bau.
-//   npm test          -> unit test doang  (node --test test/)
-//   npm run monitor:test -> file ini      (node --test monitor/)
+// This is DELIBERATELY kept out of test/ (which is pure unit tests: offline, milliseconds).
+// What lives here reaches the internet and can go red for reasons outside the code: a dead
+// nameserver, a wrong delegation, or a measuring network that is itself dirty.
+//   npm test             -> unit tests only (node --test test/)
+//   npm run monitor:test -> this file     (node --test monitor/)
 //
-// Kenapa dua antarmuka (CLI `check.js` dan tes ini)? Isinya sama persis — kasusnya
-// dipakai bareng dari lib/cases.js. Bedanya cuma pembungkus: CLI enak dibaca manusia dan
-// punya kode keluar khusus buat "hasil tidak sah", sedangkan bentuk tes enak buat CI yang
-// pengin laporan TAP per-pemeriksaan.
+// Why two interfaces (the `check.js` CLI and these tests)? The content is identical — the
+// cases are shared from lib/cases.js. Only the wrapper differs: the CLI reads well for a
+// human and has a dedicated exit code for "invalid result", while the test form suits CI
+// that wants a TAP report per check.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -36,14 +36,14 @@ const pakaiIpv6 = await adaIpv6();
 const jalur = await periksaJalur({ transports: TRANSPORTS, ipv6: pakaiIpv6, timeout: 3000 });
 
 // Pemeriksaan nomor satu: alat ukurnya sendiri. Kalau jalurnya dibajak, ini MERAH —
-// bukan di-skip diam-diam. Merah di sini artinya "hasilnya nggak sah", bukan "ns mati",
+// not skipped silently. Red here means "the result is invalid", not "the ns is down",
 // dan pesannya bilang begitu.
-test('jalur jaringan pengukur bersih (port 53 nggak dibajak)', () => {
+test('the measuring network path is clean (port 53 not hijacked)', () => {
   assert.ok(jalur.tepercaya, pesanJalurKotor(jalur));
 });
 
 if (jalur.tepercaya) {
-  if (!pakaiIpv6) test('IPv6 keluar tersedia', { skip: 'jaringan pengukur nggak punya jalan keluar IPv6 (umum di runner GitHub-hosted) — pemeriksaan v6 dilewati' }, () => {});
+  if (!pakaiIpv6) test('outbound IPv6 is available', { skip: 'the measuring network has no IPv6 route out (common on GitHub-hosted runners) — v6 checks skipped' }, () => {});
 
   for (const zone of ZONES) {
     const delegasi = await temukanNameserver(zone, {

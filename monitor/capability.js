@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// capability.js — laporan singkat: mesin ini layak nggak dipakai buat ngukur DNS?
+// capability.js — a short report: is this machine fit to measure DNS at all?
 //
-// Dipakai dua-duanya:
-//   - di CI, sebagai langkah pertama, biar asumsi "runner boleh kirim UDP 53 keluar"
-//     dibuktikan tiap kali jalan, bukan dipercaya begitu aja;
-//   - di laptop, buat ngerti kenapa monitoring nolak jalan.
+// Used in both places:
+//   - in CI, as the first step, so the assumption "the runner may send UDP 53 outbound"
+//     is proven on every run rather than simply trusted;
+//   - on a laptop, to understand why monitoring refuses to run.
 //
-// Yang dilaporkan: UDP/53 keluar, TCP/53 keluar, IPv6 keluar, DoH (HTTPS), dan yang
-// paling penting — ada pembajakan port 53 atau nggak.
+// What it reports: outbound UDP/53, outbound TCP/53, outbound IPv6, DoH (HTTPS), and
+// most important of all — whether port 53 is being hijacked.
 //
 //   node monitor/capability.js
 //   node monitor/capability.js --json
@@ -60,6 +60,6 @@ if (json) {
   for (const [nama, p] of Object.entries(hasil.pembajakan)) {
     console.log(`  ${p.dibajak ? 'BAJAK ' : 'BERSIH'} port 53 ${nama}${p.dibajak ? ` — ${p.bukti.length}/${p.diuji} IP lubang hitam menjawab` : ''}`);
   }
-  console.log(`\n  layak dipakai mengukur: ${hasil.layakMengukur ? 'YA' : 'TIDAK'}`);
+  console.log(`\n  fit to measure: ${hasil.layakMengukur ? 'YES' : 'NO'}`);
 }
 process.exit(hasil.layakMengukur ? 0 : 1);

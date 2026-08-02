@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-# remote.sh — pinjam mata server lain buat ngukur.
+# remote.sh — borrow another server's eyes to take the measurement.
 #
-# Kepakai kalau jaringan tempat kita duduk membajak port 53 (jaringan seluler Indonesia
-# sering begitu) — laptop nggak bisa dipercaya jadi alat ukur, tapi VPS-nya bisa.
-# Skrip ini nyalin monitor + src ke host SSH, jalanin di sana, hasilnya balik ke layar kita.
+# Needed when the network we are sitting on hijacks port 53 (Indonesian mobile networks
+# often do) — the laptop cannot be trusted as an instrument, but a VPS can.
+# This script copies monitor/ and src/ to an SSH host, runs there, and brings the result back.
 #
 #   ./monitor/remote.sh aicoid
 #   ./monitor/remote.sh aicoid --json > hasil.json
 #   NAMESERVERS="ns2.open-domain.com@203.0.113.9" ./monitor/remote.sh kula
 #
-# Syarat di sisi server: node >= 18 dan port 53 keluar nggak dibajak (dicek sendiri sama
-# preflight-nya; kalau server itu ternyata juga kotor, hasilnya tetap ditolak).
+# Requirements on the far side: node >= 18 and outbound port 53 that is not hijacked (its own
+# preflight checks that; if that server turns out to be dirty too, the result is still refused).
 
 set -euo pipefail
 
 HOST="${1:-}"
 if [ -z "$HOST" ]; then
-  echo "pakai: $0 <host-ssh> [--json]" >&2
+  echo "usage: $0 <ssh-host> [--json]" >&2
   exit 2
 fi
 shift || true
@@ -24,13 +24,13 @@ shift || true
 AKAR="$(cd "$(dirname "$0")/.." && pwd)"
 TUJUAN="/tmp/open-domain-monitor-$$"
 
-# Cuma kirim yang perlu: monitor/ butuh src/wire.js + src/parse.js.
+# Send only what is needed: monitor/ depends on src/wire.js and src/parse.js.
 rsync -az --delete \
   -e "ssh -o BatchMode=yes" \
   "$AKAR/src" "$AKAR/monitor" "$AKAR/package.json" \
   "$HOST:$TUJUAN/"
 
-# Teruskan env yang relevan, jalankan, lalu bersihin.
+# Forward the relevant environment, run, then clean up.
 ssh -o BatchMode=yes "$HOST" \
   "cd '$TUJUAN' && \
    ZONES='${ZONES:-a-i.sh,a-i.st}' \
