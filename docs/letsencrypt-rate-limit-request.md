@@ -1,68 +1,67 @@
-# Permohonan kenaikan batas Let's Encrypt
+# Let's Encrypt rate limit adjustment request
 
-**Form:** https://isrg.formstack.com/forms/rate_limit_adjustment_request (11 halaman)
-**Status:** belum dikirim — pengisian akhir & tombol Submit ada di tangan Kukuh.
+**Form:** https://isrg.formstack.com/forms/rate_limit_adjustment_request (11 pages)
+**Status:** not submitted — the final fill-in and the Submit button are the operator's call.
 
-## Kenapa ini penting, dan kenapa harus sekarang
+## Why this matters, and why it has to happen now
 
-Orang memakai wildcard-IP DNS justru supaya bisa HTTPS. Batas Let's Encrypt
-**"New Certificates per Registered Domain" = 50 per 7 hari**, isi ulang 1 tiap
-202 menit. Yang dihitung "registered domain" adalah `a-i.st` sebagai **satu
-entitas** — bukan per pengguna. Jadi pengguna ke-51 dalam seminggu gagal, dan
-dia akan menyimpulkan layanannya rusak, bukan bahwa kuotanya habis.
+People use wildcard-IP DNS precisely so they can get HTTPS. The Let's Encrypt limit
+**"New Certificates per Registered Domain" is 50 per 7 days**, refilling one every
+202 minutes. What counts as the "registered domain" is `a-i.st` as **a single entity** —
+not per user. So the 51st user in a week fails, and they will conclude the service is
+broken, not that a quota ran out.
 
-`a-i.st` dan `a-i.sh` **tidak ada di Public Suffix List**, dan jalur itu tertutup:
-PSL menolak layanan wildcard-IP (issue #335 ditutup dalam 16 menit).
+`a-i.st` and `a-i.sh` are **not on the Public Suffix List**, and that route is closed:
+the PSL rejects wildcard-IP services (issue #335 was closed in 16 minutes).
 
-Preseden yang menguntungkan: **sslip.io/nip.io dinaikkan dari 50 → 250.000.**
-Permintaan mereka ke 500.000 ditolak. Jadi jalurnya nyata dan pernah dikabulkan
-untuk layanan yang bentuknya persis sama.
+The precedent works in our favour: **sslip.io was raised from 50 to 250,000**, and their
+request for 500,000 was declined. So the path is real and has been granted before, for a
+service of exactly this shape.
 
-⏳ **Lead time:** form ditinjau mingguan, perubahan didorong ke produksi dua kali
-sebulan, dan mereka menulis eksplisit *"we cannot guarantee any timeline"*.
-Ini satu-satunya pekerjaan yang tidak bisa dikejar belakangan.
+⏳ **Lead time:** the form is reviewed weekly, adjustments are pushed to production twice
+a month, and they state explicitly *"we cannot guarantee any timeline"*. This is the one
+piece of work that cannot be caught up later.
 
-💡 Renewal **dikecualikan** dari batas ini. Yang memakan kuota cuma sertifikat
-untuk nama baru — dan di layanan ini, tiap pengguna baru = nama baru.
+💡 Renewals are **exempt** from this limit. What consumes the quota is certificates for
+new names — and on this service, every new user is a new name.
 
-## Jawaban siap tempel
+## Ready-to-paste answers
 
-| # | Pertanyaan | Jawaban |
+| # | Question | Answer |
 |---|---|---|
-| 1 | Have you read the Integration Guide? | ✅ centang |
-| 2 | Have you read the Rate Limits Documentation? | ✅ centang |
+| 1 | Have you read the Integration Guide? | ✅ tick |
+| 2 | Have you read the Rate Limits Documentation? | ✅ tick |
 | 3 | Are you receiving a rate limit message? | **No, I am proactively reaching out** |
 | 4 | For which rate limit do you need an override? | **Certificates per Registered Domain** |
 | 5 | Apply to Account ID or Domains? | **Domain(s)** |
-| 6 | Domains (maks 3, eTLD+1) | `a-i.st` dan `a-i.sh` |
-| 7 | Largest new certs/week, **ignoring** renewals | **300 – 1,000** — lihat catatan di bawah |
+| 6 | Domains (max 3, eTLD+1) | `a-i.st` and `a-i.sh` |
+| 7 | Largest new certs/week, **ignoring** renewals | **300 – 1,000** — see the note below |
 | 8 | Largest new certs/week, **including** renewals | **300 – 1,000** |
 | 9 | Organization / Company Name | `Open-Domain` |
 | 10 | Organization / Company Website | `https://open-domain.com` |
-| 11 | What ACME client do you use? | lihat teks di bawah |
-| 12 | Your Email Address | `kuhlaksana@gmail.com` |
-| 13 | First / Last Name | isi sendiri |
-| 14 | Privacy Policy acknowledgement | ✅ centang |
-| 15 | Technical Email Updates | **Opt In** — kalau batas berubah, kita mau tahu duluan |
-| 16 | Monthly newsletter | bebas |
+| 11 | What ACME client do you use? | see the text below |
+| 12 | Your Email Address | the operator's main address |
+| 13 | First / Last Name | fill in yourself |
+| 14 | Privacy Policy acknowledgement | ✅ tick |
+| 15 | Technical Email Updates | **Opt In** — if the limits change, we want to hear first |
+| 16 | Monthly newsletter | your choice |
 | 17 | Financially supporting Let's Encrypt? | **Not at this time** |
 
-### Catatan soal angka (pertanyaan 7 & 8)
+### A note on the numbers (questions 7 and 8)
 
-Pilihan terendah di form adalah **100 – 300**, dan itu pun sudah 2–6x batas bawaan.
+The lowest option on the form is **100 – 300**, and even that is already 2–6x the default.
 
-- **300 – 1,000** = rekomendasi. Sekitar 43–143 nama baru per hari. Cukup untuk
-  tahun pertama adopsi tanpa terdengar mengada-ada.
-- **10,000+** memicu pertanyaan tambahan "sebutkan angka pastinya" dan menuntut
-  pembenaran. Dengan traksi masih nol, itu justru memperbesar peluang ditolak.
-- Boleh mengajukan lagi nanti kalau memang terpakai. Menaikkan permintaan yang
-  terbukti dipakai jauh lebih mudah daripada mempertahankan angka yang dikarang.
+- **300 – 1,000** is the recommendation. Roughly 43–143 new names per day. Enough for a
+  first year of adoption without sounding invented.
+- **10,000+** triggers a follow-up question asking for an exact figure and demands
+  justification. With traction still at zero, that makes rejection more likely, not less.
+- You can apply again later if it is genuinely being used. Raising a request backed by
+  measured usage is far easier than defending a number that was made up.
 
-⚠️ **Jangan mengarang angka.** Traksi Open-Domain hari ini nol. Yang ditanyakan
-adalah kebutuhan ke depan, jadi 300–1,000 itu proyeksi yang jujur — bukan klaim
-tentang keadaan sekarang.
+⚠️ **Do not invent numbers.** Open-Domain's traction today is zero. What is being asked
+is future need, so 300–1,000 is an honest projection — not a claim about the present.
 
-### Teks untuk "Tell us about the service(s) or product(s)"
+### Text for "Tell us about the service(s) or product(s)"
 
 > Open-Domain is a free wildcard-IP DNS service on the suffixes a-i.st and a-i.sh.
 > Appending a suffix to any IP address returns that IP: 203.0.113.10.a-i.st resolves
@@ -86,17 +85,17 @@ tentang keadaan sekarang.
 > structural reason. Our expected volume is far smaller; we are asking for headroom
 > for early adoption, not for their scale.
 
-### Teks untuk "What ACME client do you use?"
+### Text for "What ACME client do you use?"
 
 > Not applicable to us directly — we operate the DNS layer only and do not request
 > certificates ourselves. Our subscribers run their own ACME clients against their
 > own machines; in practice that is Certbot, acme.sh, Caddy, Traefik, and
 > cert-manager. We do not proxy, batch, or intermediate their requests.
 
-## Sesudah dikirim
+## After submitting
 
-- Mereka mengabari lewat email ketika permohonan diproses.
-- Sambil menunggu, halaman utama **belum boleh** menjanjikan HTTPS mulus. Sebutkan
-  apa adanya bahwa kuota sertifikat dibagi bersama sampai penyesuaian turun.
-- Kalau ditolak: sebutkan jumlah pengguna nyata yang sudah ada dan ajukan ulang.
-  Permintaan yang didukung pemakaian terukur jauh lebih kuat daripada proyeksi.
+- They notify by email when the application is processed.
+- While waiting, the front page **must not** promise smooth HTTPS. State plainly that
+  the certificate quota is shared until the adjustment lands.
+- If rejected: cite the number of real users by then and apply again. A request backed
+  by measured usage is far stronger than a projection.
