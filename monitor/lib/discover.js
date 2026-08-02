@@ -1,27 +1,27 @@
-// temukan.js — cari sendiri siapa saja nameserver produksi sebuah zone.
+// discover.js — work out for ourselves which nameservers actually serve a zone.
 //
-// Prinsipnya: daftar nameserver JANGAN ditulis di dalam kode tes. Begitu ns2 (dan ns3)
-// nyala di benua lain, tes harus langsung ikut mengujinya tanpa satu baris pun diubah.
+// The principle: never hard-code the nameserver list in the test. The moment ns2 (and ns3)
+// come up on another continent, the tests must cover them without a single line changing.
 //
-// Sumber kebenaran = **delegasi di zona induk**, bukan NS di apex zone kita sendiri.
-// Alasannya: NS di apex itu jawaban dari server yang lagi kita uji — kalau errors konfigurasi,
-// dia bisa "mengaku" apa saja. Yang menentukan siapa yang berhak menjawab dunia adalah
-// record NS di induk (buat a-i.sh: server TLD .sh). Jadi kita jalan turun dari root:
+// The source of truth is **the delegation in the parent zone**, not the NS set at our own apex.
+// The reason: the apex NS is an answer from the very server under test — if it is misconfigured,
+// it can claim anything. What decides who is entitled to answer the world is the NS
+// record in the parent (for a-i.sh: the .sh TLD servers). So we walk down from the root:
 //     root  ->  server .sh  ->  delegasi a-i.sh (+ glue A/AAAA)
-// Selisih antara delegasi induk dan NS apex justru errors satu hal yang kita periksa.
+// A mismatch between the parent delegation and the apex NS is itself one of the things we check.
 //
-// Tiga mode, dipilih otomatis, bisa dipaksa lewat env TEMUKAN=induk|doh|env:
-//   induk : jalan turun dari root pakai DNS asli (paling benar, butuh port 53 keluar)
-//   doh   : tanya resolver publik lewat HTTPS (buat jaringan yang port 53-nya diblok;
-//           cukup buat NEMU nameserver, nggak dipakai buat MENILAI nameserver)
-//   env   : daftar manual dari env NAMESERVERS — dipakai waktu ns baru belum didelegasikan
+// Three modes, chosen automatically, forceable via env TEMUKAN=induk|doh|env:
+//   induk : walk down from the root over real DNS (most correct, needs outbound port 53)
+//   doh   : ask a public resolver over HTTPS (for networks that block port 53;
+//           enough to FIND nameservers, never used to JUDGE them)
+//   env   : a manual list from env NAMESERVERS — for a new ns that is not delegated yet
 //
-// Format env NAMESERVERS: "nama@ip" dipisah koma, nama boleh dilewat.
+// NAMESERVERS format: "name@ip" separated by commas; the name may be omitted.
 //   NAMESERVERS="ns1.open-domain.com@167.235.234.220,ns2.open-domain.com@203.0.113.9"
 
 import { tanya, TYPE, ambil } from './dns.js';
 
-// Root hints (data publik IANA). Cukup beberapa; kita pakai yang pertama merespons.
+// Root hints (public IANA data). A handful is enough; we use whichever answers first.
 export const ROOT = [
   { nama: 'a.root-servers.net', v4: '198.41.0.4', v6: '2001:503:ba3e::2:30' },
   { nama: 'f.root-servers.net', v4: '192.5.5.241', v6: '2001:500:2f::f' },
@@ -43,7 +43,7 @@ async function satuLangkah({ ip, zone, transport, timeout }) {
 }
 
 /**
- * Jalan turun dari root sampai ketemu delegasi buat `zone`.
+ * Walk down from the root until the delegation for `zone` is found.
  * @returns {Promise<{sumber:string, ns:string[], glue:object, jejak:string[]}>}
  */
 export async function temukanDariInduk(zone, { transport = 'udp', timeout = 4000 } = {}) {
@@ -59,50 +59,50 @@ export async function temukanDariInduk(zone, { transport = 'udp', timeout = 4000
       try { hasil = await satuLangkah({ ip, zone: target, transport, timeout }); ipDipakai = ip; break; }
       catch (e) { jejak.push(`${ip} gagal: ${e.message}`); }
     }
-    if (!hasil) throw new Error(`nggak ada server yang bisa dihubungi di langkah ${langkah}: ${jejak.join('; ')}`);
+    if (!hasil) throw new Error(`no server could be reached at step ${langkah}: ${jejak.join('; ')}`);
 
     glueTotal = { ...glueTotal, ...hasil.glue };
     const pemilik = hasil.ns.length ? hasil.ns[0].pemilik : '(kosong)';
     jejak.push(`@${ipDipakai} -> delegasi "${pemilik}" (${hasil.ns.length} NS)`);
 
-    // Ketemu: NS-nya dimiliki persis oleh zone yang kita cari.
+    // Found it: the NS records are owned by exactly the zone we are looking for.
     if (hasil.ns.length && hasil.ns.every((n) => n.pemilik === target)) {
       const nama = [...new Set(hasil.ns.map((n) => n.nama))].sort();
       return { sumber: 'induk', ns: nama, glue: glueTotal, jejak };
     }
-    if (!hasil.ns.length) throw new Error(`langkah ${langkah}: nggak ada NS di jawaban — zone "${target}" kemungkinan belum didelegasikan`);
+    if (!hasil.ns.length) throw new Error(`step ${langkah}: no NS in the answer — zone "${target}" is probably not delegated yet`);
 
-    // Belum sampai: turun ke server delegasi berikutnya, pakai glue kalau ada.
+    // Not there yet: descend to the next delegation's servers, using glue where present.
     const berikut = [];
     for (const n of hasil.ns) for (const ip of glueTotal[n.nama] || []) if (!ip.includes(':')) berikut.push(ip);
     if (!berikut.length) {
-      // Nggak ada glue (zone induk beda TLD) — resolve nama NS-nya dari root lagi.
+      // No glue (the parent zone is a different TLD) — resolve the NS name from the root again.
       for (const n of hasil.ns.slice(0, 2)) {
         const ip = await alamatNS(n.nama, { transport, timeout }).catch(() => []);
         berikut.push(...ip.filter((x) => !x.includes(':')));
       }
     }
-    if (!berikut.length) throw new Error(`langkah ${langkah}: NS ketemu tapi alamatnya nggak bisa dicari (${hasil.ns.map((n) => n.nama).join(', ')})`);
+    if (!berikut.length) throw new Error(`step ${langkah}: NS found but their addresses could not be resolved (${hasil.ns.map((n) => n.nama).join(', ')})`);
     kandidat = berikut;
   }
-  throw new Error(`kelamaan turun tanpa ketemu delegasi buat ${target}`);
+  throw new Error(`descended too far without finding a delegation for ${target}`);
 }
 
 /**
- * Cari A/AAAA sebuah hostname lewat jalan-turun dari root (tanpa resolver rekursif).
+ * Find a hostname's A/AAAA by walking down from the root (no recursive resolver).
  *
  * 🚨 AAAA SELALU dicari, apa pun kemampuan jaringan pengukur. Pertanyaannya
- * "apakah nameserver ini PUNYA alamat IPv6", dan itu sifat layanan yang diperiksa —
+ * "does this nameserver HAVE an IPv6 address", which is a property of the service —
  * bukan sifat jaringan kita. Query-nya sendiri jalan di atas IPv4, jadi runner
- * tanpa jalan keluar IPv6 tetap bisa menjawabnya dengan benar.
+ * and a measuring host without IPv6 connectivity can still answer it correctly.
  *
- * Yang boleh dimatikan oleh ketiadaan IPv6 cuma MENEMBAK server lewat IPv6, dan
+ * The only thing a lack of IPv6 may disable is QUERYING a server over IPv6, and
  * itu diputuskan di temukanNameserver, bukan di sini.
  */
 export async function alamatNS(host, { transport = 'udp', timeout = 4000 } = {}) {
   const nama = bersih(host);
   const bagian = nama.split('.');
-  // Cari zone induk terdekat yang punya delegasi, lalu tanya server-nya langsung.
+  // Find the nearest parent zone that has a delegation, then ask its servers directly.
   for (let i = 1; i < bagian.length; i++) {
     const zone = bagian.slice(i).join('.');
     let d;
@@ -123,7 +123,7 @@ export async function alamatNS(host, { transport = 'udp', timeout = 4000 } = {})
   return [];
 }
 
-// ---- Mode DoH: cuma buat NEMU, bukan buat MENILAI ----
+// ---- DoH mode: only to FIND, never to JUDGE ----
 
 const DOH = [
   (n, t) => `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(n)}&type=${t}`,
@@ -140,11 +140,11 @@ async function doh(nama, tipe) {
       return (j.Answer || []).map((a) => bersih(a.data));
     } catch (e) { salahTerakhir = e; }
   }
-  throw new Error(`semua resolver DoH gagal: ${salahTerakhir?.message}`);
+  throw new Error(`every DoH resolver failed: ${salahTerakhir?.message}`);
 }
 
-// AAAA tetap ditanyakan walau jaringan pengukur nggak punya IPv6 — DoH jalan di
-// atas HTTPS/IPv4, dan yang ditanya adalah punya-atau-nggak, bukan bisa-dijangkau.
+// AAAA is still asked even when the measuring network has no IPv6 — DoH runs over
+// HTTPS/IPv4, and the question is has-one-or-not, not is-it-reachable.
 export async function temukanDariDoH(zone) {
   const ns = [...new Set(await doh(bersih(zone), 'NS'))].sort();
   const glue = {};
@@ -171,7 +171,7 @@ export function temukanDariEnv(daftar) {
 }
 
 /**
- * Pintu masuk: temukan nameserver + alamatnya buat satu zone.
+ * Entry point: discover the nameservers and their addresses for one zone.
  * @returns {Promise<{sumber:string, ns:string[], glue:object, jejak:string[],
  *                    server:{nama:string, ip:string, keluarga:'v4'|'v6'}[]}>}
  */
@@ -190,10 +190,10 @@ export async function temukanNameserver(zone, opsi = {}) {
     }
   }
 
-  // Lengkapi alamat tiap NS yang belum punya glue. Ini kena ke nameserver
-  // out-of-bailiwick: ns2.a-i.st nggak muncul di bagian additional delegasi
-  // a-i.sh (registry cuma nge-glue nama yang ada DI DALAM zone itu), jadi
-  // alamatnya harus dicari sendiri.
+  // Fill in the address of every NS that has no glue. This applies to nameservers
+  // out-of-bailiwick: ns2.a-i.st does not appear in the additional section of the
+  // a-i.sh delegation (a registry only glues names INSIDE that zone), so its
+  // address has to be looked up separately.
   for (const n of hasil.ns) {
     if (hasil.glue[n]?.length) continue;
     hasil.glue[n] = hasil.sumber === 'doh'
@@ -201,15 +201,15 @@ export async function temukanNameserver(zone, opsi = {}) {
       : await alamatNS(n, { transport, timeout }).catch(() => []);
   }
 
-  // 🚨 `ipv6` cuma memutuskan siapa yang DITEMBAK, bukan apa yang DIKETAHUI.
-  // glue tetap lengkap (A + AAAA) supaya pemeriksaan tingkat zone "tiap
+  // 🚨 `ipv6` decides only who gets QUERIED, never what is KNOWN.
+  // The glue stays complete (A + AAAA) so the zone-level check "every
   // nameserver punya alamat IPv6" menilai layanannya, bukan jaringan pengukur.
   //
   // Ini bukan kehati-hatian teoretis: versi sebelumnya menyembunyikan AAAA saat
-  // runner-nya nggak punya IPv6, lalu melaporkan "belum ada AAAA buat ns2.a-i.st"
-  // sebagai insiden — padahal AAAA-nya ada. Alat ukur yang menyalahkan benda yang
-  // diukur atas keterbatasan dirinya sendiri persis yang bikin monitor nggak bisa
-  // dipercaya, dan itu yang mau dihindari seluruh berkas ini.
+  // the runner had no IPv6, and then reported "no AAAA yet for ns2.a-i.st"
+  // as an incident — when the AAAA was there all along. An instrument that blames the
+  // thing it measures for its own limitation is exactly what makes a monitor
+  // untrustworthy, and avoiding that is the point of this entire file.
   hasil.server = [];
   for (const n of hasil.ns) {
     for (const ip of hasil.glue[n] || []) {
