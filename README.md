@@ -178,4 +178,4 @@ This is community-run infrastructure offered as a public good, with **no SLA**. 
 
 ## License
 
-[MIT](./LICENSE) © 2026 Kukuh Adi Laksana Rahman
+[MIT](./LICENSE) © 2026 Kukuh Laksana

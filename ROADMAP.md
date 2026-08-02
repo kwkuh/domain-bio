@@ -122,6 +122,6 @@ Hardening and reach, once the core and the agent-facing features are proven.
 
 ---
 
-*Maintainer: Kukuh Adi Laksana Rahman ([@kwkuh](https://github.com/kwkuh)).
+*Maintainer: Kukuh Laksana ([@kwkuh](https://github.com/kwkuh)).
 Feedback, integrations, and PRs welcome — this is meant to be public
 infrastructure for the open agent ecosystem.*

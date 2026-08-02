@@ -151,5 +151,5 @@ please **do not** open a public issue; contact the maintainer privately at
 
 ---
 
-Maintained by Kukuh Adi Laksana Rahman ([@kwkuh](https://github.com/kwkuh)).
+Maintained by Kukuh Laksana ([@kwkuh](https://github.com/kwkuh)).
 Licensed MIT.
