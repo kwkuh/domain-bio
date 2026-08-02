@@ -139,12 +139,40 @@ dig +short -p 5353 @127.0.0.1 1.2.3.4.a-i.st
 One process can be authoritative for **any number of zones**. Point `ZONES` at your own domains, comma-separated:
 
 ```sh
-ZONES=example.dev,example.test PORT=15353 BIND=127.0.0.1 node src/server.js
+ZONES=example.dev,example.test NS_HOSTS=ns1.example.dev,ns2.example.dev \
+  PORT=15353 BIND=127.0.0.1 BIND6=::1 node src/server.js
 ```
 
 Each zone gets its own correct `SOA` and apex; the longest matching zone wins, so overlapping zones (`a-i.st` and `dev.a-i.st`) stay deterministic. Names outside every configured zone get `REFUSED`.
 
-To run it as an authoritative nameserver you need a host with a **public static IPv4** and **UDP+TCP port 53** open, then delegate NS/glue records to it. Configure via env (`ZONES`, `PORT`, `BIND`, `NS_HOSTS`, `APEX_IP`, `TTL`, `DEBUG`). `ZONE` is still accepted as an alias for a single-zone setup. Full deployment steps, the `systemd` unit for binding port 53 without full root, and secondary-nameserver notes are in **[ROADMAP.md](./ROADMAP.md)** and the deploy docs. Oracle Cloud Always Free (permanent free ARM VM with a static IP and port 53) is a good place to run it.
+To run it as an authoritative nameserver you need a host with a **public static IPv4** and **UDP+TCP port 53** open, then delegate NS/glue records to it. The end-to-end deployment steps — the `systemd` unit for binding port 53 without full root, the firewall rules, and the apex redirect — are in **[DEPLOY.md](./DEPLOY.md)**; secondary-nameserver plans are in **[ROADMAP.md](./ROADMAP.md)**.
+
+<h2 id="config-env">Configuration</h2>
+
+Everything is an environment variable; there is no config file. `ZONE` is still accepted as an alias for a single-zone `ZONES`.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `ZONES` | `a-i.sh,a-i.st` | Comma-separated suffixes this process is authoritative for. |
+| `NS_HOSTS` | `ns1.a-i.sh,ns2.a-i.st` | The `NS` names announced for every zone. **Set this to your own** — the default points at ours. |
+| `PORT` | `53` | Listen port. Use a high port locally; below 1024 needs privilege. |
+| `BIND` | `0.0.0.0` | IPv4 address to listen on. |
+| `BIND6` | `::` | IPv6 address to listen on. Set `BIND6=""` to disable IPv6; it otherwise listens on all v6 interfaces. |
+| `SELF_IP` / `SELF_IP6` | — | A/AAAA answered for an in-zone nameserver name (the glue). Needed only if an `NS_HOSTS` entry lives inside a zone you serve. |
+| `APEX_IP` / `APEX_IP6` | — | A/AAAA answered for the bare apex (e.g. a landing page or redirect). |
+| `TTL` | `300` | TTL on the address answers. |
+| `SOA_REFRESH` / `SOA_RETRY` / `SOA_EXPIRE` / `SOA_MINTTL` | `3600` / `600` / `604800` / `60` | SOA timers. `SOA_MINTTL` is also the negative-cache TTL. |
+| `SOA_SERIAL` | date-based | Override the serial. Left unset, it is `YYYYMMDD01` in UTC, so every nameserver agrees. |
+| `RRL_PER_SECOND` | `100` | Rate limit per client /24 (v4) or /56 (v6) block. `0` disables it. |
+| `RRL_BURST` | `RRL_PER_SECOND` | Bucket size — how much of a burst is tolerated before limiting. |
+| `RRL_SLIP` | `5` | 1 in N limited queries gets a truncated reply (retry over TCP) instead of a silent drop. |
+| `MAX_TCP_CONN` | `512` | Concurrent TCP connection cap. |
+| `RCVBUF` | `4194304` | UDP receive buffer in bytes (the kernel may cap it at `net.core.rmem_max`). |
+| `BLOCKLIST` | — | Path to a rules file; destinations matching it are refused (or sinkholed). |
+| `SINKHOLE_IP` | — | If set, blocked names answer this address instead of `NXDOMAIN`. |
+| `QUERYLOG` | — | Path to a JSON-lines query log. Unset means nothing is logged. |
+| `QUERYLOG_FULL` | — | `1` writes full client addresses instead of truncating them. **Do not use in production** — see [PRIVACY.md](./PRIVACY.md). |
+| `DEBUG` | — | `1` logs every query to stdout. |
 
 ## How it works
 

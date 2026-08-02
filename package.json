@@ -1,7 +1,12 @@
 {
   "name": "open-domain",
   "version": "0.1.0",
-  "description": "Open-Domain — authoritative wildcard-IP DNS server (ala nip.io/sslip.io) buat a-i.st + a-i.sh, zero dependency.",
+  "description": "Authoritative wildcard-IP DNS server (like nip.io/sslip.io) for a-i.st and a-i.sh. Stateless, zero-dependency, computes every answer from the query name.",
+  "keywords": ["dns", "wildcard-dns", "nip.io", "sslip.io", "ipv6", "authoritative-dns", "zero-dependency"],
+  "homepage": "https://open-domain.com",
+  "repository": { "type": "git", "url": "https://github.com/kwkuh/open-domain.git" },
+  "bugs": { "url": "https://github.com/kwkuh/open-domain/issues" },
+  "author": "Kukuh Laksana (https://github.com/kwkuh)",
   "type": "module",
   "bin": {
     "open-domain": "src/server.js"
@@ -9,7 +14,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "PORT=5353 BIND=127.0.0.1 DEBUG=1 node src/server.js",
-    "test": "node --test \"test/**/*.test.js\"",
+    "test": "node --test test/*.test.js",
     "monitor": "node monitor/check.js",
     "monitor:test": "node --test monitor/production.test.js",
     "monitor:remote": "./monitor/remote.sh",

@@ -1,8 +1,9 @@
 # Roadmap
 
-`a-i.st` is a wildcard DNS address layer for AI agents. `1.2.3.4.a-i.st` resolves
-to `1.2.3.4` — no dashboard, no account, no database. The answer is computed from
-the hostname itself. This roadmap tracks where the project is and where it's going.
+**Open-Domain** is a wildcard DNS address layer for AI agents, served on the suffixes
+`a-i.st` and `a-i.sh`. `1.2.3.4.a-i.st` resolves to `1.2.3.4` — no dashboard, no
+account, no database. The answer is computed from the hostname itself. This roadmap
+tracks where the project is and where it's going.
 
 **Why this matters for the open agent ecosystem.** Agents get spawned on ephemeral
 boxes with a raw IP and no human at the keyboard to click through a DNS control
@@ -24,19 +25,23 @@ The core resolver, shipped and verifiable today.
 
 - **v0.1 — Wildcard IP resolution** ✅ **DONE**
   - Dotted (`1.2.3.4.a-i.st`), dashed (`1-2-3-4.a-i.st`), hex (`0a000001.a-i.st`),
-    and IPv6 (`2001-db8--1.a-i.st`) encodings.
-  - Free-form prefixes (`app.1.2.3.4.a-i.st`) for per-service subdomains.
+    IPv6 (`2001-db8--1.a-i.st`), and hyphen-joined prefixes (`app-1-2-3-4.a-i.st`,
+    `app-c0a801fc.a-i.st`) — the full set of encodings nip.io and sslip.io answer.
+  - Free-form dotted prefixes (`app.1.2.3.4.a-i.st`) for per-service subdomains.
   - Zero-dependency Node DNS server over UDP + TCP on port 53. Stateless — every
     answer is derived from the name, so there is no database to run or back up.
-  - 12 unit tests passing, `dig`-verified locally.
-- **Public release** — push to `github.com/kwkuh/open-domain` (MIT `LICENSE` already in
-  the repo), publish the landing page + `llms.txt`, and get the project's clock
-  running (awesome-lists and grant programs both care about repo age and usage
-  history). Status: repo not yet public — [TODO: publish date].
-- **Public deploy** — stand the resolver up on a static public IPv4 with inbound
-  UDP/TCP 53 open, delegate `a-i.st` NS records to it. Target host: Oracle Cloud
-  Always Free (free forever, reserved static IP, port 53 allowed). Status: not yet
-  deployed — [TODO: deploy date, public IP].
+  - Rate limiting (per /24 and /56 block), EDNS0, minimal-ANY (RFC 8482), a
+    destination blocklist, and a privacy-preserving query log (client address
+    truncated before writing). 107 unit tests, plus external monitoring that queries
+    the live nameserver over UDP/TCP and IPv4/IPv6 every run.
+- **Public release** ✅ **DONE** — the repo is public at
+  `github.com/kwkuh/open-domain` (MIT), the landing page and `llms.txt` are live at
+  [open-domain.com](https://open-domain.com).
+- **Public deploy** ✅ **DONE** — the resolver is live. Both suffixes are delegated
+  and answer through the public DNS hierarchy; the apex of each redirects to
+  open-domain.com. The honest caveat, stated plainly on the site: it is **one
+  resolver on one machine today**, so both suffixes share a single point of failure.
+  A second nameserver is the next hardening step (see *Later*).
 
 ---
 

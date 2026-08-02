@@ -36,8 +36,8 @@ disclosure and will credit reporters who wish to be named.
 
 Target response times (best-effort for a volunteer-maintained project):
 
-- **Acknowledgement:** [TODO: e.g. within 3 business days]
-- **Initial assessment / triage:** [TODO: e.g. within 7 business days]
+- **Acknowledgement:** within 3 business days
+- **Initial assessment / triage:** within 7 business days
 
 ## Scope
 

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/kwkuh/open-domain/security/advisories/new
+    about: Report a vulnerability in the resolver privately, not as a public issue.
+  - name: Report abuse of a hostname
+    url: mailto:abuse@open-domain.com
+    about: Phishing, malware, or C2 behind an *.a-i.st name. See the abuse page.

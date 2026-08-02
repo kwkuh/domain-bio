@@ -1,6 +1,6 @@
-# Contributing to a-i-dns
+# Contributing to Open-Domain
 
-Thanks for your interest in `a-i-dns` — the authoritative wildcard-IP DNS server
+Thanks for your interest in **Open-Domain** — the authoritative wildcard-IP DNS server
 behind [Open-Domain](https://open-domain.com). It encodes an IP address in the hostname
 (like [nip.io](https://nip.io) / [sslip.io](https://sslip.io)) and computes every
 answer from the query name. It is **stateless** (no database), **zero-dependency**
@@ -136,9 +136,10 @@ Some genuinely useful ways to start:
   an ephemeral agent sandbox). These are the most valuable contributions —
   they help other people adopt the project.
 - **Test coverage.** Broaden `test/` — malformed inputs, edge cases in the wire
-  encoder, EDNS0/OPT handling.
-- **Protocol niceties.** EDNS0/OPT is not yet echoed back (see the README
-  notes); implementing it is a well-scoped, self-contained task.
+  encoder, or the transport layer in `src/server.js`, which the unit tests do not
+  reach yet (they exercise `resolve()` and `parseQuery()` directly, not real sockets).
+- **DNSSEC.** The zones are unsigned today (see [ROADMAP.md](./ROADMAP.md)). Signing a
+  wildcard-computed zone is a genuinely interesting, well-scoped problem.
 
 ## Reporting bugs / security
 
@@ -147,7 +148,7 @@ answer, and what you got (a `dig` transcript is ideal).
 
 For anything security-sensitive (this is a DNS server — it's an attack surface),
 please **do not** open a public issue; contact the maintainer privately at
-[TODO: security contact email].
+[security@open-domain.com](mailto:security@open-domain.com) — see [SECURITY.md](./SECURITY.md).
 
 ---
 

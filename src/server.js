@@ -39,7 +39,7 @@ const RCVBUF = Number(process.env.RCVBUF || 4 * 1024 * 1024);
 // The default of 100/s is deliberately generous: large resolvers such as Google and
 // Cloudflare share a /24, so a tight limit punishes legitimate users before it touches
 // an attacker. RRL_PER_SECOND=0 disables the limiter.
-const RRL_PER_SECOND = Number(process.env.RRL_PER_SECOND ?? process.env.RRL_PERDETIK ?? 100);
+const RRL_PER_SECOND = Number(process.env.RRL_PER_SECOND ?? 100);
 const RRL_BURST = process.env.RRL_BURST ? Number(process.env.RRL_BURST) : null;
 const RRL_SLIP = Number(process.env.RRL_SLIP ?? 5);
 
@@ -67,7 +67,7 @@ const SERIAL_OVERRIDE = Number(process.env.SOA_SERIAL) || null;
 // Query log. Disabled unless QUERYLOG is set.
 const queryLog = openLog({
   file: process.env.QUERYLOG || null,
-  full: process.env.QUERYLOG_FULL === '1' || process.env.QUERYLOG_PENUH === '1',
+  full: process.env.QUERYLOG_FULL === '1',
   log: (m) => console.log(m),
 });
 
