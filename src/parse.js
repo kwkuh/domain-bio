@@ -10,6 +10,8 @@
 //   0a000001.a-i.sh         -> A     10.0.0.1     (8 hex digits)
 //   2001-db8--1.a-i.sh      -> AAAA  2001:db8::1  (dashed IPv6, "-" replaces ":")
 //   app.1.2.3.4.a-i.sh      -> A     1.2.3.4      (any prefix; the IP nearest the zone wins)
+//   www-192-168-0-1.a-i.sh  -> A     192.168.0.1  (prefix joined by "-", still one label)
+//   app-c0a801fc.a-i.sh     -> A     192.168.1.252 (prefix joined to the hex form)
 //   a-i.sh                  -> apex  (SOA/NS)
 //   foo.bar.a-i.sh          -> nxdomain (in the zone, but not an IP)
 //   google.com              -> refused (outside every zone we serve)
@@ -93,6 +95,40 @@ export function parseName(rawName, zones) {
   if (labels.length >= 4) {
     const last4 = labels.slice(-4);
     if (last4.every(isOctet)) return { kind: 'A', ip: canonicalV4(last4), zone };
+  }
+
+  // 5) A prefix joined to the address with a HYPHEN, all inside one label:
+  //      www-192-168-0-1   -> 192.168.0.1   (prefix "www")
+  //      app-c0a801fc      -> 192.168.1.252 (prefix "app")
+  //      customer2-app-127-0-0-1 -> 127.0.0.1 (the prefix may contain hyphens itself)
+  //
+  // This is the form that matters most in practice. It stays a SINGLE label, which is
+  // what makes it usable with a wildcard certificate on a domain the user owns, and it
+  // is what tooling generates automatically (`service-10-0-0-1.example`). nip.io and
+  // sslip.io have both answered it for years, so anyone arriving from either of them
+  // expects it to work. Our own front page documented `www-192-168-0-1` as a working
+  // example while the server answered NXDOMAIN.
+  //
+  // Read right-to-left, greedily: the address is whatever sits at the END of the label,
+  // and everything before it is the prefix. Deliberately placed AFTER the whole-label
+  // rules above, so nothing that already resolved can change meaning - this rule can
+  // only turn an NXDOMAIN into an address, never one address into a different one.
+  if (last.includes('-')) {
+    const parts = last.split('-');
+
+    // Four trailing numeric groups: "...-192-168-0-1". Needs a prefix, otherwise rule 1
+    // already handled it as a plain dashed address.
+    if (parts.length > 4) {
+      const tail4 = parts.slice(-4);
+      if (tail4.every(isOctet)) return { kind: 'A', ip: canonicalV4(tail4), zone };
+    }
+
+    // One trailing group of eight hex digits: "...-c0a801fc".
+    if (parts.length > 1 && /^[0-9a-f]{8}$/.test(parts[parts.length - 1])) {
+      const n = parseInt(parts[parts.length - 1], 16);
+      const ip = [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join('.');
+      return { kind: 'A', ip, zone };
+    }
   }
 
   return { kind: 'nxdomain', zone }; // in the zone, but not an address

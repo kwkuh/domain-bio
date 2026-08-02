@@ -101,7 +101,11 @@ jobs:
             *) STATUS=ERROR ;;
           esac
           echo "status=$STATUS" >> "$GITHUB_OUTPUT"
-          echo "summary=$(node -e 'const h=require("./result.json");console.log(`passed ${h.lulus||0} failed ${h.gagal||0}`)' 2>/dev/null || echo '-')" >> "$GITHUB_OUTPUT"
+          # The keys here must match the ones check.js actually writes into result.json.
+          # They were renamed together once and drifted anyway, and the failure is silent:
+          # `${h.lulus||0}` on a file that no longer has that key reads as 0, so the summary
+          # cheerfully reported "passed 0 failed 0" on a run where 218 checks passed.
+          echo "summary=$(node -e 'const h=require("./result.json");console.log(`passed ${h.passed||0} failed ${h.failed||0}`)' 2>/dev/null || echo '-')" >> "$GITHUB_OUTPUT"
           if [ "$STATUS" = "INVALID" ]; then
             echo "::error title=Instrument problem::The runner network hijacks or blocks port 53. This is NOT a sign the nameserver is down — this run is invalid."
           fi
