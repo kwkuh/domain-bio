@@ -20,9 +20,9 @@
 // daily file may be kept forever precisely because it cannot point at anyone —
 // which is what makes deleting the raw log after 14 days safe.
 //
-// Pakai:
+// Usage:
 //   node monitor/stats.js /var/log/open-domain/query.jsonl
-//   node monitor/stats.js --json berkas.jsonl >> stats/harian.jsonl
+//   node monitor/stats.js --json file.jsonl >> stats/daily.jsonl
 //   zcat query.jsonl.1.gz | node monitor/stats.js -
 
 import fs from 'node:fs';
@@ -31,25 +31,25 @@ import { parseName } from '../src/parse.js';
 
 const ZONES = (process.env.ZONES || 'a-i.st,a-i.sh').split(',').map((s) => s.trim());
 
-/** Kelompokkan nama jadi BENTUK, bukan disimpan apa adanya. */
-function bentuk(nama) {
-  const p = parseName(nama, ZONES);
-  if (p.kind === 'refused') return 'luar-zone';
+/** Group a name into its FORM, rather than storing it as-is. */
+function nameForm(name) {
+  const p = parseName(name, ZONES);
+  if (p.kind === 'refused') return 'outside-zone';
   if (p.kind === 'apex') return 'apex';
-  if (p.kind === 'nxdomain') return 'bukan-ip';
+  if (p.kind === 'nxdomain') return 'not-ip';
 
-  const sub = String(nama).toLowerCase().replace(/\.$/, '');
+  const sub = String(name).toLowerCase().replace(/\.$/, '');
   const zone = p.zone;
   const label = sub.slice(0, -(zone.length + 1)).split('.');
-  const akhir = label[label.length - 1];
-  const berprefix = label.length > (p.kind === 'AAAA' || /^[0-9a-f]{8}$/.test(akhir) || akhir.includes('-') ? 1 : 4);
+  const last = label[label.length - 1];
+  const hasPrefix = label.length > (p.kind === 'AAAA' || /^[0-9a-f]{8}$/.test(last) || last.includes('-') ? 1 : 4);
 
-  let b;
-  if (p.kind === 'AAAA') b = 'ipv6-bergaris';
-  else if (/^[0-9a-f]{8}$/.test(akhir)) b = 'heksa';
-  else if (akhir.includes('-')) b = 'ipv4-bergaris';
-  else b = 'ipv4-bertitik';
-  return berprefix ? `${b}+prefix` : b;
+  let form;
+  if (p.kind === 'AAAA') form = 'ipv6-dashed';
+  else if (/^[0-9a-f]{8}$/.test(last)) form = 'hex';
+  else if (last.includes('-')) form = 'ipv4-dashed';
+  else form = 'ipv4-dotted';
+  return hasPrefix ? `${form}+prefix` : form;
 }
 
 /**
@@ -61,128 +61,128 @@ function bentuk(nama) {
  * using the service. Hundreds more were our own testing, and the rest were
  * scanners guessing names like "login" and "fileshare".
  *
- * Only one thing deserves to be called usage: a name that actually produces
- * sebuah ALAMAT. Sisanya dipisahkan supaya tidak pernah ikut membesarkan angka.
+ * Only one thing deserves to be called usage: a name that actually produces an
+ * ADDRESS. Everything else is separated out so it can never inflate the number.
  */
-function golongan(nama, p) {
-  const n = String(nama).toLowerCase().replace(/\.$/, '');
-  if (p.kind === 'refused') return 'ditolak';        // di luar zone kita
-  if (p.kind === 'apex') return 'infrastruktur';     // SOA/NS zone
-  // ns1.a-i.sh / ns2.a-i.st — resolver mencari alamat nameserver, bukan pemakaian.
-  if (/^ns\d+\./.test(n)) return 'infrastruktur';
-  if (p.kind === 'A' || p.kind === 'AAAA') return 'layanan';
-  return 'derau';                                     // dalam zone tapi bukan IP
+function classify(name, p) {
+  const n = String(name).toLowerCase().replace(/\.$/, '');
+  if (p.kind === 'refused') return 'refused';            // outside our zones
+  if (p.kind === 'apex') return 'infrastructure';        // the zone's own SOA/NS
+  // ns1.a-i.sh / ns2.a-i.st — a resolver looking up a nameserver address, not usage.
+  if (/^ns\d+\./.test(n)) return 'infrastructure';
+  if (p.kind === 'A' || p.kind === 'AAAA') return 'service';
+  return 'noise';                                         // in-zone but not an IP
 }
 
-export function ringkas(baris, { abaikanBlok = [] } = {}) {
+export function summarise(lines, { ignoreBlocks = [] } = {}) {
   const t = {
-    query: 0, rusak: 0, diabaikan: 0,
-    golongan: { layanan: 0, infrastruktur: 0, derau: 0, ditolak: 0 },
-    zone: {}, tipe: {}, rcode: {}, transport: {}, keluarga: { v4: 0, v6: 0 },
-    bentuk: {}, hasil: {}, jam: {},
+    queries: 0, malformed: 0, ignored: 0,
+    classes: { service: 0, infrastructure: 0, noise: 0, refused: 0 },
+    zones: {}, types: {}, rcodes: {}, transports: {}, families: { v4: 0, v6: 0 },
+    forms: {}, outcomes: {}, hours: {},
   };
   // The Sets are TEMPORARY and then discarded; only their sizes leave this function.
-  const resolver = new Set();
-  const tujuan = new Set();
+  const resolvers = new Set();
+  const targets = new Set();
 
-  for (const l of baris) {
-    // Baris kosong bukan data rusak — itu bukan apa-apa. Menghitungnya sebagai
-    // rusak bikin angka "rusak" kehilangan arti, padahal gunanya justru sebagai
-    // a marker for records that are genuinely broken and worth looking at.
+  for (const l of lines) {
+    // A blank line is not broken data — it is nothing at all. Counting it as broken
+    // makes the "malformed" number meaningless, when its whole purpose is to be a
+    // marker for records that are genuinely broken and worth looking at.
     if (!String(l).trim()) continue;
     let e;
-    try { e = JSON.parse(l); } catch { t.rusak++; continue; }
-    if (!e || !e.n) { t.rusak++; continue; }
-    // Our own test traffic is discarded before counting. Without this,
-    // the monitor running every 30 minutes would make the graph climb forever with
-    // no real user at all — a graph that goes up because we are looking at it.
-    if (abaikanBlok.length && abaikanBlok.some((b) => String(e.c).startsWith(b))) { t.diabaikan++; continue; }
-    t.query++;
+    try { e = JSON.parse(l); } catch { t.malformed++; continue; }
+    if (!e || !e.n) { t.malformed++; continue; }
+    // Our own test traffic is discarded before counting. Without this, the monitor
+    // running every 30 minutes would make the graph climb forever with no real user
+    // at all — a graph that goes up because we are looking at it.
+    if (ignoreBlocks.length && ignoreBlocks.some((b) => String(e.c).startsWith(b))) { t.ignored++; continue; }
+    t.queries++;
 
-    const naik = (obj, k) => { obj[k] = (obj[k] || 0) + 1; };
+    const bump = (obj, k) => { obj[k] = (obj[k] || 0) + 1; };
     const p = parseName(e.n, ZONES);
-    const g = golongan(e.n, p);
-    naik(t.golongan, g);
-    naik(t.zone, p.zone || '(luar)');
-    naik(t.tipe, String(e.q));
-    naik(t.rcode, e.r === null || e.r === undefined ? 'dibatasi' : String(e.r));
-    naik(t.transport, e.x || '?');
-    naik(t.keluarga, String(e.c).startsWith('v6:') || String(e.c).includes(':') ? 'v6' : 'v4');
-    naik(t.hasil, e.h || '?');
-    if (e.t) naik(t.jam, String(e.t).slice(0, 13)); // YYYY-MM-DDTHH
+    const c = classify(e.n, p);
+    bump(t.classes, c);
+    bump(t.zones, p.zone || '(outside)');
+    bump(t.types, String(e.q));
+    bump(t.rcodes, e.r === null || e.r === undefined ? 'limited' : String(e.r));
+    bump(t.transports, e.x || '?');
+    bump(t.families, String(e.c).startsWith('v6:') || String(e.c).includes(':') ? 'v6' : 'v4');
+    bump(t.outcomes, e.h || '?');
+    if (e.t) bump(t.hours, String(e.t).slice(0, 13)); // YYYY-MM-DDTHH
 
-    if (g === 'layanan') {
-      naik(t.bentuk, bentuk(e.n));
-      tujuan.add(p.ip);
-      if (e.c) resolver.add(e.c);
+    if (c === 'service') {
+      bump(t.forms, nameForm(e.n));
+      targets.add(p.ip);
+      if (e.c) resolvers.add(e.c);
     }
   }
 
-  const jamTersibuk = Object.entries(t.jam).sort((a, b) => b[1] - a[1])[0];
+  const busiest = Object.entries(t.hours).sort((a, b) => b[1] - a[1])[0];
   return {
-    query: t.query,
-    rusak: t.rusak,
-    diabaikan: t.diabaikan,
-    golongan: t.golongan,
-    // The count of distinct TARGET ADDRESSES, taken ONLY from the "layanan" class.
+    queries: t.queries,
+    malformed: t.malformed,
+    ignored: t.ignored,
+    classes: t.classes,
+    // The count of distinct TARGET ADDRESSES, taken ONLY from the "service" class.
     // This is the most honest growth signal we have: how many different machines
     // are actually being addressed. Not a user count — one person can own many
     // machines, and one machine can serve many people.
-    tujuanUnik: tujuan.size,
+    distinctTargets: targets.size,
     // Resolver blocks forwarding service requests. This number rising means the
-    // sebarannya melebar, BUKAN penggunanya bertambah.
-    blokResolver: resolver.size,
-    zone: t.zone, tipe: t.tipe, rcode: t.rcode, transport: t.transport,
-    keluarga: t.keluarga, bentuk: t.bentuk, hasil: t.hasil,
-    jamTersibuk: jamTersibuk ? { jam: jamTersibuk[0], query: jamTersibuk[1] } : null,
+    // reach is widening, NOT that there are more users.
+    resolverBlocks: resolvers.size,
+    zones: t.zones, types: t.types, rcodes: t.rcodes, transports: t.transports,
+    families: t.families, forms: t.forms, outcomes: t.outcomes,
+    busiestHour: busiest ? { hour: busiest[0], queries: busiest[1] } : null,
   };
 }
 
 // ---- CLI ----
 const argv = process.argv.slice(2);
-const modeJson = argv.includes('--json');
-const berkas = argv.filter((a) => !a.startsWith('--'));
+const jsonMode = argv.includes('--json');
+const files = argv.filter((a) => !a.startsWith('--'));
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const sumber = berkas[0] === '-' || berkas.length === 0
+  const source = files[0] === '-' || files.length === 0
     ? process.stdin
-    : fs.createReadStream(berkas[0]);
-  const rl = readline.createInterface({ input: sumber, crlfDelay: Infinity });
-  const baris = [];
-  for await (const l of rl) if (l.trim()) baris.push(l);
-  // ABAIKAN_BLOK="5.78.141.,2a01:4ff:1f0" — block prefixes discarded before counting.
-  const abaikanBlok = (process.env.ABAIKAN_BLOK || '').split(',').map((s) => s.trim()).filter(Boolean);
-  const r = ringkas(baris, { abaikanBlok });
+    : fs.createReadStream(files[0]);
+  const rl = readline.createInterface({ input: source, crlfDelay: Infinity });
+  const lines = [];
+  for await (const l of rl) if (l.trim()) lines.push(l);
+  // IGNORE_BLOCKS="5.78.141.,2a01:4ff:1f0" — block prefixes discarded before counting.
+  const ignoreBlocks = (process.env.IGNORE_BLOCKS || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const r = summarise(lines, { ignoreBlocks });
 
-  if (modeJson) {
-    console.log(JSON.stringify({ tanggal: new Date().toISOString().slice(0, 10), ...r }));
+  if (jsonMode) {
+    console.log(JSON.stringify({ date: new Date().toISOString().slice(0, 10), ...r }));
   } else {
-    const tabel = (judul, obj) => {
+    const table = (title, obj) => {
       const total = Object.values(obj).reduce((a, b) => a + b, 0) || 1;
-      console.log(`\n  ${judul}`);
+      console.log(`\n  ${title}`);
       for (const [k, v] of Object.entries(obj).sort((a, b) => b[1] - a[1])) {
         console.log(`    ${k.padEnd(20)} ${String(v).padStart(8)}  ${(100 * v / total).toFixed(1).padStart(5)}%`);
       }
     };
-    const g = r.golongan;
-    console.log(`\n  ${r.query.toLocaleString()} queries recorded` +
-      (r.diabaikan ? `, ${r.diabaikan.toLocaleString()} discarded (our own traffic)` : '') +
-      (r.rusak ? `, ${r.rusak} malformed lines` : ''));
+    const g = r.classes;
+    console.log(`\n  ${r.queries.toLocaleString()} queries recorded` +
+      (r.ignored ? `, ${r.ignored.toLocaleString()} discarded (our own traffic)` : '') +
+      (r.malformed ? `, ${r.malformed} malformed lines` : ''));
     console.log('');
-    console.log(`  ${String(g.layanan).padStart(8)}  SERVICE USED      names that actually produced an address`);
-    console.log(`  ${String(g.infrastruktur).padStart(8)}  infrastructure    resolvers looking up ns1/ns2 & apex — plumbing, not usage`);
-    console.log(`  ${String(g.derau).padStart(8)}  noise             in-zone names that are not IPs — scanners & typos`);
-    console.log(`  ${String(g.ditolak).padStart(8)}  refused           outside our zones — we are not an open resolver`);
+    console.log(`  ${String(g.service).padStart(8)}  SERVICE USED      names that actually produced an address`);
+    console.log(`  ${String(g.infrastructure).padStart(8)}  infrastructure    resolvers looking up ns1/ns2 & apex — plumbing, not usage`);
+    console.log(`  ${String(g.noise).padStart(8)}  noise             in-zone names that are not IPs — scanners & typos`);
+    console.log(`  ${String(g.refused).padStart(8)}  refused           outside our zones — we are not an open resolver`);
     console.log('');
-    console.log(`  ${r.tujuanUnik.toLocaleString()} distinct target addresses   <- this is the growth signal`);
-    console.log(`  ${r.blokResolver.toLocaleString()} resolver blocks            <- reach, NOT a user count`);
-    if (r.jamTersibuk) console.log(`  busiest hour: ${r.jamTersibuk.jam} (${r.jamTersibuk.query} queries)`);
-    tabel('by zone', r.zone);
-    tabel('name form (service class only)', r.bentuk);
-    tabel('by query type', r.tipe);
-    tabel('by outcome', r.hasil);
-    tabel('by transport', r.transport);
-    tabel('by address family', r.keluarga);
+    console.log(`  ${r.distinctTargets.toLocaleString()} distinct target addresses   <- this is the growth signal`);
+    console.log(`  ${r.resolverBlocks.toLocaleString()} resolver blocks            <- reach, NOT a user count`);
+    if (r.busiestHour) console.log(`  busiest hour: ${r.busiestHour.hour} (${r.busiestHour.queries} queries)`);
+    table('by zone', r.zones);
+    table('name form (service class only)', r.forms);
+    table('by query type', r.types);
+    table('by outcome', r.outcomes);
+    table('by transport', r.transports);
+    table('by address family', r.families);
     console.log('\n  Note: what asks is a RESOLVER, not a user, and a TTL of 3600 hides');
     console.log('  most of the usage. The numbers above are REQUESTS, not people. No name and');
     console.log('  no address leaves this function.\n');

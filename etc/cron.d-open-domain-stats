@@ -1,0 +1,6 @@
+# Daily query-log summary. Deployed to /etc/cron.d/open-domain-stats.
+#
+# Runs after logrotate (cron.daily, ~06:25) so query.jsonl.1 is a full day. IGNORE_BLOCKS
+# drops our own traffic — the monitoring host's /24 and /56 — so it never inflates the
+# numbers. Adjust the prefixes to the machine that runs the monitor.
+30 7 * * * root IGNORE_BLOCKS="5.78.141.,2a01:4ff:1f0" /usr/local/bin/open-domain-stats-daily

@@ -1,0 +1,37 @@
+# Machine-specific settings for the DNS server. Copy to /etc/default/open-domain and
+# edit for the host. This is the ONE file that changes when the service moves hosts;
+# open-domain.service is server-agnostic. See the full variable list in README (#config-env).
+#
+# The values below are the live ns1 configuration, kept here as a worked example. None
+# of them are secret — every address is already public in the delegation and glue.
+
+# Addresses to bind and to answer as ns1's own A/AAAA (the glue). Replace with this
+# machine's real addresses.
+BIND=167.235.234.220
+BIND6=2a01:4f8:c015:8800::1
+SELF_IP=167.235.234.220
+SELF_IP6=2a01:4f8:c015:8800::1
+
+# The apex — a bare "a-i.st" / "a-i.sh" — points at this same machine, where nginx
+# redirects it to open-domain.com. Both families, or it works for only half the internet.
+APEX_IP=167.235.234.220
+APEX_IP6=2a01:4f8:c015:8800::1
+
+# Zones, nameserver names, and TTLs. Defaults live in the code; set them here to be explicit.
+ZONES=a-i.st,a-i.sh
+NS_HOSTS=ns1.a-i.sh,ns2.a-i.st
+TTL=3600
+SOA_MINTTL=180
+
+# Blocklist: destinations that must not resolve. Rules are matched on the resulting
+# address, so no respelling of a name can slip past. See etc/blocklist.txt.
+BLOCKLIST=/etc/open-domain/blocklist.txt
+
+# Rate limiting per client /24 (v4) and /56 (v6) block. 100/s is deliberately generous:
+# big resolvers share a /24, so a tight limit hurts real users before it touches an attacker.
+RRL_PER_SECOND=100
+RRL_SLIP=5
+
+# Query log. Client addresses are truncated to /24 and /48 before writing — see PRIVACY.md.
+# Unset this to disable logging entirely.
+QUERYLOG=/var/log/open-domain/query.jsonl
