@@ -60,7 +60,9 @@ function serialForToday() {
   const day = String(d.getUTCDate()).padStart(2, '0');
   return Number(`${y}${m}${day}01`);
 }
-const SERIAL = Number(process.env.SOA_SERIAL) || serialForToday();
+// A fixed override, or null to track the date live. Read as a getter on cfg below so it
+// does not freeze at the value it had when the process booted.
+const SERIAL_OVERRIDE = Number(process.env.SOA_SERIAL) || null;
 
 // Query log. Disabled unless QUERYLOG is set.
 const queryLog = openLog({
@@ -89,7 +91,12 @@ const cfg = {
   retry: Number(process.env.SOA_RETRY || 600),
   expire: Number(process.env.SOA_EXPIRE || 604800),
   minttl: Number(process.env.SOA_MINTTL || 60),
-  serial: SERIAL,
+  // A getter, not a frozen number. Computed once at boot, the date-based serial went
+  // stale the moment the process ran past midnight UTC: a resolver would see yesterday's
+  // serial today. Worse, once ns2 exists, a box that rebooted on a different day would
+  // advertise a different serial for the same zone and the "serials match" check would go
+  // permanently red. Evaluating it per request keeps every nameserver on the same number.
+  get serial() { return SERIAL_OVERRIDE || serialForToday(); },
   apexIp: process.env.APEX_IP || null,   // optional: an A record for the apex (landing page)
   apexIp6: process.env.APEX_IP6 || null, // and the AAAA to go with it
   selfIp: SELF_IP && SELF_IP !== '0.0.0.0' ? SELF_IP : null,
@@ -143,7 +150,10 @@ function listenUdp(family, address) {
         if (queryLog.active) {
           try {
             const q = parseQuery(msg);
-            queryLog.record({ ip: rinfo.address, v6, name: q.name, qtype: q.qtype, rcode: null, outcome: verdict, transport: 'udp' });
+            // qtype is written as its NAME here too, matching the normal path. It used to
+            // go in as a raw number on this branch alone, so the same statistic was half
+            // words and half integers and nothing could group it.
+            queryLog.record({ ip: rinfo.address, v6, name: q.name, qtype: TYPE_NAME[q.qtype] || q.qtype, rcode: null, outcome: verdict, transport: 'udp' });
           } catch { /* malformed packet: nothing to record */ }
         }
         if (verdict === 'drop') return;
@@ -187,8 +197,20 @@ listenUdp('udp4', BIND);
 if (BIND6) listenUdp('udp6', BIND6);
 
 // ---- TCP (fallback: each message is prefixed with a 2-byte length) ----
+// A bound on how many TCP connections may be open at once. TCP is deliberately NOT put
+// through the per-block query limiter: completing a handshake already proves the source
+// address is real, so TCP cannot be used for the reflection the UDP limiter exists to
+// stop — and TCP is the very escape hatch a rate-limited UDP client is sent to (TC=1 ->
+// retry over TCP), so limiting it with the same bucket would slam that door shut. The
+// real TCP risk is running out of sockets, so the bound is on CONCURRENCY, not on rate.
+const MAX_TCP_CONN = Number(process.env.MAX_TCP_CONN || 512);
+let tcpOpen = 0;
+
 function makeTcpServer() {
   return net.createServer((sock) => {
+    if (tcpOpen >= MAX_TCP_CONN) { sock.destroy(); return; } // at capacity: drop, do not queue
+    tcpOpen++;
+    sock.on('close', () => { tcpOpen--; });
     let buf = Buffer.alloc(0);
     sock.on('data', (chunk) => {
       buf = Buffer.concat([buf, chunk]);

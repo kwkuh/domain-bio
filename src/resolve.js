@@ -3,7 +3,7 @@
 
 import { parseName, matchZone, ipv4ToBytes, ipv6ToBytes } from './parse.js';
 import {
-  TYPE, RCODE, encodeName, answerRecord, namedRecord, soaRdata, hinfoRdata, buildResponse,
+  TYPE, RCODE, CLASS_IN, encodeName, answerRecord, namedRecord, soaRdata, hinfoRdata, buildResponse,
 } from './wire.js';
 
 /**
@@ -14,6 +14,12 @@ import {
  * @returns {Buffer}
  */
 export function resolve(q, cfg) {
+  // An OPCODE other than 0 (a standard QUERY) is a request we do not implement — UPDATE,
+  // NOTIFY, STATUS. The honest reply is NOTIMP with the opcode echoed (done in wire.js),
+  // not a cheerful NOERROR that pretends we carried out an UPDATE we never understood.
+  // 0x7800 is the OPCODE field; see wire.js.
+  if ((q.flags & 0x7800) !== 0) return buildResponse(q, { rcode: RCODE.NOTIMP });
+
   const zones = cfg.zones || cfg.zone;
   const parsed = parseName(q.name, zones);
   // SOA/NS must name the zone that actually matched, not the first one in the list.
@@ -22,6 +28,19 @@ export function resolve(q, cfg) {
   const t = q.qtype;
   const answers = [];
   const authority = [];
+
+  // Outside every zone we serve -> REFUSED, whatever the type. This MUST come before the
+  // ANY shortcut below: an ANY query for google.com used to fall into that shortcut and
+  // get a NOERROR + AA HINFO, which is us claiming authority over a domain that is not
+  // ours. We are not an open resolver and must say so for every qtype, ANY included.
+  if (parsed.kind === 'refused') return buildResponse(q, { rcode: RCODE.REFUSED });
+
+  // We serve exactly one DNS class: IN. A query in CHAOS or HESIOD used to be answered
+  // with an IN-class record and NOERROR+AA, claiming knowledge of a class we never serve.
+  // (q.qclass may be undefined for hand-built test queries; only reject a class we actually saw.)
+  if (q.qclass !== undefined && q.qclass !== CLASS_IN) {
+    return buildResponse(q, { rcode: RCODE.REFUSED });
+  }
 
   // A nameserver whose name lives INSIDE its own zone (ns1.a-i.sh serving a-i.sh)
   // must have an address record of its own, or the delegation deadlocks: a resolver

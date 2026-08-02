@@ -6,11 +6,12 @@ export const TYPE = { A: 1, NS: 2, SOA: 6, HINFO: 13, TXT: 16, AAAA: 28, OPT: 41
 export const CLASS_IN = 1;
 
 // ---- Header flags ----
-const QR = 0x8000; // this is a response
-const AA = 0x0400; // authoritative answer
-const RD = 0x0100; // recursion desired (copied from the query)
+const QR = 0x8000;     // this is a response
+const OPCODE = 0x7800; // bits 11-14: standard query = 0; UPDATE/NOTIFY/STATUS are not
+const AA = 0x0400;     // authoritative answer
+const RD = 0x0100;     // recursion desired (copied from the query)
 const TC = 0x0200; // truncated — "this did not fit, retry over TCP"
-export const RCODE = { OK: 0, FORMERR: 1, NXDOMAIN: 3, REFUSED: 5 };
+export const RCODE = { OK: 0, FORMERR: 1, NXDOMAIN: 3, NOTIMP: 4, REFUSED: 5 };
 
 /** Encode a domain name into labels ("ns1.a-i.sh" -> \x03ns1\x04a-i\x02sh\x00). */
 export function encodeName(name) {
@@ -134,6 +135,12 @@ export function parseQuery(buf) {
   if (buf.length < 12) throw new Error('packet too short');
   const id = buf.readUInt16BE(0);
   const flags = buf.readUInt16BE(2);
+  // A packet with QR=1 is a RESPONSE, not a query. Answering it would mean two servers
+  // can be pointed at each other (or one at itself, with a forged source) and bounce
+  // the same packet back and forth forever — each "answer" arrives as a new "question".
+  // The only safe reply to a response is silence, so this throws and the caller drops
+  // the packet without sending anything.
+  if (flags & 0x8000) throw new Error('QR=1: a response, not a query');
   const qdcount = buf.readUInt16BE(4);
   const arcount = buf.readUInt16BE(10);
   if (qdcount < 1) throw new Error('no question');
@@ -171,14 +178,18 @@ export function parseQuery(buf) {
   }
   if (off + 4 > buf.length) throw new Error('question has no qtype/qclass');
   const qtype = buf.readUInt16BE(off);
-  off += 4; // skip qtype + qclass
+  // The class is returned rather than skipped. It used to be dropped here, which meant
+  // a CHAOS-class query got an IN-class answer with NOERROR+AA — claiming knowledge of
+  // a class we have never heard of. resolve() refuses anything that is not IN.
+  const qclass = buf.readUInt16BE(off + 2);
+  off += 4;
   const questionSection = buf.subarray(12, off);
 
   // What follows the question is answer + authority + additional. We only care about
   // additional, but qdcount>1 is unsupported and ancount/nscount are always 0 in a
   // valid query — so walking from here is safe.
   const edns = findOpt(buf, off, arcount);
-  return { id, flags, name: labels.join('.'), qtype, questionSection, edns };
+  return { id, flags, name: labels.join('.'), qtype, qclass, questionSection, edns };
 }
 
 /**
@@ -196,7 +207,7 @@ export function buildTruncated({ id, flags, questionSection, edns }) {
   const additional = edns && edns.present ? [optRecord(OUR_PAYLOAD)] : [];
   const header = Buffer.alloc(12);
   header.writeUInt16BE(id, 0);
-  header.writeUInt16BE(QR | AA | TC | (flags & RD) | RCODE.OK, 2);
+  header.writeUInt16BE(QR | (flags & OPCODE) | AA | TC | (flags & RD) | RCODE.OK, 2);
   header.writeUInt16BE(1, 4); // qdcount
   header.writeUInt16BE(0, 6);
   header.writeUInt16BE(0, 8);
@@ -235,7 +246,10 @@ export function buildResponse({ id, flags, questionSection, edns }, { rcode = RC
   const header = Buffer.alloc(12);
   const rd = flags & RD;
   header.writeUInt16BE(id, 0);
-  header.writeUInt16BE(QR | AA | rd | (badVersion ? 0 : rcode), 2);
+  // The OPCODE is copied back from the query. A reply that silently rewrites a NOTIFY or
+  // an UPDATE to opcode 0 tells the sender "I did what you asked" for something we never
+  // implemented; echoing the opcode alongside NOTIMP (set by resolve) is the honest answer.
+  header.writeUInt16BE(QR | (flags & OPCODE) | AA | rd | (badVersion ? 0 : rcode), 2);
   header.writeUInt16BE(1, 4); // qdcount
   header.writeUInt16BE(body.length, 6);
   header.writeUInt16BE(auth.length, 8);
