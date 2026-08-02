@@ -29,7 +29,7 @@ fails, the other fails with it today: one resolver answers both. Not failover.
 ## Notes for agents
 - Deterministic: the hostname is a pure function of the IP. No lookup, no state, no registration step.
 - Available immediately: resolves the moment your host has a public IP — no propagation you control.
-- HTTPS: use the dashed form so a single *.a-i.st certificate covers the name.
+- HTTPS: any form gets a normal per-name certificate via HTTP-01 (dotted and dashed both work). There is NO *.a-i.st wildcard certificate and there cannot be one: wildcards need DNS-01, and these names are generated, not stored. The dashed form is just one label -- that only helps a wildcard on a domain YOU own, not here.
 - Direct: your traffic goes straight to the target IP. Open-Domain only answers the DNS query, nothing else.
 
 ## Do not

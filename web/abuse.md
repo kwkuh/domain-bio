@@ -19,8 +19,9 @@ any name pointing at it returns `NXDOMAIN` instead of an answer.
 
 - **Remove content.** We never had it. Whatever you are looking at lives on the IP address
   in the hostname, and it will keep serving that content whether or not we answer for the name.
-- **Tell you who used a name.** We do not log queries. There is no record of who asked for
-  what, by design, and none can be produced after the fact.
+- **Tell you who used a name.** The logs record the name that was queried, but the client
+  address is truncated to a /24 (IPv4) or /48 (IPv6) before it is written and deleted after
+  14 days, so a query cannot be traced back to a specific person. See [privacy](./privacy.md).
 - **Reach the same host elsewhere.** Blocking a name here does not affect the same IP under
   any other wildcard DNS service, under a domain the operator controls, or by its raw address.
 

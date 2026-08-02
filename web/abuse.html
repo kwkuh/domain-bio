@@ -54,14 +54,14 @@
                    clip-path:inset(50%); white-space:nowrap}
   @media (max-width:30rem){
     main{padding:1.75rem 1rem 3rem}
-    footer a{padding:.5rem 0}                                /* jempol butuh ruang lebih */
+    footer a{padding:.5rem 0}                                /* thumbs need a larger tap target */
     pre{font-size:.82em}                                     /* perintah panjang muat tanpa scroll jauh */
   }
 </style>
 </head>
 <body>
-<a class="skip" href="#isi">Skip to content</a>
-<main id="isi">
+<a class="skip" href="#content">Skip to content</a>
+<main id="content">
 
   <h1>Abuse</h1>
   <p class="tagline">Reporting misuse of a-i.st and a-i.sh.</p>
@@ -80,7 +80,7 @@
 
   <ul>
     <li><strong>Remove content.</strong> We never had it. Whatever you are looking at lives on the IP address in the hostname, and it will keep serving that content whether or not we answer for the name.</li>
-    <li><strong>Tell you who used a name.</strong> We do not log queries. There is no record of who asked for what, by design, and none can be produced after the fact.</li>
+    <li><strong>Tell you who used a name.</strong> The logs record the name that was queried, but the client address is truncated to a /24 (IPv4) or /48 (IPv6) before it is written and deleted after 14 days, so a query cannot be traced back to a specific person. See the <a href="/privacy.html">privacy page</a>.</li>
     <li><strong>Reach the same host elsewhere.</strong> Blocking a name here does not affect the same IP under any other wildcard DNS service, under a domain the operator controls, or by its raw address.</li>
   </ul>
 

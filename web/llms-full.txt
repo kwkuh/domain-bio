@@ -142,10 +142,13 @@ Zero-dependency Node. One process can be authoritative for any number of zones.
   git clone https://github.com/kwkuh/open-domain
   cd open-domain
   npm test
-  ZONES=example.dev,example.test PORT=15353 BIND=127.0.0.1 node src/server.js
+  ZONES=example.dev,example.test NS_HOSTS=ns1.example.dev,ns2.example.dev \
+    PORT=15353 BIND=127.0.0.1 BIND6=::1 node src/server.js
   dig +short -p 15353 @127.0.0.1 1.2.3.4.example.dev
 
-Environment: ZONES, PORT, BIND, NS_HOSTS, APEX_IP, TTL, SOA_MINTTL, DEBUG.
+Environment: ZONES, PORT, BIND, BIND6, NS_HOSTS, APEX_IP, TTL, SOA_MINTTL, DEBUG.
+Always set NS_HOSTS to your own nameservers; it defaults to ours. BIND is IPv4 only —
+set BIND6 too, or BIND6="" to disable IPv6 (it otherwise listens on all v6 interfaces).
 Serving the public internet needs a static public IPv4, UDP and TCP port 53 reachable,
 and NS delegation. That is a standing commitment, which is why the hosted service exists.
 

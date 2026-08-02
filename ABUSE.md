@@ -15,7 +15,9 @@ Names pointing at it then return `NXDOMAIN`.
 
 - **Remove content.** We never had it. It lives on the IP address inside the hostname
   and keeps serving whether or not we answer.
-- **Say who used a name.** We do not log queries, by design. There is no record to produce.
+- **Say who used a name.** The logs record the queried name, but the client address is
+  truncated to a /24 (IPv4) or /48 (IPv6) before writing and deleted after 14 days, so a
+  query cannot be traced back to a specific person. See PRIVACY.md.
 - **Reach the host elsewhere.** A block here does not affect the same IP under another
   service, under the operator's own domain, or by its raw address.
 

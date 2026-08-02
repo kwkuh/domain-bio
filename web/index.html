@@ -86,14 +86,14 @@
                    clip-path:inset(50%); white-space:nowrap}
   @media (max-width:30rem){
     main{padding:1.75rem 1rem 3rem}
-    footer a{padding:.5rem 0}                                /* jempol butuh ruang lebih */
+    footer a{padding:.5rem 0}                                /* thumbs need a larger tap target */
     pre{font-size:.82em}                                     /* perintah panjang muat tanpa scroll jauh */
   }
 </style>
 </head>
 <body>
-<a class="skip" href="#isi">Skip to content</a>
-<main id="isi">
+<a class="skip" href="#content">Skip to content</a>
+<main id="content">
 
   <h1>Open-Domain</h1>
   <p class="tagline">Wildcard DNS for IP addresses. Free, stateless, open source.</p>
@@ -145,6 +145,10 @@ dig +short 203.0.113.10.a-i.sh</code></pre>
 
   <p><strong>We do not provide a wildcard certificate</strong>, and neither do nip.io or sslip.io. You cannot obtain one for <code>*.a-i.st</code> yourself either: Let's Encrypt only issues wildcards through the DNS-01 challenge, and that requires adding a TXT record to <code>a-i.st</code> — which nobody but us can do. So the dashed form buys you nothing on its own. It matters only if someone hands you a wildcard certificate, and nobody does.</p>
 
+  <h2 id="isolation">Isolation <a class="anchor" href="#isolation" aria-label="Link to this section">#</a></h2>
+
+  <p><strong>Names under <code>a-i.st</code> are not isolated from one another in the browser.</strong> The suffix is not on the <a href="https://publicsuffix.org/">Public Suffix List</a>, so a browser treats every <code>*.a-i.st</code> name as one site for cookies and same-site checks: a page served at one name can set a cookie scoped to <code>a-i.st</code> that a different name will then send. Use these names for development, previews, CI, and reaching a box by its IP — not for separating untrusted tenants that must never share a cookie jar.</p>
+
   <p>What you get instead is an ordinary certificate for your exact hostname, which is all most people needed anyway. Let's Encrypt will not issue for a bare IP address, but it will for a hostname — and that is what this gives you.</p>
 
   <p>Two practical consequences, both learned the hard way:</p>
@@ -185,12 +189,23 @@ cd open-domain
 npm test
 
 ZONES=example.dev,example.test \
-  PORT=15353 BIND=127.0.0.1 \
+  NS_HOSTS=ns1.example.dev,ns2.example.dev \
+  PORT=15353 BIND=127.0.0.1 BIND6=::1 \
   node src/server.js
 
 dig +short -p 15353 @127.0.0.1 1.2.3.4.example.dev</code></pre>
 
-  <p>Each zone gets its own <code>SOA</code> and apex, and the longest matching zone wins. To serve the public internet you need a host with a static IPv4 address and UDP and TCP port 53 reachable, then delegate NS and glue records to it. Configuration is all environment variables: <code>ZONES</code>, <code>PORT</code>, <code>BIND</code>, <code>NS_HOSTS</code>, <code>APEX_IP</code>, <code>TTL</code>, <code>DEBUG</code>.</p>
+  <p>Each zone gets its own <code>SOA</code> and apex, and the longest matching zone wins. <strong>Always set <code>NS_HOSTS</code> to your own nameservers</strong> — it defaults to ours, so a zone left without it will tell the world to ask <code>ns1.a-i.sh</code>. <code>BIND</code> controls IPv4 only; set <code>BIND6</code> as well (or <code>BIND6=&quot;&quot;</code> to switch IPv6 off), since it otherwise listens on every IPv6 interface. To serve the public internet you need a host with a static IPv4 address and UDP and TCP port 53 reachable, then delegate NS and glue records to it. Configuration is all environment variables: <code>ZONES</code>, <code>PORT</code>, <code>BIND</code>, <code>BIND6</code>, <code>NS_HOSTS</code>, <code>APEX_IP</code>, <code>TTL</code>, <code>DEBUG</code>.</p>
+
+  <h2 id="troubleshooting">If a name does not resolve <a class="anchor" href="#troubleshooting" aria-label="Link to this section">#</a></h2>
+
+  <p>NXDOMAIN looks the same for three very different causes. Tell them apart in one step: run <code>dig a-i.st SOA</code>. If the SOA answers, the service is up and the problem is the name; if it does not, the problem is us.</p>
+
+  <ul>
+    <li><strong>The name is not a valid IP encoding.</strong> <code>hello.a-i.st</code> has no address in it and is NXDOMAIN by design. Check the form: dotted (<code>1.2.3.4.a-i.st</code>), dashed (<code>1-2-3-4.a-i.st</code>), or eight hex digits.</li>
+    <li><strong>Your resolver blocks private IPs.</strong> Many resolvers and routers have DNS-rebinding protection and refuse to return <code>10.x</code>, <code>192.168.x</code>, or <code>127.x</code>. That is your resolver, not this service — nip.io and sslip.io hit the same wall.</li>
+    <li><strong>The service is down.</strong> The one case the <code>SOA</code> check above confirms.</li>
+  </ul>
 
   <h2 id="reliability">Reliability <a class="anchor" href="#reliability" aria-label="Link to this section">#</a></h2>
 

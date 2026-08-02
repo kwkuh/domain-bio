@@ -19,12 +19,18 @@ One line per DNS query, containing:
 | queried name | `203.0.113.10.a-i.st` | this is what an abuse report is about |
 | query type | `A` | |
 | result code | `0` | whether it was answered, refused, or blocked |
-| outcome | `lolos` | answered / truncated / dropped / blocked |
+| outcome | `pass` | one of pass / truncate / drop / blocked |
 | transport | `udp` | |
 
 **Client addresses are truncated before they are written.** IPv4 keeps the first
 three octets (`/24`); IPv6 keeps the first three groups (`/48`). The full address
 is never stored.
+
+**The queried name, though, is stored whole** — it is the one thing an abuse report is
+about. For a wildcard-DNS service the name *is* an address, so the IP you encode into it,
+and any label you put in front, is written to the log exactly as asked and kept for 14
+days. Never put anything secret in a hostname: DNS names are not private here, or anywhere
+along the resolver path that carried the query.
 
 That is deliberate, and it comes from asking what the log is actually for. An abuse
 report says *"`bank.203.0.113.10.a-i.st` was used for phishing."* Answering it

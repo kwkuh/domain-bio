@@ -77,13 +77,13 @@ machinery, not a quota you can buy out of.
 
 ## 7. Reporting abuse
 
-<abuse@open-domain.com> — see [ABUSE.md](./ABUSE.md) for what to include and what
+<abuse@open-domain.com> — see [the abuse page](./abuse.md) for what to include and what
 happens next. Security issues: <security@open-domain.com>, see
-[SECURITY.md](./SECURITY.md).
+[SECURITY.md](https://github.com/kwkuh/open-domain/blob/main/SECURITY.md).
 
 ## 8. Privacy
 
-See [PRIVACY.md](./PRIVACY.md). Short version: no accounts, no cookies, no
+See [the privacy page](./privacy.md). Short version: no accounts, no cookies, no
 tracking, and client IP addresses are truncated before anything is written down.
 
 ## 9. Changes

@@ -85,7 +85,9 @@ certbot certonly --webroot -w /var/www/acme -d 5-78-141-213.a-i.st
 **Certificates are rate-limited per suffix, not per user.** Let's Encrypt allows 50 new
 certificates per registered domain every 7 days, and `a-i.st` counts as one registered
 domain for everybody using it. Renewals are exempt. If you hit the limit, try `a-i.sh` —
-it has its own separate allowance.## For agents and automated tools
+it has its own separate allowance.
+
+## For agents and automated tools
 
 The hostname is a pure function of the IP: no lookup, no state, no registration step.
 An agent that has just been handed a public IP can construct its own address without
@@ -120,13 +122,32 @@ git clone https://github.com/kwkuh/open-domain
 cd open-domain
 npm test
 
-ZONES=example.dev,example.test PORT=15353 BIND=127.0.0.1 node src/server.js
+ZONES=example.dev,example.test NS_HOSTS=ns1.example.dev,ns2.example.dev \
+  PORT=15353 BIND=127.0.0.1 BIND6=::1 node src/server.js
 dig +short -p 15353 @127.0.0.1 1.2.3.4.example.dev
 ```
 
 Each zone gets its own `SOA` and apex, and the longest matching zone wins. Configuration
 is all environment variables: `ZONES`, `PORT`, `BIND`, `NS_HOSTS`, `APEX_IP`, `TTL`,
 `SOA_MINTTL`, `DEBUG`.
+
+## If a name does not resolve
+
+NXDOMAIN has three common causes. Tell them apart with `dig a-i.st SOA`: if the SOA
+answers, the service is up and the problem is the name.
+
+- **Not a valid IP encoding** — `hello.a-i.st` has no address in it. Use the dotted,
+  dashed, or 8-hex-digit form.
+- **Your resolver blocks private IPs** — DNS-rebinding protection refuses `10.x`,
+  `192.168.x`, `127.x`. That is your resolver; nip.io and sslip.io hit it too.
+- **The service is down** — the case the SOA check confirms.
+
+## Isolation
+
+Names under `a-i.st` are **not** isolated from each other in the browser: the suffix is
+not on the Public Suffix List, so a browser treats all `*.a-i.st` names as one site for
+cookies. Use them for dev, previews, and reaching a box by IP — not for separating
+untrusted tenants that must not share a cookie jar.
 
 ## Reliability
 
