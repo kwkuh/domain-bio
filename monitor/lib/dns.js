@@ -1,14 +1,14 @@
-// dns.js — klien DNS mini buat monitoring: kirim satu query ke SATU server tertentu
+// dns.js — a tiny DNS client for monitoring: send one query to ONE specific server
 // (UDP atau TCP, IPv4 atau IPv6), lalu bongkar jawabannya apa adanya.
 //
 // Kenapa nulis klien sendiri, bukan manggil `dig`:
-//   - runner GitHub Actions nggak dijamin punya dig (paket dnsutils sering belum kepasang);
-//   - `dig +short` nyembunyiin header (rcode, AA, RA, ID) — padahal justru header itu yang
-//     dipakai buat bedain jawaban ASLI dari jawaban BAJAKAN;
-//   - repo ini nol dependensi, jadi alat ukurnya juga harus nol dependensi.
+//   - a GitHub Actions runner is not guaranteed to have dig (dnsutils is often absent);
+//   - `dig +short` hides the header (rcode, AA, RA, ID) — and the header is exactly what
+//     tells a GENUINE answer apart from a HIJACKED one;
+//   - this repo has zero dependencies, so its instrument must have zero dependencies too.
 //
-// Semua query dikirim dengan RD=0 (recursion desired mati). Server otoritatif nggak butuh
-// rekursi; kalau ada yang menjawab dengan RA=1, itu tanda kita lagi ngobrol sama resolver,
+// Every query is sent with RD=0 (recursion desired off). An authoritative server has no
+// use for recursion; anything answering with RA=1 means we are talking to a resolver,
 // bukan sama nameserver kita.
 
 import dgram from 'node:dgram';
@@ -20,12 +20,12 @@ export { TYPE };
 export const NAMA_RCODE = ['NOERROR', 'FORMERR', 'SERVFAIL', 'NXDOMAIN', 'NOTIMP', 'REFUSED'];
 export const NAMA_TYPE = { 1: 'A', 2: 'NS', 6: 'SOA', 16: 'TXT', 28: 'AAAA', 41: 'OPT', 255: 'ANY' };
 
-/** OPT record kosong (EDNS0, buffer 1232) buat additional section. */
+/** An empty OPT record (EDNS0, 1232-byte buffer) for the additional section. */
 function optRecord(udpSize = 1232) {
   const b = Buffer.alloc(11);
   b.writeUInt8(0, 0); // root name
   b.writeUInt16BE(41, 1); // TYPE = OPT
-  b.writeUInt16BE(udpSize, 3); // CLASS dipakai sebagai ukuran buffer
+  b.writeUInt16BE(udpSize, 3); // CLASS is reused as the buffer size
   b.writeUInt32BE(0, 5); // TTL: extended rcode + versi + flags
   b.writeUInt16BE(0, 9); // RDLENGTH
   return b;
@@ -34,7 +34,7 @@ function optRecord(udpSize = 1232) {
 /** Nama root ditulis "." di mana-mana, tapi di kawat dia nama KOSONG (satu byte 0). */
 const namaKawat = (n) => (n === '.' ? '' : String(n).replace(/\.$/, ''));
 
-/** Susun paket query. rd=false dan edns=false itu default yang kita mau. */
+/** Build a query packet. rd=false and edns=false are the defaults we want. */
 export function buatQuery({ name, type, id, rd = false, edns = false }) {
   const header = Buffer.alloc(12);
   header.writeUInt16BE(id, 0);
@@ -73,7 +73,7 @@ function bacaNama(buf, off) {
   return [label.join('.').toLowerCase(), lompat === null ? off : lompat];
 }
 
-/** 16 byte -> string IPv6 ringkas (pakai "::" di deretan nol terpanjang). */
+/** 16 bytes -> a compact IPv6 string (using "::" for the longest run of zeros). */
 function bytesKeIpv6(b) {
   const g = [];
   for (let i = 0; i < 8; i++) g.push(b.readUInt16BE(i * 2).toString(16));
@@ -121,7 +121,7 @@ function bacaRR(buf, off) {
   return [rr, rdOff + rdlen];
 }
 
-/** Bongkar paket jawaban lengkap jadi objek. */
+/** Unpack a complete reply packet into an object. */
 export function bacaJawaban(buf) {
   if (buf.length < 12) throw new Error('paket kependekan');
   const flags = buf.readUInt16BE(2);
@@ -207,15 +207,15 @@ export async function tanya({ ip, name, type, transport = 'udp', timeout = 4000,
   const ms = Number(process.hrtime.bigint() - mulai) / 1e6;
   const jwb = bacaJawaban(mentah);
 
-  // Dua pemeriksaan anti-spoof yang murah dan wajib: ID harus balik sama, dan
-  // pertanyaan harus dipantulkan persis. Jawaban yang gagal di sini = jawaban orang lain.
-  if (jwb.id !== id) throw new Error(`ID jawaban nggak cocok (kirim ${id}, terima ${jwb.id}) — ada yang nyisipin jawaban`);
+  // Two cheap, mandatory anti-spoof checks: the ID must come back unchanged, and
+  // the question must be echoed exactly. An answer failing either belongs to someone else.
+  if (jwb.id !== id) throw new Error(`reply ID mismatch (sent ${id}, got ${jwb.id}) — something injected an answer`);
   const namaMinta = namaKawat(String(name).toLowerCase());
   if (!jwb.pertanyaan || jwb.pertanyaan.nama !== namaMinta || jwb.pertanyaan.type !== type) {
-    throw new Error(`question section nggak dipantulkan sama (minta ${namaMinta}/${type}, balik ${jwb.pertanyaan?.nama}/${jwb.pertanyaan?.type})`);
+    throw new Error(`question section not echoed (asked ${namaMinta}/${type}, got ${jwb.pertanyaan?.nama}/${jwb.pertanyaan?.type})`);
   }
   return { ...jwb, ms, dikirim: { ip, name: namaMinta, type, transport, port } };
 }
 
-/** Ambil semua record bertipe tertentu dari sebuah bagian. */
+/** Take every record of a given type out of a section. */
 export const ambil = (list, type) => list.filter((rr) => rr.type === type);
