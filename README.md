@@ -5,9 +5,7 @@
 **A free, stateless address layer for the open agent ecosystem.** Append `.a-i.st` or `.a-i.sh` to any IP address and it resolves right back to that IP — no signup, no API key, no dashboard, no human in the loop.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-3ddc97.svg)](./LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-3ddc97.svg)](./CONTRIBUTING.md)
-![GitHub stars](https://img.shields.io/badge/stars-%5BTODO%5D-lightgrey.svg)
-![Sponsors](https://img.shields.io/badge/sponsors-%5BTODO%5D-lightgrey.svg)
+[![Nameservers](https://github.com/kwkuh/open-domain/actions/workflows/nameservers.yml/badge.svg)](https://github.com/kwkuh/open-domain/actions/workflows/nameservers.yml)
 
 ```
 203.0.113.10.a-i.st      -> A     203.0.113.10
@@ -40,7 +38,7 @@ Open-Domain is our answer to both:
 - **A public good, not a product.** The address layer should be free, open, and boring infrastructure that just works. There is no paywall and no plan to add one.
 - **100% open source (MIT) and self-hostable.** If the hosted service ever disappears, the code is right here and you can run your own in minutes. Open source *is* the continuity guarantee.
 - **Built to become redundant.** Two independent suffixes and a codebase you can run yourself. Today one resolver answers both suffixes, so they fail together; independent nameservers are the next milestone, not a shipped feature.
-- **Community-funded.** Running an authoritative nameserver for the world costs something. We keep it free by keeping it cheap (stateless, tiny) and letting sponsors cover the rest. See [Sponsor](#sponsor).
+- **Cheap enough to keep free.** Running an authoritative nameserver costs something, but a stateless resolver on one small VPS costs very little. It is funded out of pocket today; sponsorship exists as an option, not as a plan being relied on.
 
 ## Quick start
 

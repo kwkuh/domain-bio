@@ -1,0 +1,54 @@
+name: Tests
+
+# The unit tests were never a gate on anything. `pages.yml` deploys the site on push
+# and `nameservers.yml` monitors production on a schedule — neither one runs `npm test`.
+# So 82 passing tests proved nothing about a pull request, and a contributor could
+# break the parser and still see a green repository.
+#
+# This is the cheapest possible CI: no services, no dependencies, no network. The whole
+# suite is offline and finishes in well under a second, which is exactly why there was
+# never a good reason not to run it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Deliberately no `npm ci`: this project has zero runtime and zero dev
+      # dependencies, and keeping it that way is a design decision worth defending.
+      # If a dependency ever appears, this step is where it will become visible.
+      - name: Refuse dependencies we did not intend
+        run: |
+          if [ -f package-lock.json ] || [ -d node_modules ]; then
+            echo "::error title=Unexpected dependencies::This project is zero-dependency by design. A lockfile or node_modules appeared — if that is intentional, update this workflow deliberately."
+            exit 1
+          fi
+          node -e "const p=require('./package.json');
+            const d={...(p.dependencies||{}),...(p.devDependencies||{})};
+            const n=Object.keys(d);
+            if(n.length){console.error('::error::package.json declares dependencies: '+n.join(', '));process.exit(1)}
+            console.log('zero dependencies confirmed')"
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Every source file parses
+        run: |
+          for f in src/*.js monitor/*.js monitor/lib/*.js test/*.js; do
+            node --check "$f" || { echo "::error file=$f::syntax error"; exit 1; }
+          done
+          echo "all source files parse"
