@@ -1,12 +1,17 @@
-# a-i.sh — MCP server & integration snippets
+# Open-Domain — MCP server & integration snippets
 
-`a-i.sh` turns any IP address into a working hostname. Append `.a-i.sh` to an IP
-and it resolves straight back to that IP — no signup, no API key, no config, no
-human in the loop.
+> **Status:** the integration snippets below are ready to use today. The **MCP
+> server is planned, not built yet** (see ROADMAP.md → "Next"); its interface is
+> sketched here so the design is on record. Do not expect to `npm install` it yet.
+
+**Open-Domain** turns any IP address into a working hostname. Append a suffix —
+`.a-i.st` or `.a-i.sh`, they behave identically — to an IP and it resolves
+straight back to that IP: no signup, no API key, no config, no human in the loop.
+The examples below use `a-i.sh`; every one of them works the same with `a-i.st`.
 
 ```
 203.0.113.10.a-i.sh    -> A     203.0.113.10
-203-0-113-10.a-i.sh    -> A     203.0.113.10   (dashed — use for wildcard TLS)
+203-0-113-10.a-i.sh    -> A     203.0.113.10   (dashed — one label, not four)
 0a000001.a-i.sh        -> A     10.0.0.1       (8-hex)
 2001-db8--1.a-i.sh     -> AAAA  2001:db8::1    (":" -> "-", "::" -> "--")
 agent1.203.0.113.10.a-i.sh -> A 203.0.113.10   (any prefix is ignored)
@@ -52,8 +57,10 @@ address.
 
 - **Input**
   - `ip` — an IPv4 (`203.0.113.10`) or IPv6 (`2001:db8::1`) address.
-  - `dashed` — if `true`, emit the dashed form (`203-0-113-10.a-i.sh`) so a
-    single `*.a-i.sh` wildcard certificate covers the name. Use this for HTTPS.
+  - `dashed` — if `true`, emit the dashed form (`203-0-113-10.a-i.sh`): one
+    label instead of four. Any form gets a normal per-name certificate via
+    HTTP-01; there is no `*.a-i.sh` wildcard cert and there cannot be one. The
+    dashed form only helps a wildcard on a domain YOU own.
   - `prefix` — optional label prepended as `<prefix>.<ip>.a-i.sh`
     (e.g. `prefix="agent1"` → `agent1.203.0.113.10.a-i.sh`). The prefix is
     ignored by resolution; it just gives the agent a readable, unique name.
@@ -108,7 +115,13 @@ function hostnameForIp(ip, { dashed = false, prefix } = {}) {
 function resolveHostname(hostname) {
   // strip zone + any prefix labels, take the IP-bearing label
   const bare = hostname.replace(new RegExp(`\\.${ZONE.replace(/\./g, "\\.")}$`), "");
-  const label = bare.split(".").pop(); // last label before the zone holds the IP
+  const label = bare.split(".").pop(); // last label before the zone
+  // Dotted IPv4 lives across the LAST FOUR labels, not one: "203.0.113.10" would
+  // otherwise return just "10". Take the four nearest the zone when they are octets.
+  const labels = bare.split(".");
+  if (labels.length >= 4 && labels.slice(-4).every((o) => /^\d{1,3}$/.test(o) && +o <= 255)) {
+    return labels.slice(-4).join(".");
+  }
   if (/^[0-9a-f]{8}$/i.test(label)) {
     // 8-hex form
     const n = parseInt(label, 16);
@@ -128,7 +141,7 @@ server.tool(
   "Return the a-i.sh hostname for an IP address (pure, no network).",
   {
     ip: z.string().describe("IPv4 or IPv6 address"),
-    dashed: z.boolean().default(false).describe("Dashed form for wildcard TLS"),
+    dashed: z.boolean().default(false).describe("Dashed form: one label instead of four"),
     prefix: z.string().optional().describe("Optional readable label prefix"),
   },
   async ({ ip, dashed, prefix }) => ({
@@ -248,7 +261,7 @@ from crewai.tools import tool
 
 @tool("hostname_for_ip")
 def hostname_for_ip(ip: str, dashed: bool = False) -> str:
-    """Return the public a-i.sh hostname for an IP. dashed=True for wildcard TLS."""
+    """Return the public a-i.sh hostname for an IP. dashed=True gives one label instead of four."""
     label = ip.replace(".", "-") if dashed else ip
     return f"{label}.a-i.sh"
 ```
@@ -259,7 +272,7 @@ no DNS dashboard, no human.
 
 ### Docker + Traefik — routing labels
 
-Route by an a-i.sh hostname. The dashed form lets one `*.a-i.sh` cert cover it.
+Route by an a-i.sh hostname. Each name gets its own certificate via HTTP-01.
 
 ```yaml
 services:
@@ -291,7 +304,7 @@ metadata:
   name: app
 spec:
   rules:
-    - host: 203-0-113-10.a-i.sh   # dashed form; pair with a *.a-i.sh TLS secret
+    - host: 203-0-113-10.a-i.sh   # one label; cert-manager issues a per-name cert via HTTP-01
       http:
         paths:
           - path: /
@@ -315,8 +328,10 @@ a ready hostname for a cluster IP with no external DNS setup.
 - **Do not use for critical production.** It depends on this free service. For
   production, delegate a domain you own (you can self-host this exact server —
   it is MIT-licensed and in this repo).
-- **HTTPS:** always use the **dashed** form so one `*.a-i.sh` wildcard
-  certificate matches the name.
+- **HTTPS:** any form gets a normal per-name certificate via HTTP-01. There is no
+  `*.a-i.sh` wildcard certificate and there cannot be one (wildcards need DNS-01,
+  and these names are generated, not stored). The dashed form is just one label —
+  useful only for a wildcard on a domain you own.
 
 ## Status & placeholders
 

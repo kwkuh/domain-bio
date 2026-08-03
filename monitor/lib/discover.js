@@ -57,7 +57,7 @@ export async function temukanDariInduk(zone, { transport = 'udp', timeout = 4000
     let ipDipakai = null;
     for (const ip of kandidat) {
       try { hasil = await satuLangkah({ ip, zone: target, transport, timeout }); ipDipakai = ip; break; }
-      catch (e) { jejak.push(`${ip} gagal: ${e.message}`); }
+      catch (e) { jejak.push(`${ip} failed: ${e.message}`); }
     }
     if (!hasil) throw new Error(`no server could be reached at step ${langkah}: ${jejak.join('; ')}`);
 

@@ -57,8 +57,8 @@ function bacaNama(buf, off) {
   let lompat = null;
   let langkah = 0;
   while (true) {
-    if (off >= buf.length) throw new Error('nama kepotong');
-    if (++langkah > 128) throw new Error('loop pointer di nama');
+    if (off >= buf.length) throw new Error('name truncated');
+    if (++langkah > 128) throw new Error('pointer loop in name');
     const len = buf[off];
     if (len === 0) { off += 1; break; }
     if ((len & 0xc0) === 0xc0) {

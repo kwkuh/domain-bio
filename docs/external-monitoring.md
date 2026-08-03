@@ -103,14 +103,17 @@ Three modes, chosen automatically, forceable via `DISCOVER=parent|doh|env`:
 
 ## 4. Schedule, and what happens on failure
 
-Runs every 30 minutes via GitHub Actions, and can be triggered by hand.
+Scheduled every 30 minutes via GitHub Actions, and can be triggered by hand. GitHub's
+cron is best-effort, though: runs are often several minutes late, and under load the gap
+between them can stretch to an hour or more. Treat 30 minutes as the target, not a promise —
+for tighter monitoring, run `monitor/check.js` from your own cron as well.
 
 Exit codes are deliberately distinct:
 
 | Code | Meaning | Consequence |
 |---|---|---|
 | 0 | everything passed | badge green, any open incident issue is closed |
-| 1 | a check failed | **this is an incident** — issue opened or refreshed, notification sent |
+| 1 | a check failed | **this is an incident** — issue opened or refreshed; a WhatsApp notification too, but only if the `WA_WEBHOOK` secret is set (it is optional and off by default) |
 | 2 | could not start | discovery failed or misconfiguration |
 | 3 | **result invalid** | the runner's own network is dirty. **Not an incident** — nobody is paged, because this is an instrument problem, not a service problem |
 
@@ -139,7 +142,7 @@ checks with the reason recorded, rather than counting them as failures. Switch t
 ## 6. Running it by hand from a laptop — and the danger of mobile networks
 
 ```sh
-npm run kemampuan      # is this machine fit to measure at all?
+npm run capability     # is this machine fit to measure at all?
 npm run monitor        # a report for human eyes
 npm run monitor:test   # TAP form (node:test), same content
 npm run monitor -- --json > result.json
